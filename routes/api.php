@@ -4,10 +4,6 @@
 use Illuminate\Support\Facades\Route;
 
 
-
-
-
-
 Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 
 Route::group(['middleware' => ['auth:api']], function () {

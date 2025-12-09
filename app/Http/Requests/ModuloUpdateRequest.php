@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class ModuloUpdateRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'estado.id' => 'required|integer|exists:modulo_estados,id',
+        ];
+    }
+    public function messages(): array
+    {
+        return [
+            'estado.id.required' => 'El campo estado.id es obligatorio.',
+            'estado.id.integer' => 'El campo estado.id debe ser un número entero.',
+            'estado.id.exists' => 'El estado.id proporcionado no existe en la base de datos.',
+        ];
+    }
+}

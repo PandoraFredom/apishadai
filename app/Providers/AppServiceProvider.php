@@ -4,15 +4,19 @@ namespace App\Providers;
 
 
 
+
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
 
-  public array $bindings = [
+    public array $bindings = [
         \App\Interfaces\Device\DeviceRepositoryInterface::class => \App\Repositories\DeviceRepository::class,
         \App\Interfaces\Device\DeviceServiceInterface::class => \App\Services\Device\DeviceService::class,
+
+        \App\Interfaces\RepositoryInterface::class => \App\Repositories\Repository::class,
+        \App\Interfaces\Config\ModulosRepositoryInterface::class => \App\Repositories\Config\ModuloRepository::class,
     ];
 
     /**

@@ -18,14 +18,14 @@ class ModuloEstadoController extends Controller
      */
     public function index()
     {
-        // Get all the modulo estados
+
         $list = ModuloEstados::all();
 
-        if ($list->isNotEmpty()) {
-            return $this->sendResponse(ModuloEstadoResoure::collection($list), 'success');
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron modulos', 404);
         }
-        // If there are no modulo estados, return a 404 error
-        return $this->sendResponse(null, 'No se encontraron modulos', 404);
+
+        return $this->sendResponse(ModuloEstadoResoure::collection($list), 'success');
     }
     /**
      * Store a newly created resource in storage.
