@@ -2,53 +2,56 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DTOs\AccionesVistaDTO;
+use App\DTOs\VistaDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\VistasResource;
-use App\Models\Vistas;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Requests\AccionesVistaRequest;
+use App\Http\Requests\Vista\VistaRequest;
+use App\Http\Requests\Vista\VistaUpdateRequest;
+use App\Http\Resources\ActionsVistasResource;
+use App\Http\Resources\Modulos\ModulosResourceCbx;
+use App\Http\Resources\VistaEstadosResource;
+use App\Http\Resources\Vistas\VistasResource;
+use App\Interfaces\Config\VistaRepositoryInterface;
 
 class VistasController extends Controller
 {
+
+    public function __construct(private VistaRepositoryInterface $service)
+    {
+
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = Vistas::all();
-        if ($list->count() > 0) {
-            return $this->sendResponse(VistasResource::collection($list), 'success');
+        $list = $this->service->paginate();
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron informacion', 404);
         }
-        return $this->sendResponse(null, 'No se encontraron informacion', 404);
+        return $this->sendResponse(
+            VistasResource::collection($list),
+            'success',
+            200,
+            true
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(VistaRequest $request)
     {
-        $validate = Validator::make($request->all(), [
-            'modulo.id' => 'required|integer|exists:modulos,id',
-            'nombre' => 'required|string',
-            'codigo' => 'required|string|unique:vistas,codigo',
-            'estado.id' => 'required|integer|exists:vista_estados,id',
-        ]);
+        $dto = VistaDTO::fromRequest($request->all());
 
-        if ($validate->fails()) {
-            return $this->sendResponse(false, $validate->errors()->first(), 422);
-        }
-        // Check if a vista with the same name and module id already exists
-        if ($this->exist_samenameWhithModuleId($request->input('nombre'), $request->input('modulo.id'))) {
+        if ($this->service->exist_samenameWhithModuleId($dto->nombre, $dto->modulo) != null) {
             return $this->sendResponse(false, 'Ya existe una vista con el mismo nombre y modulo', 422);
         }
 
-
         try {
-            $input = $request->all();
-            $input['codigo'] = strtoupper($input['codigo']);
-            $input['modulo'] = $input['modulo']['id'];
-            $input['estado'] = $input['estado']['id'];
-            $vista = Vistas::create($input);
+            $vista = $this->service->create($dto->toArray());
             if ($vista) {
                 return $this->sendResponse(true, 'Vista creada');
             }
@@ -58,53 +61,30 @@ class VistasController extends Controller
         }
     }
 
-    private function exist_samenameWhithModuleId($name, $module)
-    {
-
-        $obj = Vistas::where('modulo', $module)->where('nombre', $name)->first();
-        return $obj ? true : false;
-    }
-
     /**
      * Display the specified resource.
      */
     public function show(string $id)
     {
-        $obj = Vistas::find($id);
-        if ($obj) {
-            return $this->sendResponse(VistasResource::make($obj), "success");
+        $obj = $this->service->findById($id);
+        if (!$obj) {
+            return $this->sendResponse(null, 'No se encontro informacion', 404);
         }
-        return $this->sendResponse(null, 'No se encontro informacion', 404);
+        return $this->sendResponse(VistasResource::make($obj), "success");
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(VistaUpdateRequest $request)
     {
-        $validate = Validator::make($request->all(), [
-            'estado.id' => "required|integer|exists:vista_estados,id",
-        ]);
-
-        if ($validate->fails()) {
-            return $this->sendResponse(false, $validate->errors()->first(), 422);
+        $dto = VistaDTO::fromUpdateRequest($request->all());
+        $update = $this->service->update($dto->id, $dto->toUpdateArray());
+        if ($update) {
+            return $this->sendResponse(true, 'Vista actualizada');
         }
-        try {
+        return $this->sendResponse(false, 'No se econtro informacion', 500);
 
-            $data = [
-                'estado' => $request->input('estado.id'),
-            ];
-            $id = $request->input('id');
-            $vista = Vistas::find($id);
-
-            if ($vista) {
-                $vista->update($data);
-                return $this->sendResponse(true, 'Vista actualizada');
-            }
-            return $this->sendResponse(false, 'No se econtro informacion', 500);
-        } catch (\Throwable $e) {
-            return $this->sendResponse(false, 'No se pudo actualizar la informacion : ' . $e->getMessage(), 500);
-        }
     }
 
     /**
@@ -112,26 +92,83 @@ class VistasController extends Controller
      */
     public function destroy(string $id)
     {
-        $obj = Vistas::find($id);
-        if ($obj) {
-
-            try {
-                $obj->delete();
-                return $this->sendResponse(true, 'Vista eliminada');
-            } catch (\Throwable $e) {
-                return $this->sendResponse(false, 'Vista no disponible para eliminar', 500);
-            }
-        } else {
-            return $this->sendResponse(false, 'No se encontro informacion', 404);
+        $delete = $this->service->delete($id);
+        if (!$delete) {
+            return $this->sendResponse(false, 'No se pudo eliminar la informacion', 500);
         }
+        return $this->sendResponse(true, 'Vista eliminada');
     }
 
-    public function findbyModule($id)
+    public function findbyModule(string $id)
     {
-        $list = Vistas::where('modulo', $id)->get();
-        if ($list->count() > 0) {
-            return $this->sendResponse(VistasResource::collection($list), "success");
+        $list = $this->service->findByModule($id);
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron informacion', 404);
         }
-        return $this->sendResponse(null, 'No se encontro informacion', 404);
+        return $this->sendResponse(
+            VistasResource::collection($list),
+            'success',
+            200,
+            true
+        );
+    }
+
+    public function estadosList()
+    {
+        $list = $this->service->estadosList();
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron informacion', 404);
+        }
+        return $this->sendResponse(
+            VistaEstadosResource::collection($list),
+            'success',
+            200,
+            false
+        );
+    }
+    public function modulosList()
+    {
+        $list = $this->service->modulosList();
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron informacion', 404);
+        }
+        return $this->sendResponse(
+            ModulosResourceCbx::collection($list),
+            'success',
+            200,
+            false
+        );
+    }
+
+
+    public function acctionList($vistaId)
+    {
+        $list = $this->service->acctionList($vistaId);
+        if (!$list) {
+            return $this->sendResponse(null, 'No se encontraron informacion', 404);
+        }
+        return $this->sendResponse(
+            ActionsVistasResource::collection($list),
+            'success',
+            200,
+            false
+        );
+    }
+    public function deleteAccion($id)
+    {
+        $delete = $this->service->deleteAccion($id);
+        if (!$delete) {
+            return $this->sendResponse(false, 'No se pudo eliminar la informacion', 500);
+        }
+        return $this->sendResponse(true, 'Accion eliminada');
+    }
+    public function createAccion(AccionesVistaRequest $request)
+    {
+        $dto = AccionesVistaDTO::fromRequest($request->all());
+        $create = $this->service->createAccion($dto->toArray());
+        if (!$create) {
+            return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
+        }
+        return $this->sendResponse(true, 'Accion creada');
     }
 }

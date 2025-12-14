@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Modulos;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class VistaEstadosResource extends JsonResource
+class ModulosResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,9 +16,11 @@ class VistaEstadosResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'descripcion' => $this->descripcion,
-            'created_at' => null,
-            'updated_at' => null
+            'nombre' => $this->nombre,
+            'codigo' => $this->codigo,
+            'estado' => $this->Estado,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at
         ];
     }
 }

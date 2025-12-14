@@ -14,7 +14,6 @@ class Stocks extends Model
         'ubicacion',
     ];
 
-
     public function Device()
     {
         return $this->hasMany(Device::class, 'stock');

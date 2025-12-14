@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Modulo;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
 
 class ModuloUpdateRequest extends FormRequest
 {
@@ -32,5 +33,20 @@ class ModuloUpdateRequest extends FormRequest
             'estado.id.integer' => 'El campo estado.id debe ser un número entero.',
             'estado.id.exists' => 'El estado.id proporcionado no existe en la base de datos.',
         ];
+    }
+    /**
+     * Summary of failedValidation
+     * @param Validator $validator
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        $response = [
+            'message' => $validator->errors()->first(),
+            'code' => 422,
+            'data' => false,
+        ];
+
+        return response()->json($response, 422);
     }
 }

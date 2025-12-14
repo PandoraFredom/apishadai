@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use function is_array;
 use function is_string;
 
@@ -15,7 +16,7 @@ abstract class Repository implements RepositoryInterface
     protected array $defaultRelations = [];
     protected int $perPage = 15;
 
-    protected string $order = 'DESC';
+    protected  array $orderBy = ["id","desc"];
 
     public function __construct(Model $model)
     {
@@ -24,35 +25,67 @@ abstract class Repository implements RepositoryInterface
 
     public function getAll(): Collection
     {
-        $query = $this->model->newQuery();
+        try {
+            $query = $this->model->newQuery();
 
-        if (!empty($this->defaultRelations)) {
-            $query->with($this->defaultRelations);
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->orderByBy($this->orderBy[0], $this->orderBy[1])->get();
+        } catch (\Exception $e) {
+            Log::error('Repository::getAll - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return collect();
         }
-
-        return $query->orderBy('id', $this->order)->get();
     }
 
     public function paginate(): LengthAwarePaginator
     {
-        $query = $this->model->newQuery();
+        try {
+            $query = $this->model->newQuery();
 
-        if (!empty($this->defaultRelations)) {
-            $query->with($this->defaultRelations);
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->orderByBy($this->orderBy[0], $this->orderBy[1])->paginate($this->perPage);
+        } catch (\Exception $e) {
+            Log::error('Repository::paginate - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'perPage' => $this->perPage,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return $this->model->paginate($this->perPage);
         }
-
-        return $query->orderBy('id', $this->order)->paginate($this->perPage);
     }
 
     public function findById(int $id): ?Model
     {
-        $query = $this->model->newQuery();
+        try {
+            $query = $this->model->newQuery();
 
-        if (!empty($this->defaultRelations)) {
-            $query->with($this->defaultRelations);
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->find($id);
+        } catch (\Exception $e) {
+            Log::error('Repository::findById - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'id' => $id,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return null;
         }
-
-        return $query->find($id);
     }
 
     public function create(array $data): bool
@@ -63,6 +96,13 @@ abstract class Repository implements RepositoryInterface
             });
             return true;
         } catch (\Exception $e) {
+            Log::error('Repository::create - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'data' => $data,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return false;
         }
     }
@@ -74,7 +114,7 @@ abstract class Repository implements RepositoryInterface
                 $model = $this->findById($id);
 
                 if (!$model) {
-                    throw new \Exception("Model not found");
+                    throw new \Exception("Model not found with id: $id");
                 }
 
                 $filtered = $this->filterEmptyData($data);
@@ -89,6 +129,14 @@ abstract class Repository implements RepositoryInterface
             });
             return true;
         } catch (\Exception $e) {
+            Log::error('Repository::update - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'id' => $id,
+                'data' => $data,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return false;
         }
     }
@@ -100,7 +148,7 @@ abstract class Repository implements RepositoryInterface
                 $model = $this->findById($id);
 
                 if (!$model) {
-                    throw new \Exception("Model not found");
+                    throw new \Exception("Model not found with id: $id");
                 }
 
                 if (!$model->delete()) {
@@ -109,30 +157,47 @@ abstract class Repository implements RepositoryInterface
             });
             return true;
         } catch (\Exception $e) {
+            Log::error('Repository::delete - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'id' => $id,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
             return false;
         }
     }
 
     protected function filterEmptyData(array $data): array
     {
-        return array_filter($data, function ($value) {
-            if ($value === null) {
-                return false;
-            }
+        try {
+            return array_filter($data, function ($value) {
+                if ($value === null) {
+                    return false;
+                }
 
-            if (is_numeric($value) && $value === 0) {
-                return false;
-            }
+                if (is_numeric($value) && $value === 0) {
+                    return false;
+                }
 
-            if (is_string($value) && trim($value) === '') {
-                return false;
-            }
+                if (is_string($value) && trim($value) === '') {
+                    return false;
+                }
 
-            if (is_array($value) && empty($value)) {
-                return false;
-            }
+                if (is_array($value) && empty($value)) {
+                    return false;
+                }
 
-            return true;
-        });
+                return true;
+            });
+        } catch (\Exception $e) {
+            Log::error('Repository::filterEmptyData - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return [];
+        }
     }
 }

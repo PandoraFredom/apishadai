@@ -4,9 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\DTOs\ModulosDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\ModuloRequest;
-use App\Http\Requests\ModuloUpdateRequest;
-use App\Http\Resources\ModulosResource;
+
+use App\Http\Requests\Modulo\ModuloRequest;
+use App\Http\Requests\Modulo\ModuloUpdateRequest;
+use App\Http\Resources\Modulos\ModulosResource;
 use App\Interfaces\Config\ModulosRepositoryInterface;
 
 class ModulosController extends Controller
@@ -99,7 +100,7 @@ class ModulosController extends Controller
             if ($data) {
                 return $this->sendResponse(true, 'Modulo eliminado con exito');
             }
-            return $this->sendResponse(false, 'Error al eliminar el modulo', 500);
+            return $this->sendResponse(false, 'Modulo no disponible para eliminar.', 500);
         } catch (\Throwable $th) {
             return $this->sendResponse(false, 'Error al eliminar el modulo: ' . $th->getMessage(), 500);
         }

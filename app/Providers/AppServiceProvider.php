@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Interfaces\RepositoryInterface::class => \App\Repositories\Repository::class,
         \App\Interfaces\Config\ModulosRepositoryInterface::class => \App\Repositories\Config\ModuloRepository::class,
+        \App\Interfaces\Config\VistaRepositoryInterface::class => \App\Repositories\Config\VistaRepository::class,
     ];
 
     /**

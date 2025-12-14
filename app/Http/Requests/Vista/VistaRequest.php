@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Vista;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
-class ModuloRequest extends FormRequest
+class VistaRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,18 +23,22 @@ class ModuloRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nombre' => 'required|string|unique:modulos,nombre',
-            'codigo' => 'required|string|unique:modulos,codigo',
-            'estado.id' => 'required|integer|exists:modulo_estados,id',
+            'modulo.id' => 'required|integer|exists:modulos,id',
+            'nombre' => 'required|string',
+            'codigo' => 'required|string|unique:vistas,codigo',
+            'estado.id' => 'required|integer|exists:vista_estados,id',
         ];
     }
 
     public function messages(): array
     {
         return [
+            'modulo.id.required' => 'El módulo es obligatorio',
+            'modulo.id.integer' => 'El módulo debe ser un entero',
+            'modulo.id.exists' => 'El módulo no existe',
+
             'nombre.required' => 'El nombre es obligatorio',
             'nombre.string' => 'El nombre debe ser una cadena de texto',
-            'nombre.unique' => 'El nombre ya está en uso',
 
             'codigo.required' => 'El código es obligatorio',
             'codigo.string' => 'El código debe ser una cadena de texto',
@@ -43,5 +48,21 @@ class ModuloRequest extends FormRequest
             'estado.id.integer' => 'El estado debe ser un entero',
             'estado.id.exists' => 'El estado no existe',
         ];
+    }
+
+    /**
+     * Summary of failedValidation
+     * @param Validator $validator
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        $response = [
+            'message' => $validator->errors()->first(),
+            'code' => 422,
+            'data' => false,
+        ];
+
+        return response()->json($response, 422);
     }
 }

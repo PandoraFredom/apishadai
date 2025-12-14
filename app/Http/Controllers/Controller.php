@@ -28,7 +28,7 @@ abstract class Controller
     $response = [
         'message' => $message,
         'code'    => $code,
-        'data'    => null, 
+        'data'    => null,
     ];
 
     if ($withPagination) {

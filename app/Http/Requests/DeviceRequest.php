@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Controllers\Controller;
+
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class DeviceRequest extends FormRequest
@@ -138,12 +138,11 @@ class DeviceRequest extends FormRequest
         ];
     }
 
+
     /**
-     * Handle a failed validation attempt.
-     *
+     * Summary of failedValidation
      * @param Validator $validator
-     * @return void
-     * @throws HttpResponseException
+     * @return \Illuminate\Http\JsonResponse
      */
     protected function failedValidation(Validator $validator)
     {
@@ -153,6 +152,6 @@ class DeviceRequest extends FormRequest
             'data' => false,
         ];
 
-        throw new HttpResponseException(response()->json($response, 422));
+        return response()->json($response, 422);
     }
 }

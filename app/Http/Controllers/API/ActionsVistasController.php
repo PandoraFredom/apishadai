@@ -111,5 +111,6 @@ class ActionsVistasController extends Controller
             return $this->sendResponse(null, 'No se encontraron acciones para esta vista', 404);
         }
         return $this->sendResponse(ActionsVistasResource::collection($actions), 'Acciones de la vista', 200);
+   
     }
 }

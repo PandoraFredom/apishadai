@@ -2,13 +2,14 @@
 
 namespace App\DTOs;
 
-class ModulosDTO
+class VistaDTO
 {
     public function __construct(
         public readonly ?int $id,
+        public readonly int $modulo,
         public readonly string $nombre,
-        public readonly string $codigo,
-        public readonly int $estado
+        public readonly int $estado,
+        public readonly string $codigo
     ) {
     }
 
@@ -19,9 +20,10 @@ class ModulosDTO
     {
         return new self(
             id: null,
+            modulo: (int) ($data['modulo']['id'] ?? 0),
             nombre: trim($data['nombre'] ?? ''),
-            codigo: strtoupper(trim($data['codigo'] ?? '')),
-            estado: (int) ($data['estado'] ?? 1)
+            estado: (int) ($data['estado']['id'] ?? 1),
+            codigo: strtoupper(trim($data['codigo'] ?? ''))
         );
     }
 
@@ -32,12 +34,12 @@ class ModulosDTO
     {
         return new self(
             id: $model->id,
+            modulo: (int) $model->modulo,
             nombre: $model->nombre,
-            codigo: $model->codigo,
-            estado: $model->estado
+            estado: (int) $model->estado,
+            codigo: $model->codigo
         );
     }
-
 
     /**
      * Datos para actualizar en BD (solo campos modificables)
@@ -45,9 +47,10 @@ class ModulosDTO
     public function toUpdateArray(): array
     {
         return array_filter([
+            'modulo' => null,
             'nombre' => null,
-            'codigo' => null,
             'estado' => $this->estado,
+            'codigo' => null,
         ], fn($value) => $value !== null);
     }
 
@@ -58,19 +61,24 @@ class ModulosDTO
     {
         return [
             'id' => $this->id,
+            'modulo' => $this->modulo,
             'nombre' => $this->nombre,
-            'codigo' => $this->codigo,
             'estado' => $this->estado,
+            'codigo' => $this->codigo,
         ];
     }
 
+    /**
+     * Crea DTO desde request para actualizar
+     */
     public static function fromUpdateRequest(array $data): self
     {
         return new self(
             id: isset($data['id']) ? (int) $data['id'] : null,
+            modulo: isset($data['modulo']) ? (int) $data['modulo'] : 0,
             nombre: trim($data['nombre'] ?? ''),
-            codigo: strtoupper(trim($data['codigo'] ?? '')),
-            estado: isset($data['estado']) ? (int) $data['estado']['id'] : 1
+            estado: isset($data['estado']) ? (int) $data['estado']['id'] : 1,
+            codigo: strtoupper(trim($data['codigo'] ?? ''))
         );
     }
 }
