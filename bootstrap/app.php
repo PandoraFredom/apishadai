@@ -19,7 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->group('api', [
-          //   \App\Http\Middleware\DeviceSecurityMiddleware::class,
+             \App\Http\Middleware\DeviceSecurityMiddleware::class,
             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);
 
@@ -89,5 +89,5 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 401);
             }
         });
-      
+
     })->create();

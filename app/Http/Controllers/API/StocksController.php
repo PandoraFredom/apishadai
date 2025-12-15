@@ -2,50 +2,41 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DTOs\StockDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StockRequest;
 use App\Http\Resources\StocksResource;
-use App\Models\Stocks;
+use App\Interfaces\Config\StockRepositoryInterface;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+
 
 class StocksController extends Controller
 {
+
+    public function __construct(private StockRepositoryInterface $service) {}
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = Stocks::all();
-        if ($list->count() > 0) {
-            return $this->sendResponse(StocksResource::collection($list), 'success');
+        $list = $this->service->getAll();
+        if (!$list) {
+            return $this->sendResponse(null, 'No data found', 404);
         }
-        return $this->sendResponse(null, 'No se encontraron informacion', 404);
+        return $this->sendResponse(StocksResource::collection($list), 'ok', 200, false);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StockRequest $request)
     {
-        $validate = Validator::make($request->all(), [
-            'descripcion' => 'required|string|unique:stocks,descripcion',
-            'telefono' => 'required|string',
-            'ubicacion' => 'required|string',
-        ]);
-
-        if ($validate->fails()) {
-            return $this->sendResponse(null, 'Validator error: ' . $validate->errors()->first(), 400);
+        $dto = StockDTO::fromRequest($request);
+        $created = $this->service->create($dto->toArray());
+        if (!$created) {
+            return $this->sendResponse(false, 'Error creating stock', 500);
         }
-
-        try {
-            $stock = Stocks::create($request->all());
-            if ($stock) {
-                return $this->sendResponse(true, 'Stock creado');
-            }
-            return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
-        } catch (\Throwable $e) {
-            return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
-        }
+        return $this->sendResponse(true, 'Stock created successfully', 201);
     }
 
     /**
@@ -53,11 +44,11 @@ class StocksController extends Controller
      */
     public function show(string $id)
     {
-        $obj = Stocks::find($id);
-        if ($obj) {
-            return $this->sendResponse(StocksResource::make($obj), "success");
+        $item = $this->service->findById($id);
+        if (!$item) {
+            return $this->sendResponse(null, 'Stock not found', 404);
         }
-        return $this->sendResponse(null, 'No se encontro informacion', 404);
+        return $this->sendResponse(StocksResource::make($item), 'ok');
     }
 
     /**
@@ -65,26 +56,12 @@ class StocksController extends Controller
      */
     public function update(Request $request)
     {
-        $validate = Validator::make($request->all(), [
-            'descripcion' => "required|string|unique:stocks,descripcion," . $request->id,
-            'telefono' => 'required|string',
-            'ubicacion' => 'required|string',
-        ]);
-
-        if ($validate->fails()) {
-            return $this->sendResponse(null, 'Validator error: ' . $validate->errors()->first(), 400);
+        $dto = StockDTO::fromRequest($request);
+        $updated = $this->service->update($dto->id, $dto->toArray());
+        if (!$updated) {
+            return $this->sendResponse(false, 'Error updating stock', 500);
         }
-
-        try {
-            $input = $request->all();
-            $update = Stocks::find($request->id)->update($input);
-            if ($update) {
-                return $this->sendResponse(true, 'Stock actualizado');
-            }
-            return $this->sendResponse(false, 'No se pudo actualizar la informacion', 500);
-        } catch (\Throwable $e) {
-            return $this->sendResponse(false, 'No se pudo actualizar la informacion', 500);
-        }
+        return $this->sendResponse(true, 'Stock updated successfully', 200);
     }
 
     /**
@@ -92,15 +69,10 @@ class StocksController extends Controller
      */
     public function destroy(string $id)
     {
-        try {
-            $obj = Stocks::find($id);
-            if ($obj) {
-                $obj->delete();
-                return $this->sendResponse(true, 'Stock eliminado',200);
-            }
-            return $this->sendResponse(false, 'No se encontro informacion', 404);
-        } catch (\Exception $e) {
-            return $this->sendResponse(false, 'Stock no disponible para eliminar', 500);
+        $deleted = $this->service->delete($id);
+        if (!$deleted) {
+            return $this->sendResponse(false, 'Error deleting stock', 500);
         }
+        return $this->sendResponse(true, 'Stock deleted successfully', 200);
     }
 }

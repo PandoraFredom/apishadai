@@ -11,6 +11,18 @@ class StockDTO
         public readonly ?int $id = null,
     ) {}
 
+    // from request
+    public static function fromRequest($request): self
+    {
+        return new self(
+            descripcion: $request->input('descripcion', ''),
+            telefono: $request->input('telefono', ''),
+            ubicacion: $request->input('ubicacion', ''),
+            id: $request->input('id', null),
+        );
+    }
+
+
     public static function fromArray(array $data): self
     {
         return new self(

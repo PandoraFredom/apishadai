@@ -16,7 +16,7 @@ abstract class Repository implements RepositoryInterface
     protected array $defaultRelations = [];
     protected int $perPage = 15;
 
-    protected  array $orderBy = ["id","desc"];
+    protected  array $orderBy = ["id","DESC"];
 
     public function __construct(Model $model)
     {
@@ -32,7 +32,7 @@ abstract class Repository implements RepositoryInterface
                 $query->with($this->defaultRelations);
             }
 
-            return $query->orderByBy($this->orderBy[0], $this->orderBy[1])->get();
+            return $query->orderBy($this->orderBy[0], $this->orderBy[1])->get();
         } catch (\Exception $e) {
             Log::error('Repository::getAll - ' . $e->getMessage(), [
                 'model' => get_class($this->model),
@@ -40,7 +40,7 @@ abstract class Repository implements RepositoryInterface
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
-            return collect();
+            return new Collection();
         }
     }
 
