@@ -58,5 +58,5 @@ class DeviceEstadoController extends Controller
     }
 
 
-    
+
 }

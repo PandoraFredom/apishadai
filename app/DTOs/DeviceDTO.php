@@ -41,12 +41,7 @@ class DeviceDTO
             id: $data['id'] ?? null
         );
     }
-
-    /**
-     * Crea un DTO al actualizar un dispositivo
-     * Solo actualiza el estado
-     */
-    public static function onUpdate(array $data): self
+    public static function fromUpdateRequest(array $data, int $id): self
     {
         return new self(
             ip: '',
@@ -54,10 +49,15 @@ class DeviceDTO
             displayname: '',
             name: '',
             stock: 0,
-            estado: $data['estado']['id'] ?? 0,
-            id: $data['id'] ?? null
+            estado: $data['estado']['id'],
+            id: $id
         );
     }
+
+
+
+
+
 
     /**
      * Convierte el DTO a array, filtrando valores vacíos
@@ -71,6 +71,14 @@ class DeviceDTO
             'name' => $this->name ?: null,
             'stock' => $this->stock > 0 ? $this->stock : null,
             'estado' => $this->estado > 0 ? $this->estado : null,
-        ], fn($value) => $value !== null && $value !== '');
+        ]);
+    }
+
+    public function toUpdateArray(): array
+    {
+        return array_filter([
+            'id' => $this->id > 0 ? $this->id : null,
+            'estado' => $this->estado > 0 ? $this->estado : null,
+        ]);
     }
 }

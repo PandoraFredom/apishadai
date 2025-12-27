@@ -2,32 +2,76 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DTOs\UserDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\UserRequest;
+use App\Http\Requests\User\UserUpdateRequest;
+use App\Http\Resources\RolesResource;
+use App\Http\Resources\UserEstadosResource;
 use App\Http\Resources\UserResource;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Interfaces\Config\UserRepositoryInterface;
+use App\Services\EncryptionService;
 
 class UserController extends Controller
 {
+
+    public function __construct(private UserRepositoryInterface $service,
+    private EncryptionService $encService) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = User::all();
-        if ($list->count() > 0) {
-            return $this->sendResponse(UserResource::collection($list), 'success');
+        $users = $this->service->getAll();
+        if (!$users) {
+            return $this->sendResponse(
+                null,
+                'No se encontraron usuarios',
+                404
+            );
         }
-        return $this->sendResponse(null, 'No se encontraron informacion', 404);
+
+        return $this->sendResponse(
+            UserResource::collection($users),
+            'ok',
+            200,
+            false
+
+        );
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        return $this->sendResponse(null, 'Not implemented', 501);
+        $dto = UserDTO::fromRequest($request->all());
+        $data = [
+            'nombre' => $dto->nombre,
+            'name' => $this->encService->genHash($dto->name),
+            'email' => $dto->email,
+            'password' => bcrypt($dto->password),
+            'rol' => $dto->rol,
+            'estado' => $dto->estado,
+        ];
+
+
+
+        $created = $this->service->create($data);
+
+        if (!$created) {
+            return $this->sendResponse(
+                false,
+                'No se pudo crear el usuario',
+                500
+            );
+        }
+        return $this->sendResponse(
+            true,
+            'Usuario creado con exito',
+            201
+        );
     }
 
     /**
@@ -35,19 +79,43 @@ class UserController extends Controller
      */
     public function show(string $id)
     {
-        $user = User::find($id);
-        if ($user) {
-            return $this->sendResponse(UserResource::make($user), 'success');
+        $user = $this->service->findById($id);
+        if (!$user) {
+            return $this->sendResponse(
+                null,
+                'Usuario no encontrado',
+                404
+            );
         }
-        return $this->sendResponse(null, 'No se encontro informacion', 404);
+
+        return $this->sendResponse(
+            UserResource::make($user),
+            'ok',
+            200
+        );
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UserUpdateRequest $request)
     {
-        return $this->sendResponse(null, 'Not implemented', 501);
+        $dto = UserDTO::fromUpdateRequest($request->all());
+
+        $updated = $this->service->update($dto->id, $dto->toArray());
+
+        if (!$updated) {
+            return $this->sendResponse(
+                false,
+                'No se pudo actualizar el usuario',
+                500
+            );
+        }
+        return $this->sendResponse(
+            true,
+            'Usuario actualizado con exito',
+            200
+        );
     }
 
     /**
@@ -55,40 +123,57 @@ class UserController extends Controller
      */
     public function destroy(string $id)
     {
-        //try delete user
-        try {
-            $user = User::find($id);
-            if ($user) {
-                $user->delete();
-                return $this->sendResponse(true, 'Usuario eliminado correctamente', 200);
-            }
-            return $this->sendResponse(false, 'No se encontro informacion', 404);
-        } catch (\Throwable $th) {
-            return $this->sendResponse(false, 'Usuario no disponible para eliminar.', 500);
+        $deleted = $this->service->delete($id);
+
+        if (!$deleted) {
+            return $this->sendResponse(
+                false,
+                'No se pudo eliminar el usuario',
+                500
+            );
         }
+        return $this->sendResponse(
+            true,
+            'Usuario eliminado con exito',
+            200
+        );
     }
 
-    public function findlikenombre(Request $request)
+    public function rolList()
     {
-        $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:50',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendResponse(null, $validator->errors()->first(), 422);
+        $roles = $this->service->get_rolList();
+        if (!$roles) {
+            return $this->sendResponse(
+                null,
+                'No se encontraron roles',
+                404
+            );
         }
 
-        $nombre = $request->input('nombre');
-        $users = User::where('name', 'like', "%$nombre%")->get();
+        return $this->sendResponse(
+            RolesResource::collection($roles),
+            'ok',
+            200,
+            false
 
-        if ($users->count() > 0) {
-            return $this->sendResponse(UserResource::collection($users), 'success');
-        }
-        return $this->sendResponse(null, 'No se encontraron usuarios con ese nombre', 404);
-        
-      
-       
-       
+        );
     }
-    
+    public function estadosList()
+    {
+        $estados = $this->service->get_estadoList();
+        if (!$estados) {
+            return $this->sendResponse(
+                null,
+                'No se encontraron estados de usuario',
+                404
+            );
+        }
+
+        return $this->sendResponse(
+            UserEstadosResource::collection($estados),
+            'ok',
+            200,
+            false
+        );
+    }
 }

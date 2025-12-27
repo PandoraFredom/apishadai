@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-
-class LoginRequest extends FormRequest
+class UserUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,24 +22,22 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100',
-            'password' => 'required|string|max:100',
+            'rol.id' => 'required|integer|exists:roles,id',
+            'estado.id' => 'required|integer|exists:user_estados,id',
         ];
     }
-
 
     public function messages(): array
     {
         return [
-            'name.required' => 'El campo nombre es obligatorio.',
-            'name.string' => 'El campo nombre debe ser una cadena de texto.',
-            'name.max' => 'El campo nombre no debe exceder los 100 caracteres.',
-            'password.required' => 'El campo contraseña es obligatorio.',
-            'password.string' => 'El campo contraseña debe ser una cadena de texto.',
-            'password.max' => 'El campo contraseña no debe exceder los 100 caracteres.',
+            'rol.id.required' => 'El campo rol es obligatorio.',
+            'rol.id.integer' => 'El campo rol debe ser un número entero.',
+            'rol.id.exists' => 'El rol seleccionado no es válido.',
+            'estado.id.required' => 'El campo estado es obligatorio.',
+            'estado.id.integer' => 'El campo estado debe ser un número entero.',
+            'estado.id.exists' => 'El estado seleccionado no es válido.',
         ];
     }
-
     /**
      * Summary of failedValidation
      * @param Validator $validator

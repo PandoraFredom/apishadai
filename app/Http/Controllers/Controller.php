@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\AbstractPaginator;
-
+use Illuminate\Support\Facades\Log;
 /**
  * Clase base Controller
  */
@@ -130,4 +130,13 @@ abstract class Controller
             ['Content-Type' => $contentType]
         )->setStatusCode($statusCode);
     }
+
+    protected function logError(string $location ,\Exception $e){
+        Log::error("Error en: $location", [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+
+
 }

@@ -14,11 +14,11 @@ class UserEstadosResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return [ 
+        return [
             'id' => $this->id,
             'descripcion' => $this->descripcion,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => null,
+            'updated_at' => null,
         ];
     }
 }

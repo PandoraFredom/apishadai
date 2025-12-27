@@ -19,8 +19,8 @@ class TipoTiempoResource extends JsonResource
             'nombre' => $this->nombre,
             'cantidad' => $this->cantidad,
             'unidad' => $this->unidad,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => null,
+            'updated_at' => null,
         ];
     }
 }

@@ -12,12 +12,9 @@ use App\Interfaces\Config\ModulosRepositoryInterface;
 
 class ModulosController extends Controller
 {
-  
 
-    public function __construct(private ModulosRepositoryInterface $service)
-    {
 
-    }
+    public function __construct(private ModulosRepositoryInterface $service) {}
     /**
      * Display a listing of the resource.
      */
@@ -35,7 +32,6 @@ class ModulosController extends Controller
             );
         }
         return $this->sendResponse(null, 'No se encontro informacion', 404);
-
     }
 
     /**
@@ -44,16 +40,16 @@ class ModulosController extends Controller
     public function store(ModuloRequest $request)
     {
         try {
-            $dto = ModulosDTO::fromRequest($request->all());
+            $dto = ModulosDTO::fromRequest($request->Validated());
             $data = $this->service->create($dto->toArray());
             if ($data) {
                 return $this->sendResponse(true, 'Modulo creado con exito');
             }
             return $this->sendResponse(false, 'Error al crear el modulo', 500);
         } catch (\Throwable $th) {
-            return $this->sendResponse(false, 'Error al crear el modulo: ' . $th->getMessage(), 500);
+            $this->logError('ModulosController store', $th);
+            return $this->sendResponse(false, 'Error al crear el modulo: ', 500);
         }
-
     }
 
     /**
@@ -70,6 +66,7 @@ class ModulosController extends Controller
 
             );
         }
+
         return $this->sendResponse(null, 'No se encontro informacion', 404);
     }
 
@@ -79,14 +76,15 @@ class ModulosController extends Controller
     public function update(ModuloUpdateRequest $request)
     {
         try {
-            $dto = ModulosDTO::fromUpdateRequest($request->all());
+            $dto = ModulosDTO::fromUpdateRequest($request->Validated());
             $data = $this->service->update($dto->id, $dto->toUpdateArray());
             if ($data) {
                 return $this->sendResponse(true, 'Modulo actualizado con exito');
             }
             return $this->sendResponse(false, 'Error al actualizar el modulo', 500);
         } catch (\Throwable $th) {
-            return $this->sendResponse(false, 'Error al actualizar el modulo: ' . $th->getMessage(), 500);
+            $this->logError('ModulosController update', $th);
+            return $this->sendResponse(false, 'Error al actualizar el modulo: ' . $th, 500);
         }
     }
 

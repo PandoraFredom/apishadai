@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\DTOs\StockDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockRequest;
-use App\Http\Resources\StocksResource;
+use App\Http\Resources\Stock\StocksResource;
 use App\Interfaces\Config\StockRepositoryInterface;
 use Illuminate\Http\Request;
 
@@ -31,12 +31,20 @@ class StocksController extends Controller
      */
     public function store(StockRequest $request)
     {
-        $dto = StockDTO::fromRequest($request);
+        try {
+             $dto = StockDTO::fromRequest($request->validated());
         $created = $this->service->create($dto->toArray());
         if (!$created) {
             return $this->sendResponse(false, 'Error creating stock', 500);
         }
         return $this->sendResponse(true, 'Stock created successfully', 201);
+        } catch (\Throwable $th) {
+            $this->logError('StocksController store', $th);
+            return $this->sendResponse(false, 'Error al crear stock.', 500);
+        }
+
+
+
     }
 
     /**
@@ -56,12 +64,8 @@ class StocksController extends Controller
      */
     public function update(Request $request)
     {
-        $dto = StockDTO::fromRequest($request);
-        $updated = $this->service->update($dto->id, $dto->toArray());
-        if (!$updated) {
-            return $this->sendResponse(false, 'Error updating stock', 500);
-        }
-        return $this->sendResponse(true, 'Stock updated successfully', 200);
+       // not implemented
+       return $this->sendResponse(null, 'Not implemented', 501);
     }
 
     /**
@@ -71,7 +75,7 @@ class StocksController extends Controller
     {
         $deleted = $this->service->delete($id);
         if (!$deleted) {
-            return $this->sendResponse(false, 'Error deleting stock', 500);
+            return $this->sendResponse(false, 'Stock no disponible para eliminar.', 500);
         }
         return $this->sendResponse(true, 'Stock deleted successfully', 200);
     }

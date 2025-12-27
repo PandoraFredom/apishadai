@@ -1,24 +1,21 @@
 <?php
 
 
-use App\Http\Controllers\API\RolesController;
+
 use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\UserEstadosController;
-use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('user')->group(function () {
 
-    Route::get('/cargarUsuarios', [UserController::class, 'index']);
-    Route::post('/crearUsuario', [AuthController::class, 'register']);
-    Route::put('/actualizarUsuario', [AuthController::class, 'update']);
-    Route::delete('/eliminarUsuario/{id}', [UserController::class, 'destroy']);
-    Route::get('/buscarUsuario/{id}', [UserController::class, 'show']);
-    Route::get('/findbyname', [UserController::class, 'findLikeNombre']);
+    Route::get('/listar', [UserController::class, 'index']);
+    Route::post('/crear', [UserController::class, 'store']);
+    Route::put('/actualizar', [UserController::class, 'update']);
+    Route::get('/buscar/{id}', [UserController::class, 'show']);
+    Route::delete('/eliminar/{id}', [UserController::class, 'destroy']);
 
     //==================================ROLES==============================
-    Route::get('/usuarioRoles', [RolesController::class, 'index']);
+    Route::get('/roles', [UserController::class, 'rolList']);
 
     //==================================ESTADOS==============================
-    Route::get('/estadoUsuario', [UserEstadosController::class, 'index']);
+    Route::get('/estados', [UserController::class, 'estadosList']);
 });

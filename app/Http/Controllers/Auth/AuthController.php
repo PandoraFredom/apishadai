@@ -3,143 +3,81 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use App\Models\Device;
 use App\Models\MatchTokens;
 use App\Models\Permisos;
-use App\Models\User;
 use App\Services\EncryptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-  
-
-    public function __construct(private EncryptionService $encService)
-    {
-       
-    }
 
 
-    public function login(Request $request)
+    public function __construct(private EncryptionService $encService) {}
+
+
+    public function login(LoginRequest $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:100',
-                'password' => 'required|string|max:100',
-            ]);
-
-            if ($validator->fails()) {
-                return $this->sendResponse(null, "login failed:" . $validator->errors()->first(), 400);
-            }
-
-            $credentials = $request->only('name', 'password');
-
-            if (!$token = auth()->attempt($credentials)) {
-                return $this->sendResponse(null, 'Credenciales incorrectas', 401);
-            }
 
             $deviceInfo = $this->getDeviceInfo($request);
 
-            if (!$deviceInfo) {
-                $ip_shash = $this->encService->genHash($request['ip']);
-                return $this->sendResponse(null, "Error al obtener la informacion del dispositivo:$ip_shash", 401);// remover en produccion 
+            if ($deviceInfo == null) {
+                $ip_shash = $this->encService->genHash($request['name']);
+                return $this->sendResponse(null, "Error al obtener la informacion del dispositivo-login:$ip_shash", 401); // remover en produccion
             }
+            $credentials = $request->only('name', 'password');
+
+            $credentials['name'] = $this->encService->genHash($credentials['name']);
+
+            if (!$token = Auth::attempt($credentials)) {
+                return $this->sendResponse(null, 'Credenciales incorrectas.', 401);
+            }
+
+
 
             $encToken = $this->encService->encrypt($token);
-            if ($deviceInfo !== null) {
-                $this->deleteMatchTokenUser(auth()->user()->id);
 
-                $data = [
-                    'usuario' => auth()->user()->id,
-                    'device' => $deviceInfo->id,
-                    'token' => $encToken
-                ];
-                $savematch = MatchTokens::create($data);
-                if (!$savematch) {
-                    return $this->sendResponse(null, 'Error al crear login:1', 500);
-                }
-                $permisos = $this->getPermisosUser(auth()->user()->id);
+            $this->deleteMatchTokenUser(Auth::user()->id);
 
-
-                if ($permisos->isEmpty()) {
-                    return $this->sendResponse(null, 'No tiene permisos asignados:' . auth()->user()->id, 403);
-                }
-                $data = [
-                    'token' => $encToken,
-                    'uname' => auth()->user()->nombre,
-                    'urol' => auth()->user()->Rol->descripcion,
-                    'stockname' => $deviceInfo->Stock->descripcion,
-                    'stockid' => $deviceInfo->Stock->id,
-                    'deviceid' => $deviceInfo->id,
-                    'spermisos' => $permisos,
-                ];
-
-                return $this->sendResponse($data, 'login success');
+            $data = [
+                'usuario' => Auth::user()->id,
+                'device' => $deviceInfo->id,
+                'token' => $encToken
+            ];
+            $savematch = MatchTokens::create($data);
+            if (!$savematch) {
+                return $this->sendResponse(null, 'Error al crear login:1', 500);
             }
-            return $this->sendResponse(null, 'Error al crear login:2:', 500);
+            $permisos = $this->getPermisosUser(Auth::user()->id);
 
+
+            if ($permisos->isEmpty()) {
+                return $this->sendResponse(null, 'No tiene permisos asignados:' . Auth::user()->id, 403);
+            }
+            $data = [
+                'token' => $encToken,
+                'uname' => Auth::user()->nombre,
+                'urol' => Auth::user()->Rol->descripcion,
+                'stockname' => $deviceInfo->Stock->descripcion,
+                'stockid' => $deviceInfo->Stock->id,
+                'deviceid' => $deviceInfo->id,
+                'spermisos' => $permisos,
+            ];
+
+            return $this->sendResponse($data, 'login success');
         } catch (\Exception $e) {
             return $this->sendResponse(null, 'Error al crear login:3::' . $e->getMessage(), 500);
         }
     }
 
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|unique:users,nombre',
-            'rol.id' => 'required|integer|exists:roles,id',
-            'name' => 'required|string|min:5',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:5',
-            'estado.id' => 'required|integer|exists:user_estados,id',
-        ]);
 
-        $input = $request->all();
 
-        if ($validator->fails()) {
-            return $this->sendResponse(false, $validator->errors()->first() . $input['password'], 500);
-        }
 
-        $input['password'] = bcrypt($input['password']);
-        $input['name'] = bcrypt($input['name']);
-        $input['rol'] = $input['rol']['id'];
-        $input['estado'] = $input['estado']['id'];
-        $user = User::create($input);
-        if ($user) {
-            return $this->sendResponse(true, 'register success');
-        }
-        return $this->sendResponse(false, 'register failed', 500);
-    }
-
-    public function update(Request $request)
-    {
-        try {
-            $validate = Validator::make($request->all(), [
-                'id' => "required|integer|exists:users,id",
-                'rol.id' => "required|integer|exists:roles,id",
-                'estado.id' => "required|integer|exists:user_estados,id",
-            ]);
-
-            if ($validate->fails()) {
-                return $this->sendResponse(false, $validate->errors()->first(), 500);
-            }
-            $id = $request->id;
-            $input = [
-                'rol' => $request->rol['id'],
-                'estado' => $request->estado['id'],
-            ];
-
-            $update = User::find($id)->update($input);
-            if ($update) {
-                return $this->sendResponse(true, 'update success');
-            }
-            return $this->sendResponse(false, 'update failed', 500);
-        } catch (\Exception $e) {
-            return $this->sendResponse(false, "update failed: {$e->getMessage()}", 500);
-        }
-    }
 
     public function logout(Request $request)
     {
@@ -158,7 +96,7 @@ class AuthController extends Controller
 
                     MatchTokens::where('token', $token)->delete();
 
-                    auth()->logout();
+                    Auth::logout();
 
                     return $this->sendResponse(true, 'logout success');
                 }
@@ -177,8 +115,9 @@ class AuthController extends Controller
                 ->where('ip2', $this->encService->genHash($request->ip()))
                 ->where('name', $this->encService->genHash($request['name']))
                 ->first();
+            return $device;
         }
-        return $device;
+        return null;
     }
 
 

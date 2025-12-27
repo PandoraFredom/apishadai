@@ -16,12 +16,13 @@ class PermisosResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'usuario' => $this->Usuario,
+            'usuario' => $this->usuario,
             'modulo' => $this->Modulo,
             'vista' => $this->Vista,
             'actionvista' => $this->Actionvista,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'tipo_tiempo' => $this->tipoTiempo,
+            'created_at' => null,
+            'updated_at' => null
         ];
     }
 }

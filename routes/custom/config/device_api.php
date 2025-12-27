@@ -10,11 +10,7 @@ Route::prefix('device')->group(function () {
     Route::delete('/eliminar/{id}', [App\Http\Controllers\DeviceController::class, 'destroy']);
 
     //estados
-    Route::get('/estados', [App\Http\Controllers\API\DeviceEstadoController::class, 'index']);
+    Route::get('/estados', [App\Http\Controllers\DeviceController::class, 'estadosList']);
     //stocks
-    Route::get('/stocks', [App\Http\Controllers\API\StocksController::class, 'index']);
-
+    Route::get('/stocks', [App\Http\Controllers\DeviceController::class, 'stockList']);
 });
-
-
-

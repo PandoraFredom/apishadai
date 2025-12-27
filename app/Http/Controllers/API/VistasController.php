@@ -17,10 +17,7 @@ use App\Interfaces\Config\VistaRepositoryInterface;
 class VistasController extends Controller
 {
 
-    public function __construct(private VistaRepositoryInterface $service)
-    {
-
-    }
+    public function __construct(private VistaRepositoryInterface $service) {}
 
     /**
      * Display a listing of the resource.
@@ -44,7 +41,7 @@ class VistasController extends Controller
      */
     public function store(VistaRequest $request)
     {
-        $dto = VistaDTO::fromRequest($request->all());
+        $dto = VistaDTO::fromRequest($request->Validated());
 
         if ($this->service->exist_samenameWhithModuleId($dto->nombre, $dto->modulo) != null) {
             return $this->sendResponse(false, 'Ya existe una vista con el mismo nombre y modulo', 422);
@@ -57,6 +54,7 @@ class VistasController extends Controller
             }
             return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
         } catch (\Throwable $e) {
+            $this->logError('Error al crear la vista: ', $e);
             return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
         }
     }
@@ -78,13 +76,17 @@ class VistasController extends Controller
      */
     public function update(VistaUpdateRequest $request)
     {
-        $dto = VistaDTO::fromUpdateRequest($request->all());
-        $update = $this->service->update($dto->id, $dto->toUpdateArray());
-        if ($update) {
-            return $this->sendResponse(true, 'Vista actualizada');
+        try {
+            $dto = VistaDTO::fromUpdateRequest($request->Validated());
+            $update = $this->service->update($dto->id, $dto->toUpdateArray());
+            if ($update) {
+                return $this->sendResponse(true, 'Vista actualizada');
+            }
+            return $this->sendResponse(false, 'No se econtro informacion', 500);
+        } catch (\Throwable $th) {
+            $this->logError('Error al actualizar la vista: ', $th);
+            return $this->sendResponse(false, 'No se pudo actualizar la informacion', 500);
         }
-        return $this->sendResponse(false, 'No se econtro informacion', 500);
-
     }
 
     /**
@@ -164,11 +166,16 @@ class VistasController extends Controller
     }
     public function createAccion(AccionesVistaRequest $request)
     {
-        $dto = AccionesVistaDTO::fromRequest($request->all());
-        $create = $this->service->createAccion($dto->toArray());
-        if (!$create) {
+        try {
+            $dto = AccionesVistaDTO::fromRequest($request->Validated());
+            $create = $this->service->createAccion($dto->toArray());
+            if (!$create) {
+                return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
+            }
+            return $this->sendResponse(true, 'Accion creada');
+        } catch (\Throwable $th) {
+            $this->logError('Error al crear la accion de la vista: ', $th);
             return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
         }
-        return $this->sendResponse(true, 'Accion creada');
     }
 }

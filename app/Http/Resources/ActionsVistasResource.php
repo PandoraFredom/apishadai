@@ -16,11 +16,11 @@ class ActionsVistasResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'vista' => $this->Vista,
+            'vista' => null,
             'codigo' => $this->codigo,
             'nombre' => $this->nombre,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-        ];	
+            'created_at' => null,
+            'updated_at' => null,
+        ];
     }
 }

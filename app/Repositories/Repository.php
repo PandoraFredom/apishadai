@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
@@ -16,7 +17,7 @@ abstract class Repository implements RepositoryInterface
     protected array $defaultRelations = [];
     protected int $perPage = 15;
 
-    protected  array $orderBy = ["id","DESC"];
+    protected  array $orderBy = ["id", "DESC"];
 
     public function __construct(Model $model)
     {
@@ -53,7 +54,7 @@ abstract class Repository implements RepositoryInterface
                 $query->with($this->defaultRelations);
             }
 
-            return $query->orderByBy($this->orderBy[0], $this->orderBy[1])->paginate($this->perPage);
+            return $query->orderBy($this->orderBy[0], $this->orderBy[1])->paginate($this->perPage);
         } catch (\Exception $e) {
             Log::error('Repository::paginate - ' . $e->getMessage(), [
                 'model' => get_class($this->model),
@@ -87,6 +88,29 @@ abstract class Repository implements RepositoryInterface
             return null;
         }
     }
+
+    public function findOrFail(int $id): Model
+    {
+        try {
+            $query = $this->model->newQuery();
+
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->findOrFail($id);
+        } catch (\Exception $e) {
+            Log::error('Repository::findOrFail - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'id' => $id,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            throw $e;
+        }
+    }
+
 
     public function create(array $data): bool
     {
@@ -168,7 +192,7 @@ abstract class Repository implements RepositoryInterface
         }
     }
 
-    protected function filterEmptyData(array $data): array
+    private function filterEmptyData(array $data): array
     {
         try {
             return array_filter($data, function ($value) {
@@ -188,6 +212,7 @@ abstract class Repository implements RepositoryInterface
                     return false;
                 }
 
+
                 return true;
             });
         } catch (\Exception $e) {
@@ -198,6 +223,82 @@ abstract class Repository implements RepositoryInterface
                 'line' => $e->getLine(),
             ]);
             return [];
+        }
+    }
+
+    // exists method to find if a record exists based on given conditions
+    public function exists(array $conditions): bool
+    {
+        try {
+            $query = $this->model->newQuery();
+
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+
+            return $query->exists();
+
+        } catch (\Exception $e) {
+            Log::error('Repository::exists - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'conditions' => $conditions,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return false;
+        }
+    }
+
+    public function whereList(array $conditions): Collection
+    {
+
+        try {
+            $query = $this->model->newQuery();
+
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->get();
+        } catch (\Exception $e) {
+            Log::error('Repository::whereList - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'conditions' => $conditions,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return new Collection();
+        }
+    }
+    public function whereFirst(array $conditions): ?Model
+    {
+        try {
+            $query = $this->model->newQuery();
+
+            foreach ($conditions as $column => $value) {
+                $query->where($column, $value);
+            }
+
+            if (!empty($this->defaultRelations)) {
+                $query->with($this->defaultRelations);
+            }
+
+            return $query->first();
+        } catch (\Exception $e) {
+            Log::error('Repository::whereFirst - ' . $e->getMessage(), [
+                'model' => get_class($this->model),
+                'conditions' => $conditions,
+                'exception' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            return null;
         }
     }
 }

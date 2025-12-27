@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Device;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 
-class LoginRequest extends FormRequest
+class DeviceUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,24 +23,19 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100',
-            'password' => 'required|string|max:100',
+            'id' => 'required|integer|exists:devices,id',
+            'estado.id' => 'required|integer|exists:device_estado,id',
         ];
     }
-
 
     public function messages(): array
     {
         return [
-            'name.required' => 'El campo nombre es obligatorio.',
-            'name.string' => 'El campo nombre debe ser una cadena de texto.',
-            'name.max' => 'El campo nombre no debe exceder los 100 caracteres.',
-            'password.required' => 'El campo contraseña es obligatorio.',
-            'password.string' => 'El campo contraseña debe ser una cadena de texto.',
-            'password.max' => 'El campo contraseña no debe exceder los 100 caracteres.',
+            'estado.id.required' => 'El campo estado.id es obligatorio.',
+            'estado.id.integer' => 'El campo estado.id debe ser un número entero.',
+            'estado.id.exists' => 'El estado.id proporcionado no existe en la base de datos.',
         ];
     }
-
     /**
      * Summary of failedValidation
      * @param Validator $validator
