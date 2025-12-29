@@ -12,13 +12,17 @@ use App\Http\Resources\ActionsVistasResource;
 use App\Http\Resources\Modulos\ModulosResourceCbx;
 use App\Http\Resources\VistaEstadosResource;
 use App\Http\Resources\Vistas\VistasResource;
+use App\Interfaces\Config\AccionesVistaService;
 use App\Interfaces\Config\VistaRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 
 class VistasController extends Controller
 {
 
-    public function __construct(private VistaRepositoryInterface $service) {}
+    public function __construct(
+        private VistaRepositoryInterface $service,
+        private AccionesVistaService $accionesVistaService
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -170,6 +174,20 @@ class VistasController extends Controller
     {
         try {
             $dto = AccionesVistaDTO::fromRequest($request->Validated());
+            $existcodigo = $this->accionesVistaService->exists([
+                'codigo' => $dto->codigo
+            ]);
+            if ($existcodigo) {
+                return $this->sendResponse(false, 'Ya existe una accion con el mismo codigo para esta vista', 422);
+            }
+
+            $existnombre = $this->accionesVistaService->exists([
+                'nombre' => $dto->nombre,
+            ]);
+            if ($existnombre) {
+                return $this->sendResponse(false, 'Ya existe una accion con el mismo nombre para esta vista', 422);
+            }
+
             $create = $this->service->createAccion($dto->toArray());
             if (!$create) {
                 return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
@@ -177,7 +195,7 @@ class VistasController extends Controller
             return $this->sendResponse(true, 'Accion creada');
         } catch (\Throwable $th) {
             $this->logError('Error al crear la accion de la vista: ', $th);
-            return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
+            return $this->sendResponse(false, 'No se pudo crear la informacion: ' . $th->getMessage(), 500);
         }
     }
 }

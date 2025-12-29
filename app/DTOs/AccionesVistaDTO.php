@@ -25,7 +25,7 @@ class AccionesVistaDTO
     {
         return [
             'vista' => $this->vista,
-            'codigo' => str($this->codigo)->upper(),
+            'codigo' => $this->codigo,
             'nombre' => $this->nombre,
         ];
     }

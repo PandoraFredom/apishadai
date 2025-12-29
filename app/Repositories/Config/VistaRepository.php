@@ -13,9 +13,9 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
 {
     public function __construct(
         Vistas $model,
-        private VistaEstadosService $estadoRepository,
-        private ModulosRepositoryInterface $moduloRepository,
-        private AccionesVistaService $accionesVistaRepository
+        private VistaEstadosService $estadosService,
+        private ModulosRepositoryInterface $moduloService,
+        private AccionesVistaService $accionesVistaService,
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['modulo', 'estado'];
@@ -46,23 +46,23 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
     }
     public function estadosList()
     {
-        return $this->estadoRepository->getAll();
+        return $this->estadosService->getAll();
     }
     public function modulosList()
     {
-        return $this->moduloRepository->getAll();
+        return $this->moduloService->getAll();
     }
 
     public function acctionList($vistaId)
     {
-        return $this->accionesVistaRepository->findByVista($vistaId);
+        return $this->accionesVistaService->findByVista($vistaId);
     }
     public function createAccion(array $data): bool
     {
-        return $this->accionesVistaRepository->create($data);
+        return $this->accionesVistaService->create($data);
     }
     public function deleteAccion($id): bool
     {
-        return $this->accionesVistaRepository->delete($id);
+        return $this->accionesVistaService->delete($id);
     }
 }
