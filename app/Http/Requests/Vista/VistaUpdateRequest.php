@@ -22,6 +22,7 @@ class VistaUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => 'required|integer|exists:vistas,id',
             'estado.id' => 'required|integer|exists:vista_estados,id',
         ];
     }
@@ -29,6 +30,10 @@ class VistaUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'id.required' => 'El campo id es obligatorio.',
+            'id.integer' => 'El campo id debe ser un número entero.',
+            'id.exists' => 'La vista especificada no existe.',
+
             'estado.id.required' => 'El campo estado es obligatorio.',
             'estado.id.integer' => 'El campo estado debe ser un número entero.',
             'estado.id.exists' => 'El estado seleccionado no es válido.',

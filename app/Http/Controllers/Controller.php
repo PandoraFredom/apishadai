@@ -131,7 +131,7 @@ abstract class Controller
         )->setStatusCode($statusCode);
     }
 
-    protected function logError(string $location ,\Exception $e){
+    protected function logError(string $location ,\Throwable $e){
         Log::error("Error en: $location", [
             'error' => $e->getMessage(),
             'trace' => $e->getTraceAsString()

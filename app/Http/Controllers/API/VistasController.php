@@ -13,6 +13,7 @@ use App\Http\Resources\Modulos\ModulosResourceCbx;
 use App\Http\Resources\VistaEstadosResource;
 use App\Http\Resources\Vistas\VistasResource;
 use App\Interfaces\Config\VistaRepositoryInterface;
+use Illuminate\Http\JsonResponse;
 
 class VistasController extends Controller
 {
@@ -22,7 +23,7 @@ class VistasController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $list = $this->service->paginate();
         if (!$list) {
@@ -39,7 +40,7 @@ class VistasController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(VistaRequest $request)
+    public function store(VistaRequest $request): JsonResponse
     {
         $dto = VistaDTO::fromRequest($request->Validated());
 
@@ -62,7 +63,7 @@ class VistasController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
         $obj = $this->service->findById($id);
         if (!$obj) {
@@ -74,11 +75,12 @@ class VistasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(VistaUpdateRequest $request)
+    public function update(VistaUpdateRequest $request): JsonResponse
     {
         try {
             $dto = VistaDTO::fromUpdateRequest($request->Validated());
             $update = $this->service->update($dto->id, $dto->toUpdateArray());
+
             if ($update) {
                 return $this->sendResponse(true, 'Vista actualizada');
             }
@@ -92,7 +94,7 @@ class VistasController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
         $delete = $this->service->delete($id);
         if (!$delete) {
@@ -101,7 +103,7 @@ class VistasController extends Controller
         return $this->sendResponse(true, 'Vista eliminada');
     }
 
-    public function findbyModule(string $id)
+    public function findbyModule(string $id): JsonResponse
     {
         $list = $this->service->findByModule($id);
         if (!$list) {
@@ -115,7 +117,7 @@ class VistasController extends Controller
         );
     }
 
-    public function estadosList()
+    public function estadosList(): JsonResponse
     {
         $list = $this->service->estadosList();
         if (!$list) {
@@ -128,7 +130,7 @@ class VistasController extends Controller
             false
         );
     }
-    public function modulosList()
+    public function modulosList(): JsonResponse
     {
         $list = $this->service->modulosList();
         if (!$list) {
@@ -143,7 +145,7 @@ class VistasController extends Controller
     }
 
 
-    public function acctionList($vistaId)
+    public function acctionList($vistaId): JsonResponse
     {
         $list = $this->service->acctionList($vistaId);
         if (!$list) {
@@ -156,7 +158,7 @@ class VistasController extends Controller
             false
         );
     }
-    public function deleteAccion($id)
+    public function deleteAccion($id): JsonResponse
     {
         $delete = $this->service->deleteAccion($id);
         if (!$delete) {
@@ -164,7 +166,7 @@ class VistasController extends Controller
         }
         return $this->sendResponse(true, 'Accion eliminada');
     }
-    public function createAccion(AccionesVistaRequest $request)
+    public function createAccion(AccionesVistaRequest $request): JsonResponse
     {
         try {
             $dto = AccionesVistaDTO::fromRequest($request->Validated());

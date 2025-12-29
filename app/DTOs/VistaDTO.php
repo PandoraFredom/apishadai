@@ -10,8 +10,7 @@ class VistaDTO
         public readonly string $nombre,
         public readonly int $estado,
         public readonly string $codigo
-    ) {
-    }
+    ) {}
 
     /**
      * Crea DTO desde request (sin ID)
@@ -19,7 +18,7 @@ class VistaDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            id: null,
+            id: (int) ($data['id'] ?? null),
             modulo: (int) ($data['modulo']['id'] ?? 0),
             nombre: trim($data['nombre'] ?? ''),
             estado: (int) ($data['estado']['id'] ?? 1),
@@ -47,11 +46,8 @@ class VistaDTO
     public function toUpdateArray(): array
     {
         return array_filter([
-            'modulo' => null,
-            'nombre' => null,
             'estado' => $this->estado,
-            'codigo' => null,
-        ], fn($value) => $value !== null);
+        ]);
     }
 
     /**
