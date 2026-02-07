@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
 
 class StockRequest extends FormRequest
 {
@@ -41,4 +43,21 @@ class StockRequest extends FormRequest
         ];
     }
 
+
+
+    /**
+     * Summary of failedValidation
+     * @param Validator $validator
+     * @throws ValidationException
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        $response = [
+            'message' => $validator->errors()->first(),
+            'code' => 400,
+            'data' => null,
+        ];
+        http_response_code(400);
+        exit(json_encode($response));
+    }
 }

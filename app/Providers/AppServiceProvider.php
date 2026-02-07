@@ -12,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
 {
 
     public array $bindings = [
-
+        //-------------------------------- CONFIG ---------------------------------
         \App\Interfaces\RepositoryInterface::class => \App\Repositories\Repository::class,
         \App\Interfaces\Config\ModulosRepositoryInterface::class => \App\Repositories\Config\ModuloRepository::class,
         \App\Interfaces\Config\VistaRepositoryInterface::class => \App\Repositories\Config\VistaRepository::class,
@@ -27,6 +27,18 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\DeviceEstadoService::class => \App\Repositories\Config\DeviceEstadoRepository::class,
         \App\Interfaces\Config\DeviceService::class => \App\Repositories\Config\DeviceRepository::class,
 
+        //-------------------------------- PROMOS ---------------------------------
+        \App\Interfaces\Promos\PromoEstadosService::class => \App\Repositories\promos\PromoEstadosRepository::class,
+        \App\Interfaces\Promos\PromocionesService::class =>  \App\Repositories\promos\PromosRepository::class,
+        \App\Interfaces\Promos\TicketService::class =>  \App\Repositories\promos\TicketRepository::class,
+
+            //-------------------------------- CLIENTES ---------------------------------
+        \App\Interfaces\Clientes\ClienteService::class => \App\Repositories\Cliente\ClienteRepository::class,
+        //-------------------------------- UBICACION ---------------------------------
+        \App\Interfaces\Ubicacion\DepartamentosService::class => \App\Repositories\Ubicacion\DepartamentosRepository::class,
+        \App\Interfaces\Ubicacion\MunicipiosService::class => \App\Repositories\Ubicacion\MunicipiosRepository::class,
+
+
     ];
 
     /**
@@ -40,5 +52,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Se removieron logs de SQL en desarrollo.
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\RepositoryException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -19,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->group('api', [
-             \App\Http\Middleware\DeviceSecurityMiddleware::class,
+            \App\Http\Middleware\DeviceSecurityMiddleware::class,
             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);
 
@@ -27,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\JWTAuthenticationMiddleware::class,
             // \App\Http\Middleware\MatchTokenMiddleware::class,
             //\App\Http\Middleware\ModuleSecurityMiddleware::class
-              \App\Http\Middleware\DeviceSecurityMiddleware::class,
+            \App\Http\Middleware\DeviceSecurityMiddleware::class,
             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);
     })
@@ -89,5 +90,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 401);
             }
         });
+        //RepositoryException
 
+        $exceptions->render(function (RepositoryException $e, Request $request) {
+            if ($request->is('api/*')) {
+                return $e->render();
+            }
+        });
     })->create();

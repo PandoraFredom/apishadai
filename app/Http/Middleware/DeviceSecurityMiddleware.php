@@ -37,7 +37,7 @@ class DeviceSecurityMiddleware
             ->first();
 
         if (!$device) {
-            return $this->sendResponse(null, 'Dispositivo no registrado:' . $this->encService->genHash($info['name']), 401);
+            return $this->sendResponse(null, 'Dispositivo no registrado:' . $this->encService->genHash($info['ip']), 401);
         }
 
         $status = $device->Estado->descripcion ?? null;

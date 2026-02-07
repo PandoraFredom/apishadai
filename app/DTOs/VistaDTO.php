@@ -22,7 +22,7 @@ class VistaDTO
             modulo: (int) ($data['modulo']['id'] ?? 0),
             nombre: trim($data['nombre'] ?? ''),
             estado: (int) ($data['estado']['id'] ?? 1),
-            codigo: strtoupper(trim($data['codigo'] ?? ''))
+            codigo: strtolower(trim($data['codigo'] ?? ''))
         );
     }
 

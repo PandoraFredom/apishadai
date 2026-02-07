@@ -2,56 +2,59 @@
 
 namespace App\Http\Controllers\API;
 
+use App\DTOs\PromosDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Promos\PromosRequest;
+use App\Http\Requests\Promos\PromosUpdateRequest;
+use App\Http\Requests\Util\FilterRequest;
 use App\Http\Resources\PromocionesResource;
-use App\Models\Promociones;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use App\Http\Resources\PromoEstadoResource;
+use App\Interfaces\Promos\PromocionesService;
+
 
 class PromocionesController extends Controller
 {
+
+    public function __construct(private PromocionesService $service) {}
+
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        // ultimos 15 registros
-        $list = Promociones::orderBy('id', 'desc')->take(15)->get();
-
+        $list = $this->service->paginate();
         if ($list->isEmpty()) {
-            return $this->sendResponse(null, 'No hay datos para mostrar', 404);
+            return $this->sendResponse(null, 'No hay promociones disponibles.', 404);
         }
-        return $this->sendResponse(PromocionesResource::collection($list), 'Lista de promociones', 200);
+        return $this->sendResponse(PromocionesResource::collection($list), 'ok', 200, true);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PromosRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'nombre' => 'required|string|max:255',
-            'descripcion' => 'required|string|max:255',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date',
-            'estado.id' => 'required|integer|exists:promoestado,id',
-        ]);
-        if ($validator->fails()) {
-            return $this->sendResponse(false, $validator->errors()->first(), 422);
-        }
-        $input = [
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'fecha_inicio' =>  date('Y-m-d', strtotime($request->fecha_inicio)),
-            'fecha_fin' => date('Y-m-d', strtotime($request->fecha_fin)),
-            'estado' => $request->estado['id'],
-        ];
 
-        $promocion = Promociones::create($input);
-        if ($promocion) {
-            return $this->sendResponse(true, 'Promocion creada');
+        try {
+            $dto = PromosDTO::fromRequest($request->validated());
+            $data = [
+                'nombre' => $dto->nombre,
+                'descripcion' => $dto->descripcion,
+                'fecha_inicio' =>  date('Y-m-d', strtotime($dto->fecha_inicio)),
+                'fecha_fin' => date('Y-m-d', strtotime($dto->fecha_fin)),
+                'estado' => $dto->estado,
+            ];
+
+            $create = $this->service->create($data);
+            if (!$create) {
+                return $this->sendResponse(false, 'Error al crear la promoción.', 500);
+            }
+            return $this->sendResponse(true, 'Promoción creada exitosamente.', 201);
+        } catch (\Throwable $th) {
+            $this->logError('PromocionesController store', $th);
+            return $this->sendResponse(false, 'Error inesperado al crear la promoción.', 500);
         }
-        return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
     }
 
     /**
@@ -59,36 +62,29 @@ class PromocionesController extends Controller
      */
     public function show(string $id)
     {
-        $promocion = Promociones::find($id);
-        if (!$promocion) {
-            return $this->sendResponse(null, 'No se encontro la promocion', 404);
+        $promo = $this->service->findById($id);
+        if (!$promo) {
+            return $this->sendResponse(null, 'Promoción no encontrada.', 404);
         }
-        return $this->sendResponse(PromocionesResource::make($promocion), 'Promocion encontrada', 200);
+        return $this->sendResponse(PromocionesResource::make($promo), 'ok');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(PromosUpdateRequest $request)
     {
+        try {
+            $dto = PromosDTO::fromUpdateRequest($request->validated());
 
-        $validator = Validator::make($request->all(), [
-            'estado.id' => 'required|integer|exists:promoestado,id',
-        ]);
-        if ($validator->fails()) {
-            return $this->sendResponse(false, $validator->errors()->first(), 422);
-        }
-        $promocion = Promociones::find($id);
-        if (!$promocion) {
-            return $this->sendResponse(false, 'No se encontro la promocion', 404);
-        }
-        $input = $request->all();
-        $input['estado'] = $input['estado']['id'];
-        $promocion->update($input);
-        if ($promocion) {
-            return $this->sendResponse(true, 'Promocion actualizada');
-        } else {
-            return $this->sendResponse(false, 'No se pudo actualizar la informacion', 500);
+            $update = $this->service->update($dto->id, $dto->toUpdateArray());
+            if (!$update) {
+                return $this->sendResponse(false, 'Error al actualizar la promoción.', 500);
+            }
+            return $this->sendResponse(true, 'Promoción actualizada exitosamente.', 200);
+        } catch (\Throwable $th) {
+            $this->logError('PromocionesController update', $th);
+            return $this->sendResponse(false, 'Error inesperado al actualizar la promoción.', 500);
         }
     }
 
@@ -97,59 +93,24 @@ class PromocionesController extends Controller
      */
     public function destroy(string $id)
     {
-
-        $promocion = Promociones::find($id);
-        if (!$promocion) {
-            return $this->sendResponse(false, 'No se encontro la promocion', 404);
-        }
-        if ($promocion->delete()) {
-            return $this->sendResponse(true, 'Promocion eliminada');
-        }
-        return $this->sendResponse(false, 'No se pudo eliminar la informacion', 500);
-    }
-
-
-
-    public function getactive()
-    {
-        $promocion = Promociones::join('promoestado', 'promoestado.id', '=', 'promociones.estado')
-            ->where('promoestado.descripcion', 'ACTIVO')->get(['promociones.*'])
-            ->first();
-        if (!$promocion) {
-            return $this->sendResponse(null, 'No hay promociones activas', 404);
-        }
-
-        return $this->sendResponse(PromocionesResource::make($promocion), 'Promocion activa');
-    }
-
-    public function filter(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'filterItem' => 'required|array',
-            'filterItem.*.key' => 'required|string',
-            'filterItem.*.value' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->sendResponse(null, $validator->errors()->first(), 422);
-        }
-
-        // filtrar por nombre like  
-        $query = Promociones::query();
-        foreach ($request->filterItem as $item) {
-            switch ($item['key']) {
-                case 'nombre':
-                    $query->where($item['key'], 'like', '%' . $item['value'] . '%');
-                    break;
-                default:
-                    $query->where($item['key'], $item['value']);
-                    break;
+        try {
+            $delete = $this->service->delete($id);
+            if (!$delete) {
+                return $this->sendResponse(false, 'Error al eliminar la promoción.', 500);
             }
+            return $this->sendResponse(true, 'Promoción eliminada exitosamente.', 200);
+        } catch (\Throwable $th) {
+            $this->logError('PromocionesController destroy', $th);
+            return $this->sendResponse(false, 'Promocion no disponible para eliminar.', 500);
         }
-        $list = $query->get();
-        if ($list->isEmpty()) {
-            return $this->sendResponse(null, 'No hay datos para mostrar', 404);
-        }
-        return $this->sendResponse(PromocionesResource::collection($list), 'Lista de promociones', 200);
+    }
+
+    public function filter(FilterRequest $request) {}
+
+
+    public function get_estadosList()
+    {
+        $estados = $this->service->get_estadosList();
+        return $this->sendResponse(PromoEstadoResource::collection($estados), 'ok');
     }
 }

@@ -9,22 +9,18 @@ use Illuminate\Pagination\LengthAwarePaginator;
 interface RepositoryInterface
 {
     public function getAll(): Collection;
-
     public function paginate(): LengthAwarePaginator;
-
     public function findById(int $id): ?Model;
-
     public function findOrFail(int $id): Model;
 
-    public function whereList(array $conditions): Collection;
-
+    public function whereList(array $conditions, bool $usePagination = false):Collection|LengthAwarePaginator;
     public function whereFirst(array $conditions): ?Model;
 
+    public function joinWhereList(array $conditions, array $relations = [], array $selects = [], bool $usePagination = false):Collection|LengthAwarePaginator;
+    public function joinWhereFirst(array $conditions, array $relations = [], array $selects = []): ?Model;
+
     public function create(array $data): bool;
-
     public function update(int $id, array $data): bool;
-
     public function delete(int $id): bool;
-
     public function exists(array $conditions): bool;
 }

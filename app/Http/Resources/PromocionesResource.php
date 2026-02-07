@@ -20,9 +20,9 @@ class PromocionesResource extends JsonResource
             'descripcion' => $this->descripcion,
             'fecha_inicio' => $this->fecha_inicio,
             'fecha_fin' => $this->fecha_fin,
-            'estado' => $this->Estado,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,  
+            'estado' =>     $this->Estado,
+            'created_at' => null,
+            'updated_at' => null,
         ];
     }
 }

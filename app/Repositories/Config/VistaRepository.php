@@ -40,9 +40,8 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
 
     public function findByModuloId($moduloId)
     {
-        return $this->whereList([
-            ['modulo', '=', $moduloId],
-        ]);
+
+        return $this->whereList(['modulo', '=', $moduloId]);
     }
     public function estadosList()
     {

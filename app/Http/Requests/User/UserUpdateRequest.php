@@ -4,6 +4,8 @@ namespace App\Http\Requests\User;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
+
 class UserUpdateRequest extends FormRequest
 {
     /**
@@ -41,16 +43,16 @@ class UserUpdateRequest extends FormRequest
     /**
      * Summary of failedValidation
      * @param Validator $validator
-     * @return \Illuminate\Http\JsonResponse
+     * @throws ValidationException
      */
     protected function failedValidation(Validator $validator)
     {
         $response = [
             'message' => $validator->errors()->first(),
-            'code' => 422,
-            'data' => false,
+            'code' => 400,
+            'data' => null,
         ];
-
-        return response()->json($response, 422);
+        http_response_code(400);
+        exit(json_encode($response));
     }
 }

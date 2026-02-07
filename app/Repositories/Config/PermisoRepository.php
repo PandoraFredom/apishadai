@@ -23,24 +23,24 @@ class PermisoRepository extends Repository implements PermisoService
         parent::__construct($model);
         $this->defaultRelations = ['modulo', 'vista', 'actionvista'];
     }
-    public function listByUserId(int $userId): Collection
+    public function listByUserId(int $userId)
     {
         return $this->whereList(['usuario' => $userId]);
     }
 
-    public function get_ModuloListCbx(): Collection
+    public function get_ModuloListCbx()
     {
         return $this->moduloService->getAll();
     }
-    public function get_VistasByModulo(int $moduloId): Collection
+    public function get_VistasByModulo(int $moduloId)
     {
         return  $this->vistaService->findByModuloId($moduloId);
     }
-    public function get_AccionesByVista(int $vistaId): Collection
+    public function get_AccionesByVista(int $vistaId)
     {
         return $this->accionesVistaService->findByVista($vistaId);
     }
-    public function tiposTiempoList(): Collection
+    public function tiposTiempoList()
     {
         return $this->tipoTiempoService->getAll();
     }

@@ -20,7 +20,7 @@ class Departamento extends Model
     {
         return $this->hasMany(Clientes::class, 'departamento', 'id');
     }
-    
-    
-  
+
+
+
 }

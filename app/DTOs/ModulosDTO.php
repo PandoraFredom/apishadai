@@ -20,7 +20,7 @@ class ModulosDTO
         return new self(
             id: null,
             nombre: trim($data['nombre'] ?? ''),
-            codigo: strtoupper(trim($data['codigo'] ?? '')),
+            codigo: strtolower(trim($data['codigo'] ?? '')),
             estado: (int) ($data['estado'] ?? 1)
         );
     }

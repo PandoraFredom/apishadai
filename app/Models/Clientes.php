@@ -18,7 +18,9 @@ class Clientes extends Model
         'genero',
         'municipio',
         'departamento',
+        'phone_updated_at'
     ];
+
 
     public function Municipio()
     {
@@ -29,7 +31,6 @@ class Clientes extends Model
         return $this->belongsTo(Departamento::class, 'departamento', 'id');
     }
 
-    // tikets
     public function Tiket()
     {
         return $this->hasMany(tikets::class, 'cliente', 'id');

@@ -34,7 +34,7 @@ class AlertMail extends Notification
                 'body' =>  $this->details['data'],
                 'url' => url('/')
             ])
-            
+
             ->cc($this->details['cc']);
         return $mailMessage;
     }

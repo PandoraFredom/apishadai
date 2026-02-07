@@ -4,70 +4,182 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body {
-            width: 80mm;
-            font-family: monospace;
-            font-size: 15px;
-            text-align: center;
-            margin: -45;
+        * {
+            margin: 0;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            background: none;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: 80mm auto;
+            margin: 0;
+        }
+
+        body {
+            width: 76mm;
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            padding: 2mm;
+            background: white;
+        }
+
+        .ticket-container {
+            border: 2px dashed #333;
+            padding: 8px;
+            background: white;
+            max-width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #000;
         }
 
         .logo img {
-            width: 180px;
-            margin: 10px 0;
+            width: 150px;
+            max-width: 90%;
+            height: auto;
         }
 
-        h3 {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-
-        p {
-            margin: 4px 0;
-            font-size: 15px;
+        .ticket-number {
+            text-align: center;
+            margin: 12px 0;
         }
 
         .ticket-box {
-            border: 1px solid #000;
-            border-radius: 4px;
-            padding: 6px 10px;
-            margin-bottom: 10px;
+            border: 3px double #000;
+            border-radius: 8px;
+            padding: 10px 18px;
             display: inline-block;
             font-weight: bold;
-            font-size: 17px;
+            font-size: 20px;
+            background: #f9f9f9;
+            letter-spacing: 1px;
         }
 
-        .qr {
-            margin-top: 10px;
+        .promo-section {
+            text-align: center;
+            margin: 12px 0;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+
+        .promo-section p {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .info-section {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-top: 1px dashed #666;
+            border-bottom: 1px dashed #666;
+        }
+
+        .info-row {
+            margin: 5px 0;
+            font-size: 12px;
+            word-wrap: break-word;
+        }
+
+        .info-label {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 10px;
+            color: #555;
+            display: inline-block;
+            min-width: 70px;
+        }
+
+        .info-value {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 2px solid #000;
+        }
+
+        .footer p {
+            font-size: 10px;
+            margin: 2px 0;
+            color: #666;
+        }
+
+        .good-luck {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 8px;
+            margin-bottom: 4px;
+            color: #000;
+        }
+
+        @media print {
+            body {
+                padding: 5mm;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="logo">
-        <img src="{{ public_path('img/shlogo.jpg') }}" alt="Logo">
+    <div class="ticket-container">
+        <!-- Logo -->
+        <div class="logo">
+            <img src="{{ public_path('img/shlogo.jpg') }}" alt="Logo">
+        </div>
+
+        <!-- Número de Ticket -->
+        <div class="ticket-number">
+            <div class="ticket-box">
+                TICKET #{{ $ticket->ntiket }}
+            </div>
+        </div>
+
+        <!-- Promoción -->
+        <div class="promo-section">
+            <p>{{ $ticket->Promocion->nombre }}</p>
+        </div>
+
+        <!-- Información del Cliente -->
+        <div class="info-section">
+            <div class="info-row">
+                <span class="info-label">CLIENTE:</span>
+                <span class="info-value">{{ $ticket->Cliente->pnombre }} {{ $ticket->Cliente->papellido }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">IDENTIDAD:</span>
+                <span class="info-value">{{ $ticket->Cliente->docid }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">TELÉFONO:</span>
+                <span class="info-value">{{ $ticket->Cliente->telefono }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">PUNTO:</span>
+                <span class="info-value">{{ $ticket->Stock->descripcion }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">FECHA:</span>
+                <span class="info-value">{{ $ticket->created_at->format('d/m/Y H:i') }}</span>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="good-luck">¡MUCHA SUERTE!</p>
+            <p>Conserve este ticket</p>
+            <p>Válido para el sorteo</p>
+        </div>
     </div>
-
-    <div class="ticket-box">
-        Ticket #{{ $ticket->ntiket }}
-    </div>
-
-    <p>Promoción: {{ $ticket->Promocion->nombre }}</p>
-    <p>Cliente: {{ $ticket->Cliente->pnombre }} {{ $ticket->Cliente->papellido }}</p>
-    <p>Identidad: {{ $ticket->Cliente->docid }}</p>
-    <p>Teléfono: {{ $ticket->Cliente->telefono }}</p>
-    <p>Punto: {{ $ticket->Stock->descripcion }}</p>
-    <p>Fecha: {{ $ticket->created_at->format('d/m/Y H:i') }}</p>
-
 </body>
 
 </html>

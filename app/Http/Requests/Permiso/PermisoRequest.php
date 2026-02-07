@@ -4,6 +4,8 @@ namespace App\Http\Requests\Permiso;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Validation\ValidationException;
+
 class PermisoRequest extends FormRequest
 {
     /**
@@ -55,14 +57,19 @@ class PermisoRequest extends FormRequest
         ];
     }
 
-     protected function failedValidation(Validator $validator)
+    /**
+     * Summary of failedValidation
+     * @param Validator $validator
+     * @throws ValidationException
+     */
+    protected function failedValidation(Validator $validator)
     {
         $response = [
             'message' => $validator->errors()->first(),
-            'code' => 422,
-            'data' => false,
+            'code' => 400,
+            'data' => null,
         ];
-
-        return response()->json($response, 422);
+        http_response_code(400);
+        exit(json_encode($response));
     }
 }

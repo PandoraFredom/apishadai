@@ -7,5 +7,5 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface AccionesVistaService extends RepositoryInterface
 {
-    public function findByVista(int $vistaId): Collection;
+    public function findByVista(int $vistaId);
 }

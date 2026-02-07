@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\Clientes;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ClientesResource extends JsonResource
+class ClienteResourceSingle extends JsonResource
 {
-    /**
+     /**
      * Transform the resource into an array.
      *
      * @return array<string, mixed>
@@ -21,13 +21,15 @@ class ClientesResource extends JsonResource
             'snombre' => $this->snombre,
             'papellido' => $this->papellido,
             'spaellido' => $this->spaellido,
-            'edad' => $this->edad,
-            'telefono' => $this->telefono,
-            'genero' => $this->genero,
-            'municipio' => $this->Municipio,
-            'departamento' => $this->Departamento,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'edad' => 0,
+            'telefono' => '',
+            'genero' => '',
+            'municipio' => 0,
+            'departamento' => 0,
+            'phone_updated_at' => null,
+            'created_at' => null,
+            'updated_at' => null,
         ];
     }
+
 }

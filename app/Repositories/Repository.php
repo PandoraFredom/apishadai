@@ -3,302 +3,493 @@
 namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
+use App\Repositories\Traits\{
+    QueryBuilderTrait,
+    ConditionHandlerTrait,
+    RelationHandlerTrait,
+    ErrorHandlerTrait
+};
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+
+
 use function is_array;
+use function is_numeric;
 use function is_string;
 
 abstract class Repository implements RepositoryInterface
 {
+    use QueryBuilderTrait,
+        ConditionHandlerTrait,
+        RelationHandlerTrait,
+        ErrorHandlerTrait;
+
     protected Model $model;
     protected array $defaultRelations = [];
     protected int $perPage = 15;
-
-    protected  array $orderBy = ["id", "DESC"];
+    protected array $orderBy = ["id", "DESC"];
+    protected bool $useQueryBuilder = false; // Flag para decidir entre DB y Eloquent
 
     public function __construct(Model $model)
     {
         $this->model = $model;
     }
 
+    /**
+     * Obtener todos los registros
+     */
     public function getAll(): Collection
     {
-        try {
-            $query = $this->model->newQuery();
+        return $this->executeQuery(function () {
+            if ($this->useQueryBuilder) {
+                $results = DB::table($this->getTableName())
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->get();
 
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
+                return new Collection($results);
             }
 
-            return $query->orderBy($this->orderBy[0], $this->orderBy[1])->get();
-        } catch (\Exception $e) {
-            Log::error('Repository::getAll - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return new Collection();
-        }
+            return $this->buildBaseQuery()->get();
+        }, 'getAll', new Collection());
     }
 
+    /**
+     * Paginación de registros
+     */
     public function paginate(): LengthAwarePaginator
     {
-        try {
-            $query = $this->model->newQuery();
-
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
+        return $this->executeQuery(function () {
+            if ($this->useQueryBuilder) {
+                return DB::table($this->getTableName())
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->paginate($this->perPage);
             }
 
-            return $query->orderBy($this->orderBy[0], $this->orderBy[1])->paginate($this->perPage);
-        } catch (\Exception $e) {
-            Log::error('Repository::paginate - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'perPage' => $this->perPage,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return $this->model->paginate($this->perPage);
-        }
+            return $this->buildBaseQuery()
+                ->orderBy($this->orderBy[0], $this->orderBy[1])
+                ->paginate($this->perPage);
+        }, 'paginate', $this->getEmptyPaginator());
     }
 
+    /**
+     * Buscar por ID
+     */
     public function findById(int $id): ?Model
     {
-        try {
-            $query = $this->model->newQuery();
+        return $this->executeQuery(function () use ($id) {
+            if ($this->useQueryBuilder) {
+                $result = DB::table($this->getTableName())
+                    ->where('id', '=', $id)
+                    ->first();
 
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
+                return $result ? $this->hydrateModel($result) : null;
             }
 
-            return $query->find($id);
-        } catch (\Exception $e) {
-            Log::error('Repository::findById - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'id' => $id,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return null;
-        }
+            return $this->buildBaseQuery()->find($id);
+        }, 'findById', null, ['id' => $id]);
     }
 
+    /**
+     * Buscar por ID o lanzar excepción
+     */
     public function findOrFail(int $id): Model
     {
-        try {
-            $query = $this->model->newQuery();
+        $result = $this->findById($id);
 
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
-            }
-
-            return $query->findOrFail($id);
-        } catch (\Exception $e) {
-            Log::error('Repository::findOrFail - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'id' => $id,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            throw $e;
+        if (!$result) {
+            throw new \Illuminate\Database\Eloquent\ModelNotFoundException(
+                "No query results for model [{$this->getModelClass()}] with ID {$id}"
+            );
         }
+
+        return $result;
     }
 
-
+    /**
+     * Crear un nuevo registro
+     */
     public function create(array $data): bool
     {
-        try {
-            DB::transaction(function () use ($data) {
-                $this->model->create($data);
-            });
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Repository::create - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'data' => $data,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return false;
-        }
+        return $this->executeTransaction(function () use ($data) {
+            $sanitized = $this->sanitizeData($data);
+            $this->validateRequiredFields($sanitized);
+
+            if ($this->useQueryBuilder) {
+                return DB::table($this->getTableName())->insert($sanitized);
+            }
+
+            return (bool) $this->model->create($sanitized);
+        }, 'create', ['data' => $data]);
     }
 
+    /**
+     * Actualizar un registro
+     */
     public function update(int $id, array $data): bool
     {
-        try {
-            DB::transaction(function () use ($id, $data) {
-                $model = $this->findById($id);
+        return $this->executeTransaction(function () use ($id, $data) {
+            $filtered = $this->filterEmptyData($data);
 
-                if (!$model) {
-                    throw new \Exception("Model not found with id: $id");
+            if (empty($filtered)) {
+                throw new \InvalidArgumentException("No hay datos para actualizar");
+            }
+
+            $sanitized = $this->sanitizeData($filtered);
+
+            if ($this->useQueryBuilder) {
+                $updated = DB::table($this->getTableName())
+                    ->where('id', '=', $id)
+                    ->update($sanitized);
+
+                if ($updated === 0) {
+                    throw new \Exception("Registro no encontrado con ID: $id");
                 }
-
-                $filtered = $this->filterEmptyData($data);
-
-                if (empty($filtered)) {
-                    throw new \Exception("No data to update");
-                }
-
-                if (!$model->update($filtered)) {
-                    throw new \Exception("Update failed");
-                }
-            });
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Repository::update - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'id' => $id,
-                'data' => $data,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return false;
-        }
-    }
-
-    public function delete(int $id): bool
-    {
-        try {
-            DB::transaction(function () use ($id) {
-                $model = $this->findById($id);
-
-                if (!$model) {
-                    throw new \Exception("Model not found with id: $id");
-                }
-
-                if (!$model->delete()) {
-                    throw new \Exception("Delete failed");
-                }
-            });
-            return true;
-        } catch (\Exception $e) {
-            Log::error('Repository::delete - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'id' => $id,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return false;
-        }
-    }
-
-    private function filterEmptyData(array $data): array
-    {
-        try {
-            return array_filter($data, function ($value) {
-                if ($value === null) {
-                    return false;
-                }
-
-                if (is_numeric($value) && $value === 0) {
-                    return false;
-                }
-
-                if (is_string($value) && trim($value) === '') {
-                    return false;
-                }
-
-                if (is_array($value) && empty($value)) {
-                    return false;
-                }
-
 
                 return true;
-            });
-        } catch (\Exception $e) {
-            Log::error('Repository::filterEmptyData - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return [];
-        }
+            }
+
+            $model = $this->findById($id);
+
+            if (!$model) {
+                throw new \Exception("Registro no encontrado con ID: $id");
+            }
+
+
+            return $model->update($sanitized);
+        }, 'update', ['id' => $id, 'data' => $data]);
     }
 
-    // exists method to find if a record exists based on given conditions
+    /**
+     * Eliminar un registro
+     */
+    public function delete(int $id): bool
+    {
+        return $this->executeTransaction(function () use ($id) {
+            if ($this->useQueryBuilder) {
+                $deleted = DB::table($this->getTableName())
+                    ->where('id', '=', $id)
+                    ->delete();
+
+                if ($deleted === 0) {
+                    throw new \Exception("Registro no encontrado con ID: $id");
+                }
+
+                return true;
+            }
+
+            $model = $this->findById($id);
+
+            if (!$model) {
+                throw new \Exception("Registro no encontrado con ID: $id");
+            }
+
+            return $model->delete();
+        }, 'delete', ['id' => $id]);
+    }
+
+    /**
+     * Verificar si existe un registro
+     */
     public function exists(array $conditions): bool
     {
-        try {
-            $query = $this->model->newQuery();
+        return $this->executeQuery(function () use ($conditions) {
+            $sanitized = $this->sanitizeConditions($conditions);
 
-            foreach ($conditions as $column => $value) {
-                $query->where($column, $value);
+            if ($this->useQueryBuilder) {
+                $query = DB::table($this->getTableName());
+                $this->applyWhereConditions($query, $sanitized);
+                return $query->exists();
             }
 
+            $query = $this->model->newQuery();
+            $this->applyWhereConditions($query, $sanitized);
             return $query->exists();
-
-        } catch (\Exception $e) {
-            Log::error('Repository::exists - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'conditions' => $conditions,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return false;
-        }
+        }, 'exists', false, ['conditions' => $conditions]);
     }
 
-    public function whereList(array $conditions): Collection
+    /**
+     * Listar con condiciones y paginación
+     * @param array $conditions Condiciones a aplicar
+     * @param bool $usePagination Usar paginación
+     * @param string $logicalOperator 'AND' o 'OR' para múltiples condiciones (por defecto 'AND')
+     */
+    public function whereList(array $conditions, bool $usePagination = false, string $logicalOperator = 'AND'): Collection|LengthAwarePaginator
     {
 
-        try {
-            $query = $this->model->newQuery();
 
-            foreach ($conditions as $column => $value) {
-                $query->where($column, $value);
+        return $this->executeQuery(function () use ($conditions, $usePagination, $logicalOperator) {
+            $sanitized = $this->sanitizeConditions($conditions);
+
+            if ($this->useQueryBuilder) {
+                $query = DB::table($this->getTableName());
+                $this->applyComplexConditions($query, $sanitized, $logicalOperator);
+
+                if ($usePagination) {
+                    return $query
+                        ->orderBy($this->orderBy[0], $this->orderBy[1])
+                        ->paginate($this->perPage);
+                } else {
+                    return $query
+                        ->orderBy($this->orderBy[0], $this->orderBy[1])
+                        ->get();
+                }
             }
 
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
-            }
+            $query = $this->buildBaseQuery();
+            $this->applyComplexConditions($query, $sanitized, $logicalOperator);
 
-            return $query->get();
-        } catch (\Exception $e) {
-            Log::error('Repository::whereList - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'conditions' => $conditions,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return new Collection();
-        }
+            if ($usePagination) {
+                // Paginate automáticamente lee el parámetro 'page' de la URL
+                return $query
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->paginate($this->perPage);
+            } else {
+                return $query
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->get();
+            }
+        }, 'whereList', $this->getEmptyPaginator(), ['conditions' => $conditions]);
     }
-    public function whereFirst(array $conditions): ?Model
+
+    /**
+     * Listar con FilterModel - construye condiciones con logicalOperator individual
+     */
+    public function whereListWithFilter($filterModel, bool $usePagination = false): Collection|LengthAwarePaginator
     {
-        try {
-            $query = $this->model->newQuery();
+        $conditions = [];
+        foreach ($filterModel->getFilterItems() as $item) {
+            // Estructura: [key, operator, value, logicalOperator]
+            $conditions[] = [$item->getKey(), $item->getOperator(), $item->getValue(), $item->getLogicalOperator()];
+        }
 
-            foreach ($conditions as $column => $value) {
-                $query->where($column, $value);
+        // whereList respeta el logicalOperator individual de cada condición
+
+        return $this->whereList($conditions, $usePagination);
+    }
+
+    /**
+     * Buscar el primer registro con condiciones
+     * @param string $logicalOperator 'AND' o 'OR' para múltiples condiciones
+     */
+    public function whereFirst(array $conditions, string $logicalOperator = 'AND'): ?Model
+    {
+        return $this->executeQuery(function () use ($conditions, $logicalOperator) {
+            $sanitized = $this->sanitizeConditions($conditions);
+
+            if ($this->useQueryBuilder) {
+                $query = DB::table($this->getTableName());
+                $this->applyComplexConditions($query, $sanitized, $logicalOperator);
+                $result = $query->first();
+
+                return $result ? $this->hydrateModel($result) : null;
             }
 
-            if (!empty($this->defaultRelations)) {
-                $query->with($this->defaultRelations);
-            }
-
+            $query = $this->buildBaseQuery();
+            $this->applyComplexConditions($query, $sanitized, $logicalOperator);
             return $query->first();
-        } catch (\Exception $e) {
-            Log::error('Repository::whereFirst - ' . $e->getMessage(), [
-                'model' => get_class($this->model),
-                'conditions' => $conditions,
-                'exception' => $e->getCode(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-            return null;
+        }, 'whereFirst', null, ['conditions' => $conditions]);
+    }
+
+    /**
+     * Buscar primer registro con FilterModel - construye condiciones con logicalOperator individual
+     */
+    public function whereFirstWithFilter($filterModel): ?Model
+    {
+        $conditions = [];
+        foreach ($filterModel->getFilterItems() as $item) {
+            // Estructura: [key, operator, value, logicalOperator]
+            $conditions[] = [$item->getKey(), $item->getOperator(), $item->getValue(), $item->getLogicalOperator()];
         }
+
+        // whereFirst respeta el logicalOperator individual de cada condición
+        return $this->whereFirst($conditions);
+    }
+
+    /**
+     * Listar con JOINs y condiciones
+     */
+    public function joinWhereList(
+        array $conditions,
+        array $tables = [],
+        array $selects = [],
+        bool $usePagination = false
+    ): Collection|LengthAwarePaginator {
+        return $this->executeQuery(function () use ($conditions, $tables, $selects, $usePagination) {
+            $sanitized = $this->sanitizeConditions($conditions);
+            $sanitizedJoins = $this->sanitizeJoins($tables);
+
+            $query = $this->useQueryBuilder
+                ? DB::table($this->getTableName())
+                : $this->model->newQuery();
+
+            // Aplicar JOINs
+            $this->applyJoins($query, $sanitizedJoins);
+
+            // Aplicar condiciones
+            $this->applyWhereConditions($query, $sanitized);
+
+            // Aplicar selects
+            if (!empty($selects)) {
+                $query->select($this->sanitizeSelects($selects));
+            } else {
+                $query->select($this->getTableName() . '.*');
+            }
+
+            if ($usePagination) {
+                return $query
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->paginate($this->perPage);
+            } else {
+                return  $query
+                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->get();
+            }
+        }, 'joinWhereList', $this->getEmptyPaginator(), [
+            'conditions' => $conditions,
+            'tables' => $tables,
+            'selects' => $selects
+        ]);
+    }
+
+    /**
+     * Buscar primer registro con JOINs
+     */
+    public function joinWhereFirst(
+        array $conditions,
+        array $tables = [],
+        array $selects = []
+    ): ?Model {
+        return $this->executeQuery(function () use ($conditions, $tables, $selects) {
+            $sanitized = $this->sanitizeConditions($conditions);
+            $sanitizedJoins = $this->sanitizeJoins($tables);
+
+            $query = $this->useQueryBuilder
+                ? DB::table($this->getTableName())
+                : $this->model->newQuery();
+
+            $this->applyJoins($query, $sanitizedJoins);
+            $this->applyWhereConditions($query, $sanitized);
+
+            if (!empty($selects)) {
+                $query->select($this->sanitizeSelects($selects));
+            } else {
+                $query->select($this->getTableName() . '.*');
+            }
+
+            $result = $query->first();
+
+            if ($this->useQueryBuilder && $result) {
+                return $this->hydrateModel($result);
+            }
+
+            return $result;
+        }, 'joinWhereFirst', null, [
+            'conditions' => $conditions,
+            'tables' => $tables,
+            'selects' => $selects
+        ]);
+    }
+
+    /**
+     * Filtrar datos vacíos
+     */
+    private function filterEmptyData(array $data): array
+    {
+        return array_filter($data, function ($value) {
+            if ($value === null) return false;
+            if (is_numeric($value) && $value === 0) return false;
+            if (is_string($value) && trim($value) === '') return false;
+            if (is_array($value) && empty($value)) return false;
+            return true;
+        });
+    }
+
+    /**
+     * Construir query base con relaciones
+     */
+    private function buildBaseQuery()
+    {
+        $query = $this->model->newQuery();
+
+        if (!empty($this->defaultRelations)) {
+            $query->with($this->defaultRelations);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Obtener nombre de la tabla
+     */
+    protected function getTableName(): string
+    {
+        return $this->model->getTable();
+    }
+
+    /**
+     * Obtener clase del modelo
+     */
+    protected function getModelClass(): string
+    {
+        return get_class($this->model);
+    }
+
+    /**
+     * Hidratar modelo desde objeto stdClass
+     */
+    protected function hydrateModel(object $data): Model
+    {
+        $model = $this->model->newInstance();
+        $model->setRawAttributes((array) $data, true);
+        return $model;
+    }
+
+    /**
+     * Obtener paginador vacío
+     */
+    protected function getEmptyPaginator(): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator([], 0, $this->perPage);
+    }
+
+    /**
+     * Habilitar Query Builder
+     */
+    public function useQueryBuilder(bool $use = true): self
+    {
+        $this->useQueryBuilder = $use;
+        return $this;
+    }
+
+    /**
+     * Establecer relaciones por defecto
+     */
+    public function setDefaultRelations(array $relations): self
+    {
+        $this->defaultRelations = $relations;
+        return $this;
+    }
+
+    /**
+     * Establecer paginación
+     */
+    public function setPerPage(int $perPage): self
+    {
+        $this->perPage = max(1, min($perPage, 100)); // Límite entre 1 y 100
+        return $this;
+    }
+
+    /**
+     * Establecer ordenamiento
+     */
+    public function setOrderBy(string $column, string $direction = 'DESC'): self
+    {
+        $this->orderBy = [
+            $this->sanitizeColumnName($column),
+            strtoupper($direction) === 'ASC' ? 'ASC' : 'DESC'
+        ];
+        return $this;
     }
 }

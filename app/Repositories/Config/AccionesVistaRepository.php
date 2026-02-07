@@ -15,7 +15,7 @@ class AccionesVistaRepository extends Repository implements AccionesVistaService
         $this->defaultRelations = ['vista'];
     }
 
-    public function findByVista(int $vistaId): Collection
+    public function findByVista(int $vistaId)
     {
         return $this->whereList(['vista' => $vistaId]);
     }

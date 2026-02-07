@@ -175,6 +175,7 @@ class VistasController extends Controller
         try {
             $dto = AccionesVistaDTO::fromRequest($request->Validated());
             $existcodigo = $this->accionesVistaService->exists([
+                'vista' => $dto->vista,
                 'codigo' => $dto->codigo
             ]);
             if ($existcodigo) {
@@ -182,6 +183,7 @@ class VistasController extends Controller
             }
 
             $existnombre = $this->accionesVistaService->exists([
+                'vista' => $dto->vista,
                 'nombre' => $dto->nombre,
             ]);
             if ($existnombre) {

@@ -18,8 +18,8 @@ class MunicipiosResource extends JsonResource
             'id' => $this->id,
             'nombre' => $this->nombre,
             'departamento' => $this->Departamento,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'created_at' => null,
+            'updated_at' => null,
         ];
     }
 }

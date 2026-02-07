@@ -17,7 +17,7 @@ class tiketsResource extends JsonResource
         return [
             'id' => $this->id,
             'promocion' => $this->Promocion,
-            'cliente' => $this->Cliente,
+            'cliente' => $this->cliente,
             'ntiket' => $this->ntiket,
             'usuario' => $this->Usuario,
             'stock' => $this->Stock,

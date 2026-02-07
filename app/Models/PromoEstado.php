@@ -15,6 +15,6 @@ class PromoEstado extends Model
 
     public function promociones()
     {
-        return $this->hasMany(Promociones::class);
+        return $this->hasMany(Promociones::class, 'estado');
     }
 }

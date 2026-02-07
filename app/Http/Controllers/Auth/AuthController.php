@@ -10,7 +10,6 @@ use App\Models\Permisos;
 use App\Services\EncryptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -102,7 +101,7 @@ class AuthController extends Controller
                 }
             }
         } catch (\Exception $e) {
-            return $this->sendResponse(false, 'logout failed', 500);
+            return $this->sendResponse(false, 'logout failed:' . $e->getMessage(), 500);
         }
     }
 
