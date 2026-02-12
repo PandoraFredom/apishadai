@@ -55,9 +55,9 @@ class AuthController extends Controller
             $permisos = $this->getPermisosUser(Auth::user()->id);
 
 
-            if ($permisos->isEmpty()) {
+          /*  if ($permisos->isEmpty()) {
                 return $this->sendResponse(null, 'No tiene permisos asignados:' . Auth::user()->id, 403);
-            }
+            }*/
             $data = [
                 'token' => $encToken,
                 'uname' => Auth::user()->nombre,

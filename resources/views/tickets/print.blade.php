@@ -16,10 +16,10 @@
         }
 
         body {
-            width: 76mm;
+            width: 70mm;
             font-family: 'Courier New', monospace;
             margin: 0;
-            padding: 2mm;
+            padding: 1mm;
             background: white;
         }
 
@@ -59,6 +59,14 @@
             letter-spacing: 1px;
         }
 
+        .ticket-value {
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 6px;
+            color: #000;
+        }
+
         .promo-section {
             text-align: center;
             margin: 12px 0;
@@ -91,9 +99,9 @@
             font-weight: bold;
             text-transform: uppercase;
             font-size: 10px;
-            color: #555;
+            color: #000;
             display: inline-block;
-            min-width: 70px;
+            min-width: auto;
         }
 
         .info-value {
@@ -109,17 +117,18 @@
         }
 
         .footer p {
-            font-size: 10px;
+            font-size: 12;
             margin: 2px 0;
-            color: #666;
+            color: #000000;
         }
 
         .good-luck {
-            font-size: 14px;
             font-weight: bold;
-            margin-top: 8px;
-            margin-bottom: 4px;
+            text-transform: uppercase;
+            font-size: 12px;
             color: #000;
+            display: inline-block;
+            min-width: auto;
         }
 
         @media print {
@@ -140,7 +149,10 @@
         <!-- Número de Ticket -->
         <div class="ticket-number">
             <div class="ticket-box">
-                TICKET #{{ $ticket->ntiket }}
+                BOLETO# {{ $ticket->ntiket }}
+            </div>
+            <div class="ticket-value">
+                VALOR: L.25
             </div>
         </div>
 

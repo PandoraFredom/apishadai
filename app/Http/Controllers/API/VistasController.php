@@ -14,6 +14,7 @@ use App\Http\Resources\VistaEstadosResource;
 use App\Http\Resources\Vistas\VistasResource;
 use App\Interfaces\Config\AccionesVistaService;
 use App\Interfaces\Config\VistaRepositoryInterface;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Http\JsonResponse;
 
 class VistasController extends Controller
@@ -174,23 +175,21 @@ class VistasController extends Controller
     {
         try {
             $dto = AccionesVistaDTO::fromRequest($request->Validated());
-            $existcodigo = $this->accionesVistaService->exists([
-                'vista' => $dto->vista,
-                'codigo' => $dto->codigo
-            ]);
+
+            $existcodigo = $this->accionesVistaService->existCodigoEnVista($dto->vista, $dto->codigo);
             if ($existcodigo) {
                 return $this->sendResponse(false, 'Ya existe una accion con el mismo codigo para esta vista', 422);
             }
 
-            $existnombre = $this->accionesVistaService->exists([
-                'vista' => $dto->vista,
-                'nombre' => $dto->nombre,
-            ]);
+            $existnombre = $this->accionesVistaService->existNombreEnVista($dto->vista, $dto->nombre);
+
             if ($existnombre) {
                 return $this->sendResponse(false, 'Ya existe una accion con el mismo nombre para esta vista', 422);
             }
 
             $create = $this->service->createAccion($dto->toArray());
+
+
             if (!$create) {
                 return $this->sendResponse(false, 'No se pudo crear la informacion', 500);
             }

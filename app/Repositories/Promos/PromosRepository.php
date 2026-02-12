@@ -21,7 +21,8 @@ class PromosRepository extends Repository implements PromocionesService
         $this->defaultRelations = ['estado'];
     }
 
-    public function filterPromos(FilterRequest $request) {
+    public function filterPromos(FilterRequest $request)
+    {
         return null;
     }
     public function get_estadosList()
@@ -44,10 +45,35 @@ class PromosRepository extends Repository implements PromocionesService
             ],
             selects: [
                 'promociones.id',
-                'promociones.nombre'
+                'promociones.nombre',
+                'promociones.fecha_fin',
             ]
         );
 
         return $data;
+    }
+
+    public function another_active_promo(int $current_promo_id): bool
+    {
+        $data = $this->joinWhereFirst(
+            conditions: [
+                ['promociones.id', '!=', $current_promo_id],
+                ['promoestado.descripcion', '=', 'ACTIVO']
+            ],
+            tables: [
+                [
+                    'table' => 'promoestado',
+                    'first' => 'promociones.estado',
+                    'operator' => '=',
+                    'second' => 'promoestado.id'
+                ]
+            ],
+            selects: [
+                'promociones.id',
+                'promociones.nombre'
+            ]
+        );
+
+        return $data !== null;
     }
 }

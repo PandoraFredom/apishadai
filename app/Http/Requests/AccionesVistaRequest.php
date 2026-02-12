@@ -26,7 +26,7 @@ class AccionesVistaRequest extends FormRequest
         return [
             'vista.id' => 'required|integer',
             'codigo' => 'required|string|max:20',
-            'nombre' => 'required|string|max:100',
+            'nombre' => 'required|string|max:80',
         ];
     }
     // messages

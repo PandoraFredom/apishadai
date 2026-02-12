@@ -25,8 +25,8 @@ class VistaRequest extends FormRequest
     {
         return [
             'modulo.id' => 'required|integer|exists:modulos,id',
-            'nombre' => 'required|string',
-            'codigo' => 'required|string|unique:vistas,codigo',
+            'nombre' => 'required|string|max:50|unique:vistas,nombre',
+            'codigo' => 'required|string|max:10|unique:vistas,codigo',
             'estado.id' => 'required|integer|exists:vista_estados,id',
         ];
     }
@@ -34,20 +34,24 @@ class VistaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'modulo.id.required' => 'El módulo es obligatorio',
-            'modulo.id.integer' => 'El módulo debe ser un entero',
-            'modulo.id.exists' => 'El módulo no existe',
+            'modulo.id.required' => 'El campo modulo es obligatorio.',
+            'modulo.id.integer' => 'El campo modulo debe ser un número entero.',
+            'modulo.id.exists' => 'El modulo seleccionado no existe.',
 
-            'nombre.required' => 'El nombre es obligatorio',
-            'nombre.string' => 'El nombre debe ser una cadena de texto',
+            'nombre.required' => 'El campo nombre es obligatorio.',
+            'nombre.string' => 'El campo nombre debe ser una cadena de texto.',
+            'nombre.max' => 'El campo nombre no debe exceder los 50 caracteres.',
+            'nombre.unique' => 'Ya existe una vista con ese nombre.',
 
-            'codigo.required' => 'El código es obligatorio',
-            'codigo.string' => 'El código debe ser una cadena de texto',
-            'codigo.unique' => 'El código ya está en uso',
+            'codigo.required' => 'El campo codigo es obligatorio.',
+            'codigo.string' => 'El campo codigo debe ser una cadena de texto.',
+            'codigo.max' => 'El campo codigo no debe exceder los 10 caracteres.',
+            'codigo.unique' => 'Ya existe una vista con ese codigo.',
 
-            'estado.id.required' => 'El estado es obligatorio',
-            'estado.id.integer' => 'El estado debe ser un entero',
-            'estado.id.exists' => 'El estado no existe',
+            'estado.id.required' => 'El campo estado es obligatorio.',
+            'estado.id.integer' => 'El campo estado debe ser un número entero.',
+            'estado.id.exists' => 'El estado seleccionado no existe.',
+
         ];
     }
 

@@ -57,7 +57,7 @@ class TicketRepository extends Repository implements TicketService
             selects: [
                 'tikets.*'
             ],
-            usePagination: false
+            usePagination: true
         );
     }
 

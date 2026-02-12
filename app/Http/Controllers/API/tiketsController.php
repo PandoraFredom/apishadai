@@ -109,7 +109,7 @@ class tiketsController extends Controller
     {
         $promo = $this->service->getActivePromo();
         if (!$promo) {
-            return $this->sendResponse(null, 'No hay promociones disponibles.', 404);
+            return $this->sendResponse(null, 'No hay Sorteos disponibles.', 404);
         }
 
         return $this->sendResponse($promo, 'ok', 200);

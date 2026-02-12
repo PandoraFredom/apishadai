@@ -30,7 +30,7 @@ abstract class Repository implements RepositoryInterface
     protected array $defaultRelations = [];
     protected int $perPage = 15;
     protected array $orderBy = ["id", "DESC"];
-    protected bool $useQueryBuilder = false; // Flag para decidir entre DB y Eloquent
+    protected bool $useQueryBuilder = true; // Flag para decidir entre DB y Eloquent
 
     public function __construct(Model $model)
     {
@@ -200,11 +200,13 @@ abstract class Repository implements RepositoryInterface
             if ($this->useQueryBuilder) {
                 $query = DB::table($this->getTableName());
                 $this->applyWhereConditions($query, $sanitized);
+                \Illuminate\Support\Facades\Log::debug('Repository::exists() - Query SQL (QueryBuilder):', ['sql' => $query->toSql(), 'bindings' => $query->getBindings()]);
                 return $query->exists();
             }
 
             $query = $this->model->newQuery();
             $this->applyWhereConditions($query, $sanitized);
+
             return $query->exists();
         }, 'exists', false, ['conditions' => $conditions]);
     }
@@ -327,8 +329,8 @@ abstract class Repository implements RepositoryInterface
             // Aplicar JOINs
             $this->applyJoins($query, $sanitizedJoins);
 
-            // Aplicar condiciones
-            $this->applyWhereConditions($query, $sanitized);
+            // Aplicar condiciones complejas (soporta operadores por condición)
+            $this->applyComplexConditions($query, $sanitized);
 
             // Aplicar selects
             if (!empty($selects)) {
@@ -370,7 +372,7 @@ abstract class Repository implements RepositoryInterface
                 : $this->model->newQuery();
 
             $this->applyJoins($query, $sanitizedJoins);
-            $this->applyWhereConditions($query, $sanitized);
+            $this->applyComplexConditions($query, $sanitized);
 
             if (!empty($selects)) {
                 $query->select($this->sanitizeSelects($selects));

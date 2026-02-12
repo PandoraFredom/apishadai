@@ -10,14 +10,13 @@ class AccionesVistaDTO
         public readonly string $vista,
         public readonly string $codigo,
         public readonly string $nombre,
-    ) {
-    }
+    ) {}
 
-     public static function fromRequest(array $data): self
+    public static function fromRequest(array $data): self
     {
         return new self(
             $data['vista']['id'],
-            $data['codigo'],
+            strtolower(trim($data['codigo'] ?? '')),
             $data['nombre'],
         );
     }

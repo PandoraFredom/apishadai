@@ -25,7 +25,7 @@ class PromocionesController extends Controller
     {
         $list = $this->service->paginate();
         if ($list->isEmpty()) {
-            return $this->sendResponse(null, 'No hay promociones disponibles.', 404);
+            return $this->sendResponse(null, 'No hay sorteos disponibles.', 404);
         }
         return $this->sendResponse(PromocionesResource::collection($list), 'ok', 200, true);
     }
@@ -48,12 +48,12 @@ class PromocionesController extends Controller
 
             $create = $this->service->create($data);
             if (!$create) {
-                return $this->sendResponse(false, 'Error al crear la promoción.', 500);
+                return $this->sendResponse(false, 'Error al crear Sorteo.', 500);
             }
-            return $this->sendResponse(true, 'Promoción creada exitosamente.', 201);
+            return $this->sendResponse(true, 'Sorteo creado exitosamente.', 201);
         } catch (\Throwable $th) {
             $this->logError('PromocionesController store', $th);
-            return $this->sendResponse(false, 'Error inesperado al crear la promoción.', 500);
+            return $this->sendResponse(false, 'Error inesperado al crear Sorteo.', 500);
         }
     }
 
@@ -64,7 +64,7 @@ class PromocionesController extends Controller
     {
         $promo = $this->service->findById($id);
         if (!$promo) {
-            return $this->sendResponse(null, 'Promoción no encontrada.', 404);
+            return $this->sendResponse(null, 'Sorteo no encontrado.', 404);
         }
         return $this->sendResponse(PromocionesResource::make($promo), 'ok');
     }
@@ -76,15 +76,19 @@ class PromocionesController extends Controller
     {
         try {
             $dto = PromosDTO::fromUpdateRequest($request->validated());
+            $anotherActive = $this->service->another_active_promo($dto->id);
+            if ($anotherActive) {
+                return $this->sendResponse(false, 'Ya existe otro sorteo activo. Solo puede haber un sorteo activo a la vez.', 400);
+            }
 
             $update = $this->service->update($dto->id, $dto->toUpdateArray());
             if (!$update) {
-                return $this->sendResponse(false, 'Error al actualizar la promoción.', 500);
+                return $this->sendResponse(false, 'Error al actualizar el sorteo.', 500);
             }
-            return $this->sendResponse(true, 'Promoción actualizada exitosamente.', 200);
+            return $this->sendResponse(true, 'Sorteo actualizado exitosamente.', 200);
         } catch (\Throwable $th) {
             $this->logError('PromocionesController update', $th);
-            return $this->sendResponse(false, 'Error inesperado al actualizar la promoción.', 500);
+            return $this->sendResponse(false, 'Error inesperado al actualizar el sorteo.', 500);
         }
     }
 
@@ -96,12 +100,12 @@ class PromocionesController extends Controller
         try {
             $delete = $this->service->delete($id);
             if (!$delete) {
-                return $this->sendResponse(false, 'Error al eliminar la promoción.', 500);
+                return $this->sendResponse(false, 'Error al eliminar el sorteo.', 500);
             }
-            return $this->sendResponse(true, 'Promoción eliminada exitosamente.', 200);
+            return $this->sendResponse(true, 'Sorteo eliminado exitosamente.', 200);
         } catch (\Throwable $th) {
             $this->logError('PromocionesController destroy', $th);
-            return $this->sendResponse(false, 'Promocion no disponible para eliminar.', 500);
+            return $this->sendResponse(false, 'Sorteo no disponible para eliminar.', 500);
         }
     }
 
