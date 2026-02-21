@@ -2,9 +2,8 @@
 
 namespace App\Providers;
 
-
-
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -53,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        // Se removieron logs de SQL en desarrollo.
+     /*   //log consultas a la debase de datos
+         DB::listen(function($query) {
+            Log::info(
+                $query->sql,
+                $query->bindings,
+
+            );
+        }); */
     }
 }

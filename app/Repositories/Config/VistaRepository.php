@@ -13,55 +13,51 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
 {
     public function __construct(
         Vistas $model,
-        private VistaEstadosService $estadosService,
-        private ModulosRepositoryInterface $moduloService,
-        private AccionesVistaService $accionesVistaService,
+        private VistaEstadosService $vistaEstadosService,
+        private ModulosRepositoryInterface $modulosService,
+        private AccionesVistaService $accionesVistaService
     ) {
         parent::__construct($model);
-        $this->defaultRelations = ['modulo', 'estado'];
-        $this->perPage = 15;
-        $this->orderBy = ["id", "desc"];
+        $this->defaultRelations = ['estado', 'modulo'];
     }
 
     public function exist_samenameWhithModuleId($name, $module)
     {
-        return $this->whereFirst([
-            ['nombre', '=', $name],
-            ['modulo', '=', $module],
-        ]);
+        return $this->whereFirst(['nombre' => $name, 'modulo' => $module]);
     }
 
     public function findbyModule($moduleId)
     {
-        return $this->whereFirst([
-            ['modulo', '=', $moduleId],
-        ]);
+        return $this->whereList(['modulo' => $moduleId]);
     }
 
     public function findByModuloId($moduloId)
     {
-
-        return $this->whereList(['modulo', '=', $moduloId]);
+        return $this->whereList(['modulo' => $moduloId]);
     }
+
     public function estadosList()
     {
-        return $this->estadosService->getAll();
+        return $this->vistaEstadosService->getAll();
     }
+
     public function modulosList()
     {
-        return $this->moduloService->getAll();
+        return $this->modulosService->getAll();
     }
 
     public function acctionList($vistaId)
     {
-        return $this->accionesVistaService->findByVista($vistaId);
+        return $this->accionesVistaService->findByVista((int) $vistaId);
     }
-    public function createAccion(array $data): bool
+
+    public function deleteAccion($id)
+    {
+        return $this->accionesVistaService->delete((int) $id);
+    }
+
+    public function createAccion(array $data)
     {
         return $this->accionesVistaService->create($data);
-    }
-    public function deleteAccion($id): bool
-    {
-        return $this->accionesVistaService->delete($id);
     }
 }

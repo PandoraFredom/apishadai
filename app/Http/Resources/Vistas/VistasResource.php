@@ -25,5 +25,5 @@ class VistasResource extends JsonResource
         ];
     }
 
-    
+
 }

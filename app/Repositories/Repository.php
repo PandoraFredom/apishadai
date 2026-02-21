@@ -30,7 +30,7 @@ abstract class Repository implements RepositoryInterface
     protected array $defaultRelations = [];
     protected int $perPage = 15;
     protected array $orderBy = ["id", "DESC"];
-    protected bool $useQueryBuilder = true; // Flag para decidir entre DB y Eloquent
+    protected bool $useQueryBuilder = false; // Flag para decidir entre DB y Eloquent
 
     public function __construct(Model $model)
     {
