@@ -9,4 +9,6 @@ Route::prefix('stock')->group(function () {
     Route::get('/buscar/{id}', [StocksController::class, 'show']);
     Route::put('/actualizar', [StocksController::class, 'update']);
     Route::delete('/eliminar/{id}', [StocksController::class, 'destroy']);
+
+    Route::get('/estados', [StocksController::class, 'estadosList']);
 });

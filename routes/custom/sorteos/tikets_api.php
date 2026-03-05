@@ -7,7 +7,7 @@ Route::prefix( 'ticket')->group(function () {
     //rutas tikets
     Route::get('/all', [App\Http\Controllers\API\tiketsController::class, 'index']);
     Route::post('/create', [App\Http\Controllers\API\tiketsController::class, 'store']);
-    Route::get('/active', [App\Http\Controllers\API\tiketsController::class, 'getpromo']);
+    Route::get('/sorteoactual', [App\Http\Controllers\API\tiketsController::class, 'getpromo']);
 
     //rutas clientes
     Route::get('/clientes', [App\Http\Controllers\API\tiketsController::class, 'get_clientesList']);

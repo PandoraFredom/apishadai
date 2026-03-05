@@ -17,6 +17,8 @@ Route::prefix('config')->group(function () {
     require __DIR__ . '/config/permisos_api.php';
     //---------------------------Stocks---------------------------------
     require __DIR__ . '/config/stocks_api.php';
+    //---------------------------Stock Estados---------------------------
+    require __DIR__ . '/config/stocks_estado_api.php';
     //---------------------------Dispositivos---------------------------------
     require __DIR__ . '/config/device_api.php';
 });

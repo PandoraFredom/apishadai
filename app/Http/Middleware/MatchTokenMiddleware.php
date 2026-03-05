@@ -2,14 +2,21 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Devices;
-use App\Models\MatchTokens;
+use App\Interfaces\Config\DeviceService;
+use App\Interfaces\Config\MatchTokensService;
+use App\Services\EncryptionService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class MatchTokenMiddleware
 {
+    public function __construct(
+        private DeviceService $deviceService,
+        private MatchTokensService $matchTokensService,
+        private EncryptionService $encService
+    ) {}
+
     /**
      * Handle an incoming request.
      *
@@ -18,14 +25,16 @@ class MatchTokenMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->bearerToken();
-        $deviceId = $this->getdeviceInfo($request);
+        $deviceId = $this->getDeviceInfo($request);
 
         if (empty($token) || empty($deviceId)) {
-            return $this->sendResponse(null, 'No se proporciona informacion del dispositivo2', 401);
+            return $this->sendResponse(null, 'No se proporciona informacion del dispositivo', 401);
         }
-        $match = MatchTokens::where('token', $token)
-            ->where('device', $deviceId['id'])
-            ->first();
+
+        $match = $this->matchTokensService->whereFirst([
+            ['token', '=', $token],
+            ['device', '=', $deviceId['id']]
+        ]);
 
         if (!$match) {
             return $this->sendResponse(null, 'Token Incorrecto', 401);
@@ -35,7 +44,7 @@ class MatchTokenMiddleware
     }
 
 
-    private function getdeviceInfo(Request $request): array
+    private function getDeviceInfo(Request $request): array
     {
         $info = [
             'ip' => $request->header('X-Device-Ip'),
@@ -44,10 +53,11 @@ class MatchTokenMiddleware
 
         ];
 
-        $device = Devices::where('ip', hash('sha256', $info['ip']))
-            ->where('ip2', hash('sha256', $info['ip2']))
-            ->where('name',  hash('sha256', $info['name']))
-            ->first();
+        $device = $this->deviceService->whereFirst([
+            ['ip', '=', $this->encService->genHash($info['ip'])],
+            ['ip2', '=', $this->encService->genHash($info['ip2'])],
+            ['name', '=', $this->encService->genHash($info['name'])]
+        ]);
 
         if ($device) {
             return ['id' => $device->id];

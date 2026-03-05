@@ -2,29 +2,28 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
-class StockRequest extends FormRequest
+class StockUpdateRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'descripcion' => 'required|string|max:180|unique:stocks,descripcion',
+            'id' => 'required|integer|exists:stocks,id',
+            'descripcion' => [
+                'required',
+                'string',
+                'max:180',
+                Rule::unique('stocks', 'descripcion')->ignore($this->input('id')),
+            ],
             'telefono' => 'required|string|max:20',
             'ubicacion' => 'required|string|max:180',
             'estado.id' => 'required|integer|exists:stock_estado,id',
@@ -34,6 +33,9 @@ class StockRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'id.required' => 'El id del stock es requerido',
+            'id.integer' => 'El id del stock debe ser un número entero',
+            'id.exists' => 'El stock seleccionado no existe',
             'descripcion.required' => 'La descripcion es requerida',
             'descripcion.string' => 'La descripcion debe ser una cadena de texto',
             'descripcion.unique' => 'La descripcion ya existe',
@@ -48,13 +50,6 @@ class StockRequest extends FormRequest
         ];
     }
 
-
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
     protected function failedValidation(Validator $validator)
     {
         $response = [

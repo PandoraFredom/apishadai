@@ -12,7 +12,17 @@ class Stocks extends Model
         'descripcion',
         'telefono',
         'ubicacion',
+        'estado',
     ];
+
+    protected $casts = [
+        'estado' => 'integer',
+    ];
+
+    public function Estado()
+    {
+        return $this->belongsTo(StockEstado::class, 'estado');
+    }
 
     public function Device()
     {

@@ -2,14 +2,19 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Permisos;
+use App\Interfaces\Config\PermisoService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log as FacadesLog;
 use Symfony\Component\HttpFoundation\Response;
 
 class ModuleSecurityMiddleware
 {
+    public function __construct(
+        private PermisoService $permisoService
+    ) {}
+
     /**
      * Handle an incoming request.
      *
@@ -19,31 +24,95 @@ class ModuleSecurityMiddleware
     {
         $resourceNames = $this->getResource($request);
         $action = $this->getAction($request);
+        $userId = Auth::id();
 
         if (!$action) {
             return $this->sendResponse(null, 'Acción no especificada', 401);
         }
 
-        $permiso = DB::table('permisos')
-            ->join('vistas', 'permisos.vista', '=', 'vistas.id')
-            ->join('modulos', 'permisos.modulo', '=', 'modulos.id')
-            ->join('actionsvistas', 'permisos.actionvista', '=', 'actionsvistas.id')
-            ->where('modulos.nombre', $resourceNames['md'])
-            ->where('vistas.nombre', $resourceNames['vw'])
-            ->where('permisos.usuario', auth()->id())
-            ->where('actionsvistas.codigo', $action)
+        $permissionStatus = $this->getPermissionStatus(
+            $resourceNames['md'],
+            $resourceNames['vw'],
+            $userId,
+            $action
+        );
 
-            ->where(function ($q) {
-                $q->whereNull('permisos.lifetime')
-                    ->orWhere('permisos.lifetime', '>=', now());
-            })
-            ->exists();
+       /* FacadesLog::info(
+            "Checking permissions for user {$userId} on module {$resourceNames['md']}, view {$resourceNames['vw']}, action {$action} Result: {$permissionStatus}"
+        );*/
 
-        if (!$permiso) {
-            return $this->sendResponse(null, 'Acceso denegado o permiso expirado', 401);
+        if ($permissionStatus !== 'granted') {
+            $message = $permissionStatus === 'expired'
+                ? 'Permiso expirado'
+                : 'Acceso denegado: no tiene permiso para esta acción';
+
+            return $this->sendResponse(null, $message, 401);
         }
 
         return $next($request);
+    }
+
+    private function getPermissionStatus(string $moduleName, string $viewName, ?int $userId, string $action): string
+    {
+        if (!$userId) {
+            return 'missing';
+        }
+
+        $joins = [
+            [
+                'table' => 'vistas',
+                'first' => 'permisos.vista',
+                'operator' => '=',
+                'second' => 'vistas.id',
+                'type' => 'inner'
+            ],
+            [
+                'table' => 'modulos',
+                'first' => 'permisos.modulo',
+                'operator' => '=',
+                'second' => 'modulos.id',
+                'type' => 'inner'
+            ],
+            [
+                'table' => 'actionsvistas',
+                'first' => 'permisos.actionvista',
+                'operator' => '=',
+                'second' => 'actionsvistas.id',
+                'type' => 'inner'
+            ],
+        ];
+
+        $baseConditions = [
+            ['modulos.nombre', '=', $moduleName],
+            ['vistas.nombre', '=', $viewName],
+            ['permisos.usuario', '=', $userId],
+            ['actionsvistas.codigo', '=', $action],
+        ];
+
+        $unlimitedPermission = $this->permisoService->joinWhereFirst([
+            ...$baseConditions,
+            ['permisos.lifetime', 'IS', null],
+        ], $joins);
+
+        if ($unlimitedPermission) {
+            return 'granted';
+        }
+
+        $activePermission = $this->permisoService->joinWhereFirst([
+            ...$baseConditions,
+            ['permisos.lifetime', '>=', now()],
+        ], $joins);
+
+        if ($activePermission) {
+            return 'granted';
+        }
+
+        $expiredPermission = $this->permisoService->joinWhereFirst([
+            ...$baseConditions,
+            ['permisos.lifetime', '<', now()],
+        ], $joins);
+
+        return $expiredPermission ? 'expired' : 'missing';
     }
 
 

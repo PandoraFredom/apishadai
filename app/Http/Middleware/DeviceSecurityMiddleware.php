@@ -2,21 +2,20 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Device;
+use App\Interfaces\Config\DeviceService;
 use App\Services\EncryptionService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class DeviceSecurityMiddleware
 {
 
-    public function __construct(private EncryptionService $encService)
-    {
-
-
-    }
+    public function __construct(
+        private EncryptionService $encService,
+        private DeviceService $deviceService
+    ) {}
 
     /**
      * Handle an incoming request.
@@ -30,19 +29,19 @@ class DeviceSecurityMiddleware
         }
 
         // Buscar el dispositivo que coincida con ip, ip2 y name hasheados
-        $device = Device::with('estado')
-            ->where('ip', $this->encService->genHash($info['ip']))
-            ->where('ip2', $this->encService->genHash($request->ip()))
-            ->where('name', $this->encService->genHash($info['name']))
-            ->first();
-
+        $device = $this->deviceService->whereFirst([
+            'ip' => $this->encService->genHash($info['ip']),
+            'ip2' => $this->encService->genHash($request->ip()),
+            'name' => $this->encService->genHash($info['name']),
+        ]);
+       // Log::info("Device Info - IP: {$this->encService->genHash($info['ip'])}, IP2: {$this->encService->genHash($request->ip())}, Name: {$this->encService->genHash($info['name'])}");
         if (!$device) {
-            return $this->sendResponse(null, 'Dispositivo no registrado:' . $this->encService->genHash($info['ip']), 401);
+            return $this->sendResponse(null, 'Dispositivo no registrado', 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
         if ($status !== 'ACTIVO') {
-            return $this->sendResponse(null, 'Dispositivo no activo', 401);
+            return $this->sendResponse(null, 'Dispositivo desactivado,consultar con el administrador', 401);
         }
 
         return $next($request);

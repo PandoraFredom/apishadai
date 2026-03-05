@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Resources\Stock;
+namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class StocksResource extends JsonResource
+class MatchTokenResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,14 +14,13 @@ class StocksResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return  [
+        return [
             'id' => $this->id,
-            'descripcion' => $this->descripcion,
-            'telefono' => $this->telefono,
-            'ubicacion' => $this->ubicacion,
-            'estado' => $this->Estado,
+            'usuario' => $this->usuario,
+            'device' => $this->device,
+            'token' => $this->token,
             'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'updated_at' => $this->updated_at,
         ];
     }
 }

@@ -26,8 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->group('auth:api', [
             \App\Http\Middleware\JWTAuthenticationMiddleware::class,
-            // \App\Http\Middleware\MatchTokenMiddleware::class,
-            //\App\Http\Middleware\ModuleSecurityMiddleware::class
+             \App\Http\Middleware\MatchTokenMiddleware::class,
+           \App\Http\Middleware\ModuleSecurityMiddleware::class,
             \App\Http\Middleware\DeviceSecurityMiddleware::class,
             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);

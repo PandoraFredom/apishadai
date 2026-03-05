@@ -17,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\VistaRepositoryInterface::class => \App\Repositories\Config\VistaRepository::class,
         \App\Interfaces\Config\VistaEstadosService::class => \App\Repositories\Config\VistaEstadosRepository::class,
         \App\Interfaces\Config\StockRepositoryInterface::class => \App\Repositories\Config\StockRepository::class,
+        \App\Interfaces\Config\StockEstadoService::class => \App\Repositories\Config\StockEstadoRepository::class,
         \App\Interfaces\Config\UserRepositoryInterface::class => \App\Repositories\Config\UserRepository::class,
         \App\Interfaces\Config\RolesRepositoryInterface::class => \App\Repositories\Config\RolesRepository::class,
         \App\Interfaces\Config\UserEstadoRepositoryInterface::class => \App\Repositories\Config\UserEstadoRepository::class,
@@ -25,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\AccionesVistaService::class => \App\Repositories\Config\AccionesVistaRepository::class,
         \App\Interfaces\Config\DeviceEstadoService::class => \App\Repositories\Config\DeviceEstadoRepository::class,
         \App\Interfaces\Config\DeviceService::class => \App\Repositories\Config\DeviceRepository::class,
+        \App\Interfaces\Config\MatchTokensService::class => \App\Repositories\Config\MatchTokensRepository::class,
+
+        //-------------------------------- AUTH ---------------------------------
+        \App\Interfaces\Auth\AuthService::class => \App\Repositories\Auth\AuthRepository::class,
 
         //-------------------------------- PROMOS ---------------------------------
         \App\Interfaces\Promos\PromoEstadosService::class => \App\Repositories\promos\PromoEstadosRepository::class,

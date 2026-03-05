@@ -16,5 +16,5 @@ Route::group(['middleware' => ['auth:api']], function () {
     require __DIR__ . '/custom/ConfigModule_api.php';
 
     //==================================PROMOCIONES=============================
-    require __DIR__ . '/custom/promos_api.php';
+    require __DIR__ . '/custom/sorteos_api.php';
 });
