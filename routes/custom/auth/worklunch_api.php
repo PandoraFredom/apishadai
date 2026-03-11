@@ -8,5 +8,4 @@ Route::prefix('worklunch')->group(function () {
     Route::get('/find/{id}', [WorkLunchController::class, 'show']);
     Route::post('/work', [WorkLunchController::class, 'work']);
     Route::post('/lunch', [WorkLunchController::class, 'lunch']);
-    Route::get('/findbyuserdate', [WorkLunchController::class, 'findbyuserdate']);
 });

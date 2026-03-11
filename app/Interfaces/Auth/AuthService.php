@@ -9,13 +9,6 @@ use Illuminate\Support\Collection;
 
 interface AuthService
 {
-    /**
-     * Obtiene la información del dispositivo del header de la solicitud
-     *
-     * @param Request $request
-     * @return Device|null
-     */
-    public function getDeviceInfo(Request $request): ?Device;
 
     /**
      * Obtiene los permisos de un usuario agrupados por módulo > vista > acciones

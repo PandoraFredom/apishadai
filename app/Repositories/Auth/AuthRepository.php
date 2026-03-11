@@ -3,52 +3,22 @@
 namespace App\Repositories\Auth;
 
 use App\Interfaces\Auth\AuthService;
-use App\Interfaces\Config\DeviceService;
 use App\Interfaces\Config\MatchTokensService;
 use App\Interfaces\Config\PermisoService;
-use App\Models\Device;
 use App\Models\MatchTokens;
 use App\Services\EncryptionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
 class AuthRepository implements AuthService
 {
     public function __construct(
         private EncryptionService $encService,
-        private DeviceService $deviceService,
         private PermisoService $permisoService,
         private MatchTokensService $matchTokensService
     ) {}
 
-    /**
-     * Obtiene la información del dispositivo del header de la solicitud
-     *
-     * @param Request $request
-     * @return Device|null
-     */
-    public function getDeviceInfo(Request $request): ?Device
-    {
-        if ($request->hasHeader('X-Device-Ip') && $request->hasHeader('X-Device-Name')) {
 
-            $deviceIpHash = $this->encService->genHash($request->header('X-Device-Ip'));
-            $deviceIp2Hash = $this->encService->genHash($request->ip());
-            $deviceNameHash = $this->encService->genHash($request->header('X-Device-Name'));
-
-
-
-            $conditions = [
-                ['ip', '=', $deviceIpHash],
-                ['ip2', '=', $deviceIp2Hash],
-                ['name', '=', $deviceNameHash],
-            ];
-
-            $device = $this->deviceService->joinWhereFirst($conditions, ['estado', 'stock']);
-            return $device;
-        }
-        return null;
-    }
 
     /**
      * Obtiene los permisos de un usuario agrupados por módulo > vista > acciones

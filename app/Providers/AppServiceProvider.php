@@ -28,15 +28,16 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\DeviceService::class => \App\Repositories\Config\DeviceRepository::class,
         \App\Interfaces\Config\MatchTokensService::class => \App\Repositories\Config\MatchTokensRepository::class,
 
+
         //-------------------------------- AUTH ---------------------------------
         \App\Interfaces\Auth\AuthService::class => \App\Repositories\Auth\AuthRepository::class,
-
+        \App\Interfaces\WorkLunch\WorkLunchService::class => \App\Repositories\WorkLunch\WorkLunchRepository::class,
         //-------------------------------- PROMOS ---------------------------------
         \App\Interfaces\Promos\PromoEstadosService::class => \App\Repositories\promos\PromoEstadosRepository::class,
         \App\Interfaces\Promos\PromocionesService::class =>  \App\Repositories\promos\PromosRepository::class,
         \App\Interfaces\Promos\TicketService::class =>  \App\Repositories\promos\TicketRepository::class,
 
-            //-------------------------------- CLIENTES ---------------------------------
+        //-------------------------------- CLIENTES ---------------------------------
         \App\Interfaces\Clientes\ClienteService::class => \App\Repositories\Cliente\ClienteRepository::class,
         //-------------------------------- UBICACION ---------------------------------
         \App\Interfaces\Ubicacion\DepartamentosService::class => \App\Repositories\Ubicacion\DepartamentosRepository::class,
@@ -57,7 +58,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-     /*   //log consultas a la debase de datos
+        /*   //log consultas a la debase de datos
          DB::listen(function($query) {
             Log::info(
                 $query->sql,

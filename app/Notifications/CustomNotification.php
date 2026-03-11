@@ -38,7 +38,7 @@ class CustomNotification extends Notification
             ->from('riveraorud@gmail.com', 'Sistema de Notificaciones')
             ->subject('Notificación Importante')
             ->line($this->message)
-            ->action('Visitar Sitio', url('/'))
+           // ->action('Visitar Sitio', url('/'))
             ->line('¡Gracias por usar nuestra aplicación!');
     }
 

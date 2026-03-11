@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
+use App\Utils\DeviceUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -12,13 +13,13 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthService $authService) {}
+    public function __construct(private AuthService $authService,private DeviceUtility $deviceUtility) {}
 
 
     public function login(LoginRequest $request)
     {
         try {
-            $deviceInfo = $this->authService->getDeviceInfo($request);
+            $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
 
             if ($deviceInfo == null) {
                 return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
