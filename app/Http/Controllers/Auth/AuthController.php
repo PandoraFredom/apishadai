@@ -22,7 +22,7 @@ class AuthController extends Controller
             $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
 
             if ($deviceInfo == null) {
-                return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
+               return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
             }
 
             $credentials = $request->only('name', 'password');

@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\DeviceEstadoService::class => \App\Repositories\Config\DeviceEstadoRepository::class,
         \App\Interfaces\Config\DeviceService::class => \App\Repositories\Config\DeviceRepository::class,
         \App\Interfaces\Config\MatchTokensService::class => \App\Repositories\Config\MatchTokensRepository::class,
+        \App\Interfaces\Config\AppConfigService::class => \App\Repositories\Config\AppConfigRepository::class,
 
 
         //-------------------------------- AUTH ---------------------------------

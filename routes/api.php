@@ -8,11 +8,12 @@ Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::cla
 
 
 
+
 Route::group(['middleware' => ['auth:api']], function () {
 
-
-    //==================================AUTH==================================
     require __DIR__ . '/custom/AuthModule_api.php';
+    //==================================AUTH==================================
+
 
     //==================================CONFIG=================================
     require __DIR__ . '/custom/ConfigModule_api.php';

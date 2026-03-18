@@ -40,7 +40,8 @@ class JWTAuthenticationMiddleware
                 return $this->sendResponse(null, 'Usuario no encontrado', 401);
             }
 
-            $request->auth = $user;
+            $request->attributes->set('auth', $user);
+            $request->setUserResolver(fn () => $user);
 
             return $next($request);
         } catch (TokenExpiredException $e) {

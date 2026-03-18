@@ -24,6 +24,7 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => 'required|integer|exists:users,id',
             'rol.id' => 'required|integer|exists:roles,id',
             'estado.id' => 'required|integer|exists:user_estados,id',
         ];
@@ -32,6 +33,10 @@ class UserUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'id.required' => 'El campo id es obligatorio.',
+            'id.integer' => 'El campo id debe ser un número entero.',
+            'id.exists' => 'El usuario seleccionado no es válido.',
+
             'rol.id.required' => 'El campo rol es obligatorio.',
             'rol.id.integer' => 'El campo rol debe ser un número entero.',
             'rol.id.exists' => 'El rol seleccionado no es válido.',
