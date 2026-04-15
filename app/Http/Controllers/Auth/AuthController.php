@@ -18,6 +18,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
+
         try {
             $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
 
@@ -25,7 +26,10 @@ class AuthController extends Controller
                return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
             }
 
-            $credentials = $request->only('name', 'password');
+            $credentials = $request->validated();
+
+
+
             $credentials['name'] = $this->authService->hashValue($credentials['name']);
 
             if (!$token = Auth::attempt($credentials)) {

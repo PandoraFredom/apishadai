@@ -32,7 +32,7 @@ class AppVersionSecurityMiddleware
         $dat = $this->appConfigService->existVersion($this->encryptionService->genHash($info['version']));
 
         if (!$dat) {
-            return $this->sendResponse(null, 'Version de app Incorrecta', 401);
+            return $this->sendResponse(null, 'Version de app Incorrecta', 426);
         }
 
         return $next($request);

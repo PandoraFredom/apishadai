@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class AppConfig extends Model
 {
 protected $table = 'appconfig';
+
+   protected  $fillable = [
+        'appv',
+    ];
+
 }

@@ -10,6 +10,7 @@ use App\Services\EncryptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
+
 class AuthRepository implements AuthService
 {
     public function __construct(
@@ -144,6 +145,7 @@ class AuthRepository implements AuthService
      */
     public function hashValue(string $value): string
     {
+
         return $this->encService->genHash($value);
     }
 }
