@@ -14,6 +14,13 @@ class Promociones extends Model
         'fecha_inicio',
         'fecha_fin',
         'estado',
+        'impresiones',
+        'valor',
+    ];
+
+    protected $casts = [
+        'impresiones' => 'integer',
+        'valor' => 'float',
     ];
 
     public function Estado()

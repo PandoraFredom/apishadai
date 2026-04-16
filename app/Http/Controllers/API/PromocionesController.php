@@ -44,7 +44,17 @@ class PromocionesController extends Controller
                 'fecha_inicio' =>  date('Y-m-d', strtotime($dto->fecha_inicio)),
                 'fecha_fin' => date('Y-m-d', strtotime($dto->fecha_fin)),
                 'estado' => $dto->estado,
+                'impresiones' => $dto->impresiones,
+                'valor' => $dto->valor,
             ];
+            // check if there's another active promo
+            $existingActive = $this->service->get_promoActive();
+            if ($existingActive) {
+                return $this->sendResponse(false, 'Ya existe otro sorteo activo. Solo puede haber un sorteo activo a la vez.', 400);
+            }
+
+
+
 
             $create = $this->service->create($data);
             if (!$create) {

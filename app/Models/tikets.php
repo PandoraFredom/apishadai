@@ -17,6 +17,16 @@ class tikets extends Model
         'stock',
     ];
 
+    public function getValorAttribute(): float
+    {
+        $rawValue = $this->attributes['valor'] ?? null;
+        if ($rawValue !== null) {
+            return (float) $rawValue;
+        }
+
+        return (float) ($this->Promocion?->valor ?? 0);
+    }
+
     //promocion
     public function Promocion()
     {

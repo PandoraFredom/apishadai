@@ -28,6 +28,8 @@ class PromosRequest extends FormRequest
             'descripcion' => 'required|string|max:200',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date',
+            'impresiones' => 'nullable|integer|min:0',
+            'valor' => 'nullable|numeric|min:0',
             'estado.id' => 'required|integer|exists:promoestado,id',
         ];
     }
@@ -48,6 +50,12 @@ class PromosRequest extends FormRequest
 
             'fecha_fin.required' => 'La fecha de fin es obligatoria.',
             'fecha_fin.date' => 'La fecha de fin debe ser una fecha válida.',
+
+            'impresiones.integer' => 'Las impresiones deben ser un número entero.',
+            'impresiones.min' => 'Las impresiones no pueden ser menores a 0.',
+
+            'valor.numeric' => 'El valor debe ser numérico.',
+            'valor.min' => 'El valor no puede ser menor a 0.',
 
             'estado.id.required' => 'El estado es obligatorio.',
             'estado.id.integer' => 'El estado debe ser un número entero.',

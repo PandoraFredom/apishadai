@@ -20,6 +20,8 @@ class PromocionesResource extends JsonResource
             'descripcion' => $this->descripcion,
             'fecha_inicio' => $this->fecha_inicio,
             'fecha_fin' => $this->fecha_fin,
+            'impresiones' => $this->impresiones,
+            'valor' => $this->valor,
             'estado' =>     $this->Estado,
             'created_at' => null,
             'updated_at' => null,

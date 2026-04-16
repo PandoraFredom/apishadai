@@ -151,9 +151,11 @@
             <div class="ticket-box">
                 BOLETO# {{ $ticket->ntiket }}
             </div>
-            <div class="ticket-value">
-                VALOR: L.25
-            </div>
+            @if(($ticket->valor ?? 0) > 0)
+                <div class="ticket-value">
+                    VALOR: L.{{ $ticket->valor }}
+                </div>
+            @endif
         </div>
 
         <!-- Promoción -->

@@ -47,6 +47,8 @@ class PromosRepository extends Repository implements PromocionesService
                 'promociones.id',
                 'promociones.nombre',
                 'promociones.fecha_fin',
+                'promociones.valor',
+                'promociones.impresiones',
             ]
         );
 
