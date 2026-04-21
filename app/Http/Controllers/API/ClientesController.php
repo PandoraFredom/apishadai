@@ -7,7 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Clientes\ClienteRequest;
 use App\Http\Requests\Clientes\ClienteUpdatePhoneRequest;
 use App\Http\Requests\Clientes\ClienteUpdateRequest;
-use App\Http\Requests\Util\FilterRequest;
+use App\Http\Requests\Util\DefaultFilterRequest;
 use App\Http\Resources\Clientes\ClienteResourceSingle;
 use App\Http\Resources\Clientes\ClientesResource;
 use App\Interfaces\Clientes\ClienteService;
@@ -123,7 +123,7 @@ class ClientesController extends Controller
         }
     }
 
-    public function filter(FilterRequest $request)
+    public function filter(DefaultFilterRequest $request)
     {
         try {
             $filterModel = $request->toFilterModel();

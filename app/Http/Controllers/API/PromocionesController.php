@@ -6,7 +6,7 @@ use App\DTOs\PromosDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Promos\PromosRequest;
 use App\Http\Requests\Promos\PromosUpdateRequest;
-use App\Http\Requests\Util\FilterRequest;
+use App\Http\Requests\Promos\PromoFilterRequest;
 use App\Http\Resources\PromocionesResource;
 use App\Http\Resources\PromoEstadoResource;
 use App\Interfaces\Promos\PromocionesService;
@@ -119,7 +119,21 @@ class PromocionesController extends Controller
         }
     }
 
-    public function filter(FilterRequest $request) {}
+    public function filter(PromoFilterRequest $request)
+    {
+        try {
+            $list = $this->service->filterPromos($request);
+
+            if (!$list || $list->isEmpty()) {
+                return $this->sendResponse(null, 'No se encontraron sorteos.', 404);
+            }
+
+            return $this->sendResponse(PromocionesResource::collection($list), 'ok', 200, true);
+        } catch (\Throwable $th) {
+            $this->logError('PromocionesController filter', $th);
+            return $this->sendResponse(false, 'Error inesperado al filtrar sorteos.', 500);
+        }
+    }
 
 
     public function get_estadosList()

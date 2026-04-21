@@ -14,35 +14,19 @@ use function count;
 use function in_array;
 use function is_string;
 
-class FilterRequest extends FormRequest
+abstract class FilterRequest extends FormRequest
 {
     /**
      * Campos permitidos para filtrar (whitelist)
-     * Esto previene que se filtren campos sensibles o inexistentes
+     * Las clases hijas deben sobreescribir esta lista.
      */
-    protected array $allowedKeys = [
-        'docid',
-        'pnombre',
-        'papellido'
-    ];
+    protected array $allowedKeys = [];
 
     /**
      * Operadores permitidos para filtros
+     * Las clases hijas deben sobreescribir esta lista.
      */
-    protected array $allowedOperators = [
-        '=',
-        '!=',
-        'LIKE',
-        'LIKE_LEFT',      // %value (búsqueda al inicio)
-        'LIKE_RIGHT',     // value% (búsqueda al final)
-        'LIKE_ALL',       // %value% (búsqueda en cualquier lugar)
-        'IN',
-        '>',
-        '<',
-        '>=',
-        '<=',
-        'BETWEEN',
-    ];
+    protected array $allowedOperators = [];
 
     /**
      * Longitud máxima para valores de búsqueda
@@ -173,7 +157,7 @@ class FilterRequest extends FormRequest
             'filterItems.*.operator.required' => 'El operador del filtro es requerido',
             'filterItems.*.operator.string' => 'El operador debe ser texto',
             'filterItems.*.operator.max' => 'El operador no puede exceder 10 caracteres',
-            'filterItems.*.operator.in' => 'El operador del filtro no es válido: use =, !=, LIKE, LIKE_LEFT, LIKE_RIGHT, LIKE_ALL, IN, >, <, >=, <=, BETWEEN',
+            'filterItems.*.operator.in' => 'El operador del filtro no es válido',
 
             // FilterItems logicalOperator
             'filterItems.*.logicalOperator.string' => 'El operador lógico debe ser texto',

@@ -23,7 +23,7 @@ class PromosRepository extends Repository implements PromocionesService
 
     public function filterPromos(FilterRequest $request)
     {
-        return null;
+        return $this->whereListWithFilter($request->toFilterModel());
     }
     public function get_estadosList()
     {

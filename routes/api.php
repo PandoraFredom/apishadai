@@ -14,10 +14,12 @@ Route::group(['middleware' => ['auth:api']], function () {
     require __DIR__ . '/custom/AuthModule_api.php';
     //==================================AUTH==================================
 
-
     //==================================CONFIG=================================
     require __DIR__ . '/custom/ConfigModule_api.php';
 
     //==================================PROMOCIONES=============================
     require __DIR__ . '/custom/sorteos_api.php';
+    //==================================REPORTES=============================
+    require __DIR__ . '/custom/ReportesModule_api.php';
+
 });

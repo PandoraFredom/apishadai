@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Promos\TicketRequest;
 use App\Http\Requests\Clientes\ClienteRequest;
 use App\Http\Requests\Clientes\ClienteUpdatePhoneRequest;
-use App\Http\Requests\Util\FilterRequest;
+use App\Http\Requests\Util\DefaultFilterRequest;
 use App\Http\Resources\Clientes\ClienteResourceSingle;
 use App\Http\Resources\DepartamentoResource;
 use App\Http\Resources\tiketsResource;
@@ -134,7 +134,7 @@ class tiketsController extends Controller
     /**
      * Filter clients by term
      */
-    public function filter_clientes(FilterRequest $request)
+    public function filter_clientes(DefaultFilterRequest $request)
     {
         try {
             $filterModel = $request->toFilterModel();

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Promos;
 
+use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\Clientes\ClienteService;
 use App\Interfaces\Promos\PromocionesService;
 use App\Interfaces\Promos\TicketService;
@@ -79,7 +80,7 @@ class TicketRepository extends Repository implements TicketService
 
     public function activephone(string $phone, int $id): bool
     {
-        return $this->clienteService->activephone( $id);
+        return $this->clienteService->activephone($id);
     }
 
     public function create_cliente(array $data)
@@ -99,5 +100,10 @@ class TicketRepository extends Repository implements TicketService
     public function get_municipiosList(int $departamento_id)
     {
         return $this->municipiosService->getByDepartamento($departamento_id);
+    }
+
+    public function filter(FilterRequest $filterModel)
+    {
+        return $this->whereListWithFilter($filterModel->toFilterModel(),true);
     }
 }

@@ -25,7 +25,7 @@ class DeviceUtility
             'ip2' => $this->encryptionService->genHash($request->ip()),
             'name' => $this->encryptionService->genHash($info['name']),
         ]);
-     //  Log::info("Device Info - IP: {$this->encryptionService->genHash($info['ip'])}, IP2: {$this->encryptionService->genHash($request->ip())}, Name: {$this->encryptionService->genHash($info['name'])}");
+    // Log::info("Device Info - IP: {$this->encryptionService->genHash($info['ip'])}, IP2: {$this->encryptionService->genHash($request->ip())}, Name: {$this->encryptionService->genHash($info['name'])}");
         return $device;
     }
 
