@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Config;
 
+use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\Config\StockEstadoService;
 use App\Interfaces\Config\StockRepositoryInterface;
 use App\Models\Stocks;
@@ -22,5 +23,13 @@ class StockRepository extends Repository implements StockRepositoryInterface
     public function get_estadosList(): Collection
     {
         return $this->stockEstadoService->getAll();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function filter(FilterRequest $request)
+    {
+        return $this->whereListWithFilter($request->toFilterModel(), true);
     }
 }

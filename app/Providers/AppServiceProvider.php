@@ -45,6 +45,11 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Ubicacion\MunicipiosService::class => \App\Repositories\Ubicacion\MunicipiosRepository::class,
 
 
+        //-------------------------------- REPORTES ---------------------------------
+        \App\Interfaces\Reportes\SorteosRptService::class => \App\Repositories\Reportes\SorteosRptRepository::class,
+
+
+
     ];
 
     /**

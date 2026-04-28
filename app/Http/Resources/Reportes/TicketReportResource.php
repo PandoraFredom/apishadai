@@ -18,7 +18,7 @@ class TicketReportResource extends JsonResource
                 'id' => $this->id,
                 'ntiket' => $this->ntiket,
                 'promocion' => $this->promocion,
-                'cliente' => $this->Cliente->nombre . ' ' . $this->Cliente->apellido,
+                'cliente' => $this->cliente,
                 'usuario' => $this->Usuario->nombre,
                 'stock' => $this->Stock->descripcion,
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),

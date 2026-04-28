@@ -2,9 +2,9 @@
 
 namespace App\Repositories\Cliente;
 
+use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\Clientes\ClienteService;
 use App\Models\Clientes;
-use App\Models\Utils\Filter\FilterModel;
 use App\Repositories\Repository;
 
 class ClienteRepository extends Repository implements ClienteService
@@ -17,31 +17,18 @@ class ClienteRepository extends Repository implements ClienteService
         $this->perPage = 12;
     }
 
-    public function filter(FilterModel $filterModel)
+    public function filter(FilterRequest $request)
     {
-        $conditions = [];
-
-        foreach ($filterModel->getFilterItems() as $filterItem) {
-            $key = $filterItem->getKey();
-            $value = $filterItem->getValue();
-            $operator = $filterItem->getOperator();
-            $logicalOperator = $filterItem->getLogicalOperator();
-
-            // Estructura: [column, operator, value, logicalOperator]
-            $conditions[] = [$key, $operator, $value, $logicalOperator];
-        }
-
-        // Usar whereList con paginación - cada condición lleva su propio logicalOperator
-        return $this->whereList($conditions, true);
+        return $this->whereListWithFilter($request->toFilterModel(), true);
     }
 
-    public function activephone(int $id ): bool
+    public function activephone(int $id): bool
     {
         $phoneRecord = $this->whereFirst(
             [
                 ['id', '=', $id],
-                    ['phone_updated_at', '!=', null],
-                    ['phone_updated_at', '>', now()->subMonth()]
+                ['phone_updated_at', '!=', null],
+                ['phone_updated_at', '>', now()->subMonth()]
             ]
         );
 
