@@ -7,14 +7,12 @@ use App\Http\Requests\Util\FilterRequest;
 class SorteosFilterRequest extends FilterRequest
 {
     protected array $allowedKeys = [
-        'promocion',
-        'cliente',
-        'usuario',
-        'stock',
+        'nombre',
     ];
 
     protected array $allowedOperators = [
-        '=',
+        '=','LIKE',
     ];
 
 }
+

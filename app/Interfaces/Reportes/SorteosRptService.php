@@ -2,21 +2,17 @@
 
 namespace App\Interfaces\Reportes;
 
-use App\Http\Requests\Filters\ClientesFilterRequest;
-use App\Http\Requests\Filters\SorteosfilterRequest;
-use App\Http\Requests\Filters\StocksFilterRequest;
-use App\Http\Requests\Filters\TicketfilterRequest;
-use App\Http\Requests\Filters\UserFilterRequest;
+use App\Models\Utils\Filter\FilterModel;
 
 interface SorteosRptService
 {
-    public function filterTickets(TicketfilterRequest $request);
+    public function filterTickets(FilterModel $filter);
 
-    public function filterSorteos(SorteosfilterRequest $request);
+    public function filterSorteos(FilterModel $filter);
 
-    public function filterClientes(ClientesFilterRequest $request);
+    public function filterClientes(FilterModel $filter);
 
-    public function filterUsuarios(UserFilterRequest $request);
+    public function filterUsuarios(FilterModel $filter);
 
-    public function filterStocks(StocksFilterRequest $request);
+    public function filterStocks(FilterModel $filter);
 }

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Interfaces\RepositoryInterface;
+use App\Models\Utils\Filter\FilterModel;
 use App\Repositories\Traits\{
     QueryBuilderTrait,
     ConditionHandlerTrait,
@@ -255,21 +256,7 @@ abstract class Repository implements RepositoryInterface
         }, 'whereList', $this->getEmptyPaginator(), ['conditions' => $conditions]);
     }
 
-    /**
-     * Listar con FilterModel - construye condiciones con logicalOperator individual
-     */
-    public function whereListWithFilter($filterModel, bool $usePagination = false): Collection|LengthAwarePaginator
-    {
-        $conditions = [];
-        foreach ($filterModel->getFilterItems() as $item) {
-            // Estructura: [key, operator, value, logicalOperator]
-            $conditions[] = [$item->getKey(), $item->getOperator(), $item->getValue(), $item->getLogicalOperator()];
-        }
 
-        // whereList respeta el logicalOperator individual de cada condición
-
-        return $this->whereList($conditions, $usePagination);
-    }
 
     /**
      * Buscar el primer registro con condiciones
@@ -294,10 +281,27 @@ abstract class Repository implements RepositoryInterface
         }, 'whereFirst', null, ['conditions' => $conditions]);
     }
 
-    /**
+        /**
+     * Listar con FilterModel - construye condiciones con logicalOperator individual
+     */
+
+    public function filterAll(FilterModel $filterModel, bool $usePagination = false): Collection|LengthAwarePaginator
+    {
+        $conditions = [];
+        foreach ($filterModel->getFilterItems() as $item) {
+            // Estructura: [key, operator, value, logicalOperator]
+            $conditions[] = [$item->getKey(), $item->getOperator(), $item->getValue(), $item->getLogicalOperator()];
+        }
+
+        // whereList respeta el logicalOperator individual de cada condición
+
+        return $this->whereList($conditions, $usePagination);
+    }
+
+       /**
      * Buscar primer registro con FilterModel - construye condiciones con logicalOperator individual
      */
-    public function whereFirstWithFilter($filterModel): ?Model
+    public function filterOne(FilterModel $filterModel): ?Model
     {
         $conditions = [];
         foreach ($filterModel->getFilterItems() as $item) {

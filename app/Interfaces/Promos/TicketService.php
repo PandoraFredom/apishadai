@@ -16,8 +16,6 @@ interface TicketService extends RepositoryInterface
 
     public function filter_clientes(FilterModel $filterModel);
 
-    public function filter(FilterRequest $filterModel);
-
     public function activephone(string $phone, int $id): bool;
 
     public function create_cliente(array $data);

@@ -2,21 +2,13 @@
 
 namespace App\Repositories\Reportes;
 
-use  App\Http\Requests\Filters\{
-    ClientesFilterRequest,
-    SorteosfilterRequest,
-    StocksFilterRequest,
-    TicketfilterRequest,
-    UserFilterRequest
-};
-
 use App\Interfaces\Clientes\ClienteService;
 use App\Interfaces\Config\StockRepositoryInterface;
 use App\Interfaces\Config\UserRepositoryInterface;
 use App\Interfaces\Promos\PromocionesService;
 use App\Interfaces\Promos\TicketService;
 use App\Interfaces\Reportes\SorteosRptService;
-
+use App\Models\Utils\Filter\FilterModel;
 
 class SorteosRptRepository implements SorteosRptService
 {
@@ -32,40 +24,40 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * @inheritDoc
      */
-    public function filterClientes(ClientesFilterRequest $request)
+    public function filterClientes(FilterModel $filter)
     {
-        return $this->clientesService->filter($request);
+        return $this->clientesService->filterAll($filter);
     }
 
     /**
      * @inheritDoc
      */
-    public function filterSorteos(SorteosfilterRequest $request)
+    public function filterSorteos(FilterModel $filter)
     {
-        return $this->promocionesService->filter($request);
+        return $this->promocionesService->filterAll($filter);
     }
 
     /**
      * @inheritDoc
      */
-    public function filterStocks(StocksFilterRequest $request)
+    public function filterStocks(FilterModel $filter)
     {
-        return $this->stocksService->filter($request);
+        return $this->stocksService->filterAll($filter);
     }
 
     /**
      * @inheritDoc
      */
-    public function filterTickets(TicketfilterRequest $request)
+    public function filterTickets(FilterModel $filter)
     {
-        return $this->ticketService->filter($request);
+        return $this->ticketService->filterAll($filter);
     }
 
     /**
      * @inheritDoc
      */
-    public function filterUsuarios(UserFilterRequest $request)
+    public function filterUsuarios(FilterModel $filter)
     {
-        return $this->userService->filter($request);
+        return $this->userService->filterAll($filter);
     }
 }

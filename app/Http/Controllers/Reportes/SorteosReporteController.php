@@ -11,6 +11,7 @@ use App\Http\Requests\Reportes\SorteosFilterRequest;
 use App\Http\Resources\Reportes\SorteosRptResource;
 use App\Http\Resources\Reportes\TicketReportResource;
 use App\Interfaces\Reportes\SorteosRptService;
+use App\Models\Utils\Filter\FilterModel;
 
 class SorteosReporteController extends Controller
 {
@@ -19,7 +20,7 @@ class SorteosReporteController extends Controller
 
     public function filter(TicketfilterRequest $request)
     {
-        $list = $this->service->filterTickets($request->validated());
+        $list = $this->service->filterTickets(FilterModel::fromRequest($request->validated()));
 
         return $this->sendResponse(
             TicketReportResource::collection($list),
@@ -32,7 +33,8 @@ class SorteosReporteController extends Controller
 
     public function filter_sorteos(SorteosFilterRequest $request)
     {
-        $list = $this->service->filterSorteos($request->validated());
+
+        $list = $this->service->filterSorteos(FilterModel::fromRequest($request->validated()));
 
         return $this->sendResponse(
             SorteosRptResource::collection($list),
@@ -45,7 +47,7 @@ class SorteosReporteController extends Controller
 
     public function filter_clientes(ClientesFilterRequest $request)
     {
-        $list = $this->service->filterClientes($request->validated());
+        $list = $this->service->filterClientes(FilterModel::fromRequest($request->validated()));
 
         return $this->sendResponse(
             TicketReportResource::collection($list),
@@ -58,7 +60,7 @@ class SorteosReporteController extends Controller
 
     public function filter_usuarios(UserFilterRequest $request)
     {
-        $list = $this->service->filterUsuarios($request->validated());
+        $list = $this->service->filterUsuarios(FilterModel::fromRequest($request->validated()));
 
         return $this->sendResponse(
             TicketReportResource::collection($list),
@@ -70,7 +72,7 @@ class SorteosReporteController extends Controller
 
     public function filter_stocks(StocksFilterRequest $request)
     {
-        $list = $this->service->filterStocks($request->validated());
+        $list = $this->service->filterStocks(FilterModel::fromRequest($request->validated()));
 
         return $this->sendResponse(
             TicketReportResource::collection($list),

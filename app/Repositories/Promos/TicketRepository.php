@@ -73,11 +73,6 @@ class TicketRepository extends Repository implements TicketService
         return $this->clienteService->paginate();
     }
 
-    public function filter_clientes(FilterModel $filterModel)
-    {
-        return $this->clienteService->filter($filterModel);
-    }
-
     public function activephone(string $phone, int $id): bool
     {
         return $this->clienteService->activephone($id);
@@ -102,8 +97,13 @@ class TicketRepository extends Repository implements TicketService
         return $this->municipiosService->getByDepartamento($departamento_id);
     }
 
-    public function filter(FilterRequest $filterModel)
+
+    /**
+     * @inheritDoc
+     */
+    public function filter_clientes(FilterModel $filterModel)
     {
-        return $this->whereListWithFilter($filterModel->toFilterModel(),true);
+
+        return $this->clienteService->filterAll($filterModel);
     }
 }

@@ -35,4 +35,18 @@ class FilterModel
             'filterItems' => array_map(fn($item) => $item->toArray(), $this->filterItems)
         ];
     }
+
+    // from request to model
+    public static function fromRequest(array $data): self
+    {
+        $name = $data['name'] ?? null;
+        $filterItemsData = $data['filterItems'] ?? [];
+        $filterItems = array_map(
+            fn ($itemData) => $itemData instanceof FilterItem ? $itemData : new FilterItem(...array_values((array) $itemData)),
+            $filterItemsData
+        );
+        return new self($name, ...$filterItems);
+    }
+
+
 }

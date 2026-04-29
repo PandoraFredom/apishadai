@@ -2,7 +2,6 @@
 
 namespace App\Repositories\Config;
 
-use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\Config\RolesRepositoryInterface;
 use App\Interfaces\Config\UserEstadoRepositoryInterface;
 use App\Interfaces\Config\UserRepositoryInterface;
@@ -42,12 +41,4 @@ class UserRepository extends Repository implements UserRepositoryInterface
         return false;
     }
 
-
-    /**
-     * @inheritDoc
-     */
-    public function filter(FilterRequest $request)
-    {
-        return $this->whereListWithFilter($request->toFilterModel(), true);
-    }
 }

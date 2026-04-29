@@ -2,6 +2,7 @@
 
 namespace App\Interfaces;
 
+use App\Models\Utils\Filter\FilterModel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -15,6 +16,9 @@ interface RepositoryInterface
 
     public function whereList(array $conditions, bool $usePagination = false):Collection|LengthAwarePaginator;
     public function whereFirst(array $conditions): ?Model;
+
+    public function filterAll(FilterModel $filterModel, bool $usePagination = false): Collection|LengthAwarePaginator;
+    public function filterOne(FilterModel $filterModel): ?Model;
 
     public function joinWhereList(array $conditions, array $relations = [], array $selects = [], bool $usePagination = false):Collection|LengthAwarePaginator;
     public function joinWhereFirst(array $conditions, array $relations = [], array $selects = []): ?Model;

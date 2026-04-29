@@ -21,10 +21,6 @@ class PromosRepository extends Repository implements PromocionesService
         $this->defaultRelations = ['estado'];
     }
 
-    public function filter(FilterRequest $request)
-    {
-        return $this->whereListWithFilter($request->toFilterModel());
-    }
     public function get_estadosList()
     {
         return $this->promoEstadosService->getAll();

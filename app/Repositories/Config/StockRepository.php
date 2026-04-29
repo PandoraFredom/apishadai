@@ -25,11 +25,4 @@ class StockRepository extends Repository implements StockRepositoryInterface
         return $this->stockEstadoService->getAll();
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function filter(FilterRequest $request)
-    {
-        return $this->whereListWithFilter($request->toFilterModel(), true);
-    }
 }

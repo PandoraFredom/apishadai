@@ -17,11 +17,6 @@ class ClienteRepository extends Repository implements ClienteService
         $this->perPage = 12;
     }
 
-    public function filter(FilterRequest $request)
-    {
-        return $this->whereListWithFilter($request->toFilterModel(), true);
-    }
-
     public function activephone(int $id): bool
     {
         $phoneRecord = $this->whereFirst(
