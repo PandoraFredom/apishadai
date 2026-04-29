@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 
-    require __DIR__ . '/custom/ReportesModule_api.php';
+
 
 
 Route::group(['middleware' => ['auth:api']], function () {
@@ -21,5 +21,5 @@ Route::group(['middleware' => ['auth:api']], function () {
     require __DIR__ . '/custom/sorteos_api.php';
     //==================================REPORTES=============================
 
-
+    require __DIR__ . '/custom/ReportesModule_api.php';
 });
