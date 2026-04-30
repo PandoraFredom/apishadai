@@ -25,10 +25,15 @@ class DeviceSecurityMiddleware
     {
 
         $device = $this->deviceUtility->get_DeviceInfo($request);
+        $data = [
+            'ip' => $this->encService->genHash($device['ip'] ?? ''),
+            'ip2' => $this->encService->genHash($request->ip()),
+            'name' => $this->encService->genHash($device['name'] ?? ''),
+        ];
 
 
         if (!$device) {
-            return $this->sendResponse(null, "Error al obtener información del dispositivo:", 401);
+            return $this->sendResponse(null, "Error al obtener información del dispositivo:" . json_encode($data), 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
