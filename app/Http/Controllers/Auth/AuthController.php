@@ -13,7 +13,10 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function __construct(private AuthService $authService,private DeviceUtility $deviceUtility) {}
+    public function __construct(
+        private AuthService $authService,
+        private DeviceUtility $deviceUtility
+    ) {}
 
 
     public function login(LoginRequest $request)
@@ -23,7 +26,7 @@ class AuthController extends Controller
             $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
 
             if ($deviceInfo == null) {
-               return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
+                return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);
             }
 
             $credentials = $request->validated();

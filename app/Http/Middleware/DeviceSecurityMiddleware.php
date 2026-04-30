@@ -24,7 +24,17 @@ class DeviceSecurityMiddleware
     public function handle(Request $request, Closure $next): Response
     {
 
+         $data = [
+                'ip' => $this->encService->genHash($request->header('X-Device-Ip')),
+                'name' => $this->encService->genHash($request->header('X-Device-Name')),
+            ];
+
+            return $this->sendResponse(null, "device info:" . json_encode($data), 401);
+
+
+
         $device = $this->deviceUtility->get_DeviceInfo($request);
+
         $data = [
             'ip' => $this->encService->genHash($device['ip'] ?? ''),
             'name' => $this->encService->genHash($device['name'] ?? ''),
