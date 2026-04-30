@@ -23,13 +23,12 @@ class DeviceSecurityMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Buscar el dispositivo que coincida con ip, ip2 y name hasheados
+
         $device = $this->deviceUtility->get_DeviceInfo($request);
-        // Log::info("Device Info - IP: {$this->encService->genHash($device['ip'])}, IP2: {$this->encService->genHash($request->ip())}, Name: {$this->encService->genHash($device['name'])}");
-        $data = "Device Info - IP: {$this->encService->genHash($device['ip'])}, IP2: {$this->encService->genHash($request->ip())}, Name: {$this->encService->genHash($device['name'])}";
+
 
         if (!$device) {
-            return $this->sendResponse(null, 'Error al obtener información del dispositivo: ' . $data, 401);
+            return $this->sendResponse(null, "Error al obtener información del dispositivo:", 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
