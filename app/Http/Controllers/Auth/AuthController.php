@@ -22,12 +22,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $data = [
-            'ip' => $this->encService->genHash($request->header('X-Device-Ip')),
-            'name' => $this->encService->genHash($request->header('X-Device-Name')),
-        ];
 
-        return $this->sendResponse(null, "device info:" . json_encode($data), 401);
         try {
             $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
 
