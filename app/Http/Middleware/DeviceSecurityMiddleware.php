@@ -27,7 +27,6 @@ class DeviceSecurityMiddleware
         $device = $this->deviceUtility->get_DeviceInfo($request);
         $data = [
             'ip' => $this->encService->genHash($device['ip'] ?? ''),
-            'ip2' => $this->encService->genHash($request->ip()),
             'name' => $this->encService->genHash($device['name'] ?? ''),
         ];
 
