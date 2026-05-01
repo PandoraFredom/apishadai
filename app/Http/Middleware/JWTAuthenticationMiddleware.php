@@ -13,24 +13,23 @@ use App\Services\EncryptionService;
 
 class JWTAuthenticationMiddleware
 {
-    protected $ipEncryption;
 
-    public function __construct(EncryptionService $ipEncryption)
+
+    public function __construct(private EncryptionService $encService)
     {
-        $this->ipEncryption = $ipEncryption;
+
     }
 
     public function handle(Request $request, Closure $next)
     {
+        $encryptedToken = $this->getTokenFromRequest($request);
         try {
-
-            $encryptedToken = $this->getTokenFromRequest($request);
 
             if (!$encryptedToken) {
                 return $this->sendResponse(null, 'Token no proporcionado', 401);
             }
 
-            $token = $this->ipEncryption->decrypt($encryptedToken);
+            $token = $this->encService->decrypt($encryptedToken, $request);
 
             if (!$token) {
                 return $this->sendResponse(null, 'Error al verificar el token', 401);
@@ -41,7 +40,7 @@ class JWTAuthenticationMiddleware
             }
 
             $request->attributes->set('auth', $user);
-            $request->setUserResolver(fn () => $user);
+            $request->setUserResolver(fn() => $user);
 
             return $next($request);
         } catch (TokenExpiredException $e) {
@@ -54,7 +53,7 @@ class JWTAuthenticationMiddleware
         }
     }
 
-    private function getTokenFromRequest(Request $request): ?string
+    private function getTokenFromRequest(Request $request)
     {
         if ($request->hasHeader('Authorization')) {
             $header = $request->header('Authorization');

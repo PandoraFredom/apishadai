@@ -113,14 +113,14 @@ class AuthRepository implements AuthService
      * @param Request $request
      * @return string|null
      */
-    public function getDecryptedToken(Request $request): ?string
+    public function getDecryptedToken($request): ?string
     {
         if ($request->hasHeader('Authorization')) {
             $header = $request->header('Authorization');
 
             if (str_starts_with($header, 'Bearer ')) {
                 $token = substr($header, 7);
-                return $this->encService->decrypt($token);
+                return $this->encService->decrypt($token, $request);
             }
         }
         return null;
@@ -132,9 +132,9 @@ class AuthRepository implements AuthService
      * @param string $token
      * @return string
      */
-    public function encryptToken(string $token): string
+    public function encryptToken(string $token, $request): string
     {
-        return $this->encService->encrypt($token);
+        return $this->encService->encrypt($token, $request);
     }
 
     /**
@@ -149,4 +149,3 @@ class AuthRepository implements AuthService
         return $this->encService->genHash($value);
     }
 }
-

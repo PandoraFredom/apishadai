@@ -2,9 +2,7 @@
 
 namespace App\Interfaces\Auth;
 
-use App\Models\Device;
 use App\Models\MatchTokens;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 interface AuthService
@@ -45,10 +43,9 @@ interface AuthService
     /**
      * Obtiene el token desencriptado del header de autorización
      *
-     * @param Request $request
      * @return string|null
      */
-    public function getDecryptedToken(Request $request): ?string;
+    public function getDecryptedToken( $request): ?string;
 
     /**
      * Encripta un token JWT
@@ -56,7 +53,7 @@ interface AuthService
      * @param string $token
      * @return string
      */
-    public function encryptToken(string $token): string;
+    public function encryptToken(string $token,  $request): string;
 
     /**
      * Genera un hash hmac-sha256 de un valor

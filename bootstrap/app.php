@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->group('api', [
             \App\Http\Middleware\DeviceSecurityMiddleware::class,
-         //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
+            \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);
 
         $middleware->group('auth:api', [
@@ -29,7 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\MatchTokenMiddleware::class,
             \App\Http\Middleware\ModuleSecurityMiddleware::class,
             \App\Http\Middleware\DeviceSecurityMiddleware::class,
-         //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
+            \App\Http\Middleware\AppVersionSecurityMiddleware::class
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

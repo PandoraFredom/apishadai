@@ -2,12 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use App\Interfaces\Config\DeviceService;
-use App\Services\EncryptionService;
 use App\Utils\DeviceUtility;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class DeviceSecurityMiddleware
@@ -15,7 +12,6 @@ class DeviceSecurityMiddleware
 
     public function __construct(
         private DeviceUtility $deviceUtility,
-        private EncryptionService $encService,
     ) {}
 
     /**

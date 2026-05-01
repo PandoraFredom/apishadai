@@ -2,27 +2,34 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Request;
-use Illuminate\Support\Facades\Crypt;
+
+use App\Utils\DeviceUtility;
 
 class EncryptionService
 {
+    public function __construct(private DeviceUtility $deviceUtility) {}
+
+
     /**
      * Encripta un texto usando la IP como parte de la clave
      *
      * @param string $text Texto a encriptar
-     * @param string|null $ip IP opcional (si no se proporciona, usa la IP actual)
      * @return string Texto encriptado
      */
-    public function encrypt(string $text, ?string $ip = null): string
+    public function encrypt(string $text,   $request): string
     {
-        $ip = $ip ?? Request::ip();
-        $key = $this->generateKeyFromIp($ip);
+        $device = $this->deviceUtility->get_DeviceInfo($request);
+
+        if (!$device) {
+            throw new \RuntimeException('Dispositivo no registrado');
+        }
+
+        $key = $this->generateKeyFromIp($device->ip);
 
         // Combina el texto con la IP antes de encriptar
         $dataToEncrypt = json_encode([
             'text' => $text,
-            'ip' => $ip,
+            'ip' => $device->ip,
             'timestamp' => now()->timestamp,
             'key_hash' => hash('sha256', $key) // Almacenamos un hash de la clave para verificación
         ]);
@@ -47,13 +54,17 @@ class EncryptionService
      * Desencripta un texto usando la IP como parte de la clave
      *
      * @param string $encryptedText Texto encriptado
-     * @param string|null $ip IP opcional (si no se proporciona, usa la IP actual)
      * @return string|null Texto desencriptado o null si la IP no coincide
      */
-    public function decrypt(string $encryptedText, ?string $ip = null): ?string
+    public function decrypt(string $encryptedText, $request)
     {
         try {
-            $ip = $ip ?? Request::ip();
+            $device = $this->deviceUtility->get_DeviceInfo($request);
+            if (!$device) {
+                return null;
+            }
+
+            $ip = $device->ip;
             $key = $this->generateKeyFromIp($ip);
 
             $encrypted = base64_decode($encryptedText);

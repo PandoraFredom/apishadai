@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
+use App\Services\EncryptionService;
 use App\Utils\DeviceUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ class AuthController extends Controller
     public function __construct(
         private AuthService $authService,
         private DeviceUtility $deviceUtility,
-        private \App\Services\EncryptionService $encService,
+        private EncryptionService $encService,
     ) {}
 
 
@@ -44,7 +45,7 @@ class AuthController extends Controller
             if ($permisos->isEmpty()) {
                 return $this->sendResponse(null, 'No hay permisos disponibles para el usuario', 500);
             }
-            $encToken = $this->authService->encryptToken($token);
+            $encToken = $this->authService->encryptToken($token, $request);
 
             $this->authService->deleteMatchTokenUser(Auth::user()->id);
 
