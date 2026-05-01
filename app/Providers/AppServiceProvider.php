@@ -33,10 +33,10 @@ class AppServiceProvider extends ServiceProvider
         //-------------------------------- AUTH ---------------------------------
         \App\Interfaces\Auth\AuthService::class => \App\Repositories\Auth\AuthRepository::class,
         \App\Interfaces\WorkLunch\WorkLunchService::class => \App\Repositories\WorkLunch\WorkLunchRepository::class,
-        //-------------------------------- PROMOS ---------------------------------
-        \App\Interfaces\Promos\PromoEstadosService::class => \App\Repositories\promos\PromoEstadosRepository::class,
-        \App\Interfaces\Promos\PromocionesService::class =>  \App\Repositories\promos\PromosRepository::class,
-        \App\Interfaces\Promos\TicketService::class =>  \App\Repositories\promos\TicketRepository::class,
+        //-------------------------------- SORTEOS ---------------------------------
+        \App\Interfaces\Promos\PromoEstadosService::class => \App\Repositories\Promos\PromoEstadosRepository::class,
+        \App\Interfaces\Promos\PromocionesService::class =>  \App\Repositories\Promos\PromosRepository::class,
+        \App\Interfaces\Promos\TicketService::class =>  \App\Repositories\Promos\TicketRepository::class,
 
         //-------------------------------- CLIENTES ---------------------------------
         \App\Interfaces\Clientes\ClienteService::class => \App\Repositories\Cliente\ClienteRepository::class,

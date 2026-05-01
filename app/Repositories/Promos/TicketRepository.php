@@ -2,7 +2,7 @@
 
 namespace App\Repositories\Promos;
 
-use App\Http\Requests\Util\FilterRequest;
+
 use App\Interfaces\Clientes\ClienteService;
 use App\Interfaces\Promos\PromocionesService;
 use App\Interfaces\Promos\TicketService;

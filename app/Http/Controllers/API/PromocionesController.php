@@ -122,7 +122,7 @@ class PromocionesController extends Controller
     public function filter(PromoFilterRequest $request)
     {
         try {
-            $list = $this->service->filterPromos($request);
+            $list = $this->service->filterAll($request->validated(),true);
 
             if (!$list || $list->isEmpty()) {
                 return $this->sendResponse(null, 'No se encontraron sorteos.', 404);
