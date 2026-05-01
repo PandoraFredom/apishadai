@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Interfaces\Config\DeviceService;
 use App\Interfaces\Config\MatchTokensService;
 use App\Services\EncryptionService;
+use App\Utils\DeviceUtility;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,7 +15,8 @@ class MatchTokenMiddleware
     public function __construct(
         private DeviceService $deviceService,
         private MatchTokensService $matchTokensService,
-        private EncryptionService $encService
+        private EncryptionService $encService,
+        private DeviceUtility $deviceUtility
     ) {}
 
     /**
@@ -25,15 +27,15 @@ class MatchTokenMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $token = $request->bearerToken();
-        $deviceId = $this->getDeviceInfo($request);
+        $device = $this->deviceUtility->get_DeviceInfo($request);
 
-        if (empty($token) || empty($deviceId)) {
+        if ($token==null || $device==null) {
             return $this->sendResponse(null, 'No se proporciona informacion del dispositivo', 401);
         }
 
         $match = $this->matchTokensService->whereFirst([
             ['token', '=', $token],
-            ['device', '=', $deviceId['id']]
+            ['device', '=', $device['id']]
         ]);
 
         if (!$match) {
@@ -44,26 +46,7 @@ class MatchTokenMiddleware
     }
 
 
-    private function getDeviceInfo(Request $request): array
-    {
-        $info = [
-            'ip' => $request->header('X-Device-Ip'),
-            'ip2' => $request->ip(),
-            'name' => $request->header('X-Device-Name'),
 
-        ];
-
-        $device = $this->deviceService->whereFirst([
-            ['ip', '=', $this->encService->genHash($info['ip'])],
-            ['ip2', '=', $this->encService->genHash($info['ip2'])],
-            ['name', '=', $this->encService->genHash($info['name'])]
-        ]);
-
-        if ($device) {
-            return ['id' => $device->id];
-        }
-        return [];
-    }
     private function sendResponse($result, $message, $code)
     {
         $response = [
