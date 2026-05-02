@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\EncryptionService;
 use App\Utils\DeviceUtility;
 use Closure;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ class DeviceSecurityMiddleware
 
     public function __construct(
         private DeviceUtility $deviceUtility,
+        private EncryptionService $encService
     ) {}
 
     /**
@@ -22,13 +24,13 @@ class DeviceSecurityMiddleware
 
         $device = $this->deviceUtility->get_DeviceInfo($request);
 
-       /* $data = [
+        $data = [
             'ip' => $this->encService->genHash($device['ip'] ?? ''),
             'name' => $this->encService->genHash($device['name'] ?? ''),
-        ];*/
+        ];
 
         if (!$device) {
-            return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador" , 401);
+            return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador:".json_encode($data) , 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
