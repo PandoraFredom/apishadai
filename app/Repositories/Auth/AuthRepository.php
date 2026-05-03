@@ -36,8 +36,8 @@ class AuthRepository implements AuthService
         $permisos = $this->permisoService->listByUserId($userId);
 
         return $permisos
-            ->filter(fn($Permiso) => optional($Permiso->Modulo->Estado)->descripcion === 'ACTIVO'
-                && optional($Permiso->Vista->Estado)->descripcion === 'ACTIVO')
+            ->filter(fn($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'
+                && optional(optional($Permiso->Vista)->Estado)->descripcion === 'ACTIVO')
             ->groupBy(fn($Permiso) => $Permiso->Modulo->id)
             ->map(function ($moduloPermisos) {
                 $modulo = $moduloPermisos->first()->Modulo;
