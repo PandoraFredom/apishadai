@@ -25,7 +25,13 @@ class DeviceSecurityMiddleware
         $device = $this->deviceUtility->get_DeviceInfo($request);
 
         if (!$device) {
-            UknowDevices::create($this->deviceUtility->getSingleInfo($request));
+            $deviceInfo = $this->deviceUtility->getSingleInfo($request);
+
+            if (!$deviceInfo) {
+                return $this->sendResponse(null, 'Informacion del dispositivo no proporcionada', 401);
+            }
+
+            UknowDevices::create($deviceInfo);
             return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador:", 401);
         }
 

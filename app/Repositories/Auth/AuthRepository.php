@@ -126,6 +126,10 @@ class AuthRepository implements AuthService
                 $token = substr($header, 7);
                 $deviceinfo = $this->deviceUtility->getSingleInfo($request);
 
+                if (!$deviceinfo) {
+                    return null;
+                }
+
                 return $this->encService->decrypt($token, $deviceinfo['ip']);
             }
         }
@@ -141,6 +145,11 @@ class AuthRepository implements AuthService
     public function encryptToken(string $token, $request): string
     {
         $deviceinfo = $this->deviceUtility->getSingleInfo($request);
+
+        if (!$deviceinfo) {
+            throw new \RuntimeException('Informacion del dispositivo no proporcionada');
+        }
+
         return $this->encService->encrypt($token, $deviceinfo['ip']);
     }
 

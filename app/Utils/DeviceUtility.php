@@ -30,9 +30,14 @@ class DeviceUtility
         return $device;
     }
 
-    public function getSingleInfo(Request  $request)
+    public function getSingleInfo(Request  $request): ?array
     {
         $info = $this->getIpAndDeviceName($request);
+
+        if (empty($info)) {
+            return null;
+        }
+
         return [
             'ip' => $this->hashService->genHash($info['ip']),
             'name' => $this->hashService->genHash($info['name']),
@@ -41,12 +46,16 @@ class DeviceUtility
 
     private function getIpAndDeviceName(Request $request): array
     {
-        if ($request->hasHeader('X-Device-Ip') && $request->hasHeader('X-Device-Name')) {
-            return [
-                'ip' => $request->header('X-Device-Ip'),
-                'name' => $request->header('X-Device-Name'),
-            ];
+        $ip = trim((string) $request->header('X-Device-Ip', ''));
+        $name = trim((string) $request->header('X-Device-Name', ''));
+
+        if ($ip === '' || $name === '') {
+            return [];
         }
-        return [];
+
+        return [
+            'ip' => $ip,
+            'name' => $name,
+        ];
     }
 }
