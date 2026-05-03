@@ -2,11 +2,11 @@
 
 namespace App\DTOs;
 
-use App\Services\EncryptionService;
+
 
 class DeviceDTO
 {
-    private static ?EncryptionService $encService = null;
+
 
     public function __construct(
         public readonly string $ip,
@@ -16,12 +16,7 @@ class DeviceDTO
         public readonly int $stock,
         public readonly int $estado,
         public readonly ?int $id = null
-    ) {
-        // Inicializar EncryptionService si no está set
-        if (self::$encService === null) {
-            self::$encService = app(EncryptionService::class);
-        }
-    }
+    ) {}
 
     /**
      * Crea un DTO al crear un nuevo dispositivo
@@ -29,13 +24,11 @@ class DeviceDTO
      */
     public static function onCreate(array $data): self
     {
-        $encService = app(EncryptionService::class);
-
         return new self(
-            ip: $encService->genHash($data['ip']),
-            ip2: $encService->genHash($data['ip2']),
+            ip: $data['ip'],
+            ip2: $data['ip2'],
             displayname: $data['displayname'],
-            name: $encService->genHash($data['name']),
+            name: $data['name'],
             stock: $data['stock']['id'],
             estado: $data['estado']['id'],
             id: $data['id'] ?? null
@@ -53,11 +46,6 @@ class DeviceDTO
             id: $id
         );
     }
-
-
-
-
-
 
     /**
      * Convierte el DTO a array, filtrando valores vacíos

@@ -3,17 +3,15 @@
 namespace App\Http\Middleware;
 
 use App\Interfaces\Config\AppConfigService;
-use App\Services\EncryptionService;
+use App\Utils\Services\SingleHashService;
 use Closure;
-
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 class AppVersionSecurityMiddleware
 {
 
-    public function __construct(private AppConfigService $appConfigService, private EncryptionService $encryptionService) {}
+    public function __construct(private AppConfigService $appConfigService, private SingleHashService $encryptionService) {}
 
 
     /**

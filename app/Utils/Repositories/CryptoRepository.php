@@ -1,35 +1,24 @@
 <?php
 
-namespace App\Services;
+namespace App\Utils\Repositories;
 
+use App\Utils\Services\CryptoService;
 
-use App\Utils\DeviceUtility;
-
-class EncryptionService
+class CryptoRepository implements CryptoService
 {
-    public function __construct(private DeviceUtility $deviceUtility) {}
-
 
     /**
-     * Encripta un texto usando la IP como parte de la clave
-     *
-     * @param string $text Texto a encriptar
-     * @return string Texto encriptado
+     * @inheritDoc
      */
-    public function encrypt(string $text,   $request): string
+    public function encrypt(string $data, string $ip): string
     {
-        $device = $this->deviceUtility->get_DeviceInfo($request);
 
-        if (!$device) {
-            throw new \RuntimeException('Dispositivo no registrado');
-        }
-
-        $key = $this->generateKeyFromIp($device->ip);
+        $key = $this->generateKeyFromIp($ip);
 
         // Combina el texto con la IP antes de encriptar
         $dataToEncrypt = json_encode([
-            'text' => $text,
-            'ip' => $device->ip,
+            'text' => $data,
+            'ip' => $ip,
             'timestamp' => now()->timestamp,
             'key_hash' => hash('sha256', $key) // Almacenamos un hash de la clave para verificación
         ]);
@@ -51,23 +40,15 @@ class EncryptionService
     }
 
     /**
-     * Desencripta un texto usando la IP como parte de la clave
-     *
-     * @param string $encryptedText Texto encriptado
-     * @return string|null Texto desencriptado o null si la IP no coincide
+     * @inheritDoc
      */
-    public function decrypt(string $encryptedText, $request)
+    public function decrypt(string $encryptedData, string $ip): string|null
     {
         try {
-            $device = $this->deviceUtility->get_DeviceInfo($request);
-            if (!$device) {
-                return null;
-            }
 
-            $ip = $device->ip;
             $key = $this->generateKeyFromIp($ip);
 
-            $encrypted = base64_decode($encryptedText);
+            $encrypted = base64_decode($encryptedData);
             $decrypted = openssl_decrypt(
                 $encrypted,
                 'AES-256-CBC',
@@ -93,21 +74,9 @@ class EncryptionService
         }
     }
 
-    /**
-     * Genera una clave única basada en la IP
-     *
-     * @param string $ip
-     * @return string
-     */
     private function generateKeyFromIp(string $ip): string
     {
         // Combina la IP con el salt de la aplicación y genera una clave de 32 bytes
         return hash('sha256', $ip . config('app.key'), true);
-    }
-
-    public function genHash($var): string
-    {
-        $key = config('app.key') ?? env('APP_KEY');
-        return hash_hmac('sha256', $var, $key);
     }
 }

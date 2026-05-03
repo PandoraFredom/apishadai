@@ -50,6 +50,14 @@ class AppServiceProvider extends ServiceProvider
 
 
 
+        //-------------------------------- UTILS ---------------------------------
+
+        \App\Utils\Services\SingleHashService::class => \App\Utils\Repositories\SingleHashRepository::class,
+        \App\Utils\Services\CryptoService::class => \App\Utils\Repositories\CryptoRepository::class
+
+
+
+
     ];
 
     /**

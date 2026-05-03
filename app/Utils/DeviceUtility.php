@@ -3,30 +3,43 @@
 namespace App\Utils;
 
 use App\Interfaces\Config\DeviceService;
-
+use App\Utils\Services\SingleHashService;
+use Illuminate\Http\Request;
 
 class DeviceUtility
 {
-    public function __construct(private DeviceService $deviceService) {}
+    public function __construct(
+        private DeviceService $deviceService,
+        private SingleHashService $hashService
+    ) {}
 
 
-    public function get_DeviceInfo( $request)
+    public function get_DeviceInfo(Request  $request)
     {
 
         $info = $this->getIpAndDeviceName($request);
 
-            if (empty($info)) {
-                return null;
-            }
+        if (empty($info)) {
+            return null;
+        }
         $device = $this->deviceService->whereFirst([
-            'ip' => $this->genHash($info['ip']),
-            'name' => $this->genHash($info['name']),
+            'ip' => $this->hashService->genHash($info['ip']),
+            'name' => $this->hashService->genHash($info['name']),
         ]);
-    // Log::info("Device Info - IP: {$this->genHash($info['ip'])}, IP2: {$this->genHash($request->ip())}, Name: {$this->genHash($info['name'])}");
+
         return $device;
     }
 
-    private function getIpAndDeviceName( $request): array
+    public function getSingleInfo(Request  $request)
+    {
+        $info = $this->getIpAndDeviceName($request);
+        return [
+            'ip' => $this->hashService->genHash($info['ip']),
+            'name' => $this->hashService->genHash($info['name']),
+        ];
+    }
+
+    private function getIpAndDeviceName(Request $request): array
     {
         if ($request->hasHeader('X-Device-Ip') && $request->hasHeader('X-Device-Name')) {
             return [
@@ -35,11 +48,5 @@ class DeviceUtility
             ];
         }
         return [];
-    }
-
-    private function genHash($var): string
-    {
-        $key = config('app.key') ?? env('APP_KEY');
-        return hash_hmac('sha256', $var, $key);
     }
 }

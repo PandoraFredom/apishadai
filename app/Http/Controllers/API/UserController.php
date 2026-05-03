@@ -10,13 +10,14 @@ use App\Http\Resources\RolesResource;
 use App\Http\Resources\UserEstadosResource;
 use App\Http\Resources\UserResource;
 use App\Interfaces\Config\UserRepositoryInterface;
-use App\Services\EncryptionService;
+
+use App\Utils\Services\SingleHashService;
 
 class UserController extends Controller
 {
 
     public function __construct(private UserRepositoryInterface $service,
-    private EncryptionService $encService) {}
+    private SingleHashService $encService) {}
 
     /**
      * Display a listing of the resource.

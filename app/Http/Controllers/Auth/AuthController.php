@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
-use App\Services\EncryptionService;
 use App\Utils\DeviceUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +16,7 @@ class AuthController extends Controller
     public function __construct(
         private AuthService $authService,
         private DeviceUtility $deviceUtility,
-        private EncryptionService $encService,
+
     ) {}
 
 
@@ -76,10 +75,6 @@ class AuthController extends Controller
             return $this->sendResponse(null, 'Error al crear login:3::' . $e->getMessage(), 500);
         }
     }
-
-
-
-
 
     public function logout(Request $request)
     {

@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use App\Interfaces\Config\DeviceService;
 use App\Interfaces\Config\MatchTokensService;
-use App\Services\EncryptionService;
 use App\Utils\DeviceUtility;
 use Closure;
 use Illuminate\Http\Request;
@@ -13,9 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 class MatchTokenMiddleware
 {
     public function __construct(
-        private DeviceService $deviceService,
         private MatchTokensService $matchTokensService,
-        private EncryptionService $encService,
         private DeviceUtility $deviceUtility
     ) {}
 

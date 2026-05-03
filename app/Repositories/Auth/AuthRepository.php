@@ -6,7 +6,9 @@ use App\Interfaces\Auth\AuthService;
 use App\Interfaces\Config\MatchTokensService;
 use App\Interfaces\Config\PermisoService;
 use App\Models\MatchTokens;
-use App\Services\EncryptionService;
+use App\Utils\DeviceUtility;
+use App\Utils\Services\CryptoService;
+use App\Utils\Services\SingleHashService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -14,9 +16,11 @@ use Illuminate\Support\Collection;
 class AuthRepository implements AuthService
 {
     public function __construct(
-        private EncryptionService $encService,
+        private DeviceUtility $deviceUtility,
+        private CryptoService $encService,
         private PermisoService $permisoService,
-        private MatchTokensService $matchTokensService
+        private MatchTokensService $matchTokensService,
+        private SingleHashService $singleHashService
     ) {}
 
 
@@ -120,7 +124,9 @@ class AuthRepository implements AuthService
 
             if (str_starts_with($header, 'Bearer ')) {
                 $token = substr($header, 7);
-                return $this->encService->decrypt($token, $request);
+                $deviceinfo = $this->deviceUtility->getSingleInfo($request);
+
+                return $this->encService->decrypt($token, $deviceinfo['ip']);
             }
         }
         return null;
@@ -134,7 +140,8 @@ class AuthRepository implements AuthService
      */
     public function encryptToken(string $token, $request): string
     {
-        return $this->encService->encrypt($token, $request);
+        $deviceinfo = $this->deviceUtility->getSingleInfo($request);
+        return $this->encService->encrypt($token, $deviceinfo['ip']);
     }
 
     /**
@@ -146,6 +153,6 @@ class AuthRepository implements AuthService
     public function hashValue(string $value): string
     {
 
-        return $this->encService->genHash($value);
+        return $this->singleHashService->genHash($value);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\EncryptionService;
+use App\Models\UknowDevices;
 use App\Utils\DeviceUtility;
 use Closure;
 use Illuminate\Http\Request;
@@ -12,8 +12,8 @@ class DeviceSecurityMiddleware
 {
 
     public function __construct(
-        private DeviceUtility $deviceUtility,
-        private EncryptionService $encService
+        private DeviceUtility $deviceUtility
+
     ) {}
 
     /**
@@ -24,13 +24,9 @@ class DeviceSecurityMiddleware
 
         $device = $this->deviceUtility->get_DeviceInfo($request);
 
-        $data = [
-            'ip' => $this->encService->genHash($device['ip'] ?? ''),
-            'name' => $this->encService->genHash($device['name'] ?? ''),
-        ];
-
         if (!$device) {
-            return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador:".json_encode($data) , 401);
+            UknowDevices::create($this->deviceUtility->getSingleInfo($request));
+            return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador:", 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
@@ -45,7 +41,7 @@ class DeviceSecurityMiddleware
     /**
      * Envía una respuesta JSON normalizada
      */
-    private function sendResponse($result, $message, $code)
+    private function sendResponse(?array $result, string $message, int $code)
     {
         return response()->json([
             'message' => $message,
