@@ -2,7 +2,7 @@
 
 namespace App\Utils\Repositories;
 
-use App\Utils\services\SingleHashService;
+use App\Utils\Services\SingleHashService;
 
 class SingleHashRepository implements SingleHashService
 {
