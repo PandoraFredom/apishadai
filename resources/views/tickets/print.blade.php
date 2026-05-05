@@ -171,7 +171,13 @@
             </div>
             <div class="info-row">
                 <span class="info-label">IDENTIDAD:</span>
-                <span class="info-value">{{ $ticket->Cliente->docid }}</span>
+                <span class="info-value">
+                    {{
+                        strlen($ticket->Cliente->docid) >= 13
+                        ? substr($ticket->Cliente->docid, 0, 4).'-'.substr($ticket->Cliente->docid, 4, 4).'-'.substr($ticket->Cliente->docid, 8, 5)
+                        : $ticket->Cliente->docid
+                    }}
+                </span>
             </div>
             <div class="info-row">
                 <span class="info-label">TELÉFONO:</span>
@@ -189,7 +195,6 @@
 
         <!-- Footer -->
         <div class="footer">
-            <p class="good-luck">¡MUCHA SUERTE!</p>
             <p>Conserve este ticket</p>
             <p>Válido para el sorteo</p>
         </div>
