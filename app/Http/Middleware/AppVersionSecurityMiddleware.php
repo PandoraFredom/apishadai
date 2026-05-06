@@ -27,7 +27,7 @@ class AppVersionSecurityMiddleware
             return $this->sendResponse(null, 'No se proporciona la version de la app', 401);
         }
 
-        $dat = $this->appConfigService->existVersion($this->encryptionService->genHash($info['version']));
+        $dat = $this->appConfigService->existVersion($info['version']);
 
         if (!$dat) {
             return $this->sendResponse(null, 'Version de app Incorrecta', 426);
