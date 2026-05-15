@@ -60,4 +60,32 @@ class SorteosRptRepository implements SorteosRptService
     {
         return $this->userService->filterAll($filter);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getClientesList() {
+        return $this->clientesService->paginate();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getSorteosList() {
+        return $this->promocionesService->paginate();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getStocksList() {
+        return $this->stocksService->paginate();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getUsuariosList() {
+        return $this->userService->paginate();
+    }
 }

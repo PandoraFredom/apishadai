@@ -17,8 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 
 use function is_array;
-use function is_numeric;
 use function is_string;
+
 
 abstract class Repository implements RepositoryInterface
 {
@@ -45,14 +45,20 @@ abstract class Repository implements RepositoryInterface
     {
         return $this->executeQuery(function () {
             if ($this->useQueryBuilder) {
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                 $results = DB::table($this->getTableName())
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->get();
 
                 return new Collection($results);
             }
 
-            return $this->buildBaseQuery()->get();
+            [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
+            return $this->buildBaseQuery()
+                ->orderBy($orderColumn, $orderDirection)
+                ->get();
         }, 'getAll', new Collection());
     }
 
@@ -63,13 +69,17 @@ abstract class Repository implements RepositoryInterface
     {
         return $this->executeQuery(function () {
             if ($this->useQueryBuilder) {
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                 return DB::table($this->getTableName())
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->paginate($this->perPage);
             }
 
+            [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
             return $this->buildBaseQuery()
-                ->orderBy($this->orderBy[0], $this->orderBy[1])
+                ->orderBy($orderColumn, $orderDirection)
                 ->paginate($this->perPage);
         }, 'paginate', $this->getEmptyPaginator());
     }
@@ -230,12 +240,16 @@ abstract class Repository implements RepositoryInterface
                 $this->applyComplexConditions($query, $sanitized, $logicalOperator);
 
                 if ($usePagination) {
+                    [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                     return $query
-                        ->orderBy($this->orderBy[0], $this->orderBy[1])
+                        ->orderBy($orderColumn, $orderDirection)
                         ->paginate($this->perPage);
                 } else {
+                    [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                     return $query
-                        ->orderBy($this->orderBy[0], $this->orderBy[1])
+                        ->orderBy($orderColumn, $orderDirection)
                         ->get();
                 }
             }
@@ -245,12 +259,16 @@ abstract class Repository implements RepositoryInterface
 
             if ($usePagination) {
                 // Paginate automáticamente lee el parámetro 'page' de la URL
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                 return $query
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->paginate($this->perPage);
             } else {
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
                 return $query
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->get();
             }
         }, 'whereList', $this->getEmptyPaginator(), ['conditions' => $conditions]);
@@ -270,14 +288,22 @@ abstract class Repository implements RepositoryInterface
             if ($this->useQueryBuilder) {
                 $query = DB::table($this->getTableName());
                 $this->applyComplexConditions($query, $sanitized, $logicalOperator);
-                $result = $query->first();
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
+                $result = $query
+                    ->orderBy($orderColumn, $orderDirection)
+                    ->first();
 
                 return $result ? $this->hydrateModel($result) : null;
             }
 
             $query = $this->buildBaseQuery();
             $this->applyComplexConditions($query, $sanitized, $logicalOperator);
-            return $query->first();
+            [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+
+            return $query
+                ->orderBy($orderColumn, $orderDirection)
+                ->first();
         }, 'whereFirst', null, ['conditions' => $conditions]);
     }
 
@@ -344,12 +370,18 @@ abstract class Repository implements RepositoryInterface
             }
 
             if ($usePagination) {
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+                $orderColumn = $this->qualifyOrderColumnForCurrentTable($orderColumn);
+
                 return $query
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->paginate($this->perPage);
             } else {
+                [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+                $orderColumn = $this->qualifyOrderColumnForCurrentTable($orderColumn);
+
                 return  $query
-                    ->orderBy($this->orderBy[0], $this->orderBy[1])
+                    ->orderBy($orderColumn, $orderDirection)
                     ->get();
             }
         }, 'joinWhereList', $this->getEmptyPaginator(), [
@@ -384,6 +416,11 @@ abstract class Repository implements RepositoryInterface
                 $query->select($this->getTableName() . '.*');
             }
 
+            [$orderColumn, $orderDirection] = $this->getNormalizedOrderBy();
+            $orderColumn = $this->qualifyOrderColumnForCurrentTable($orderColumn);
+
+            $query->orderBy($orderColumn, $orderDirection);
+
             $result = $query->first();
 
             if ($this->useQueryBuilder && $result) {
@@ -405,7 +442,6 @@ abstract class Repository implements RepositoryInterface
     {
         return array_filter($data, function ($value) {
             if ($value === null) return false;
-            if (is_numeric($value) && $value === 0) return false;
             if (is_string($value) && trim($value) === '') return false;
             if (is_array($value) && empty($value)) return false;
             return true;
@@ -461,9 +497,36 @@ abstract class Repository implements RepositoryInterface
     }
 
     /**
+     * Normalizar ordenamiento configurado por repositorios concretos.
+     */
+    private function getNormalizedOrderBy(): array
+    {
+        if (array_is_list($this->orderBy) && count($this->orderBy) >= 2) {
+            $column = $this->orderBy[0];
+            $direction = $this->orderBy[1];
+        } else {
+            $column = array_key_first($this->orderBy) ?: 'id';
+            $direction = $this->orderBy[$column] ?? 'DESC';
+        }
+
+        return [
+            $this->sanitizeColumnName((string) $column),
+            strtoupper((string) $direction) === 'ASC' ? 'ASC' : 'DESC',
+        ];
+    }
+
+    /**
+     * Evitar columnas ambiguas en consultas con JOINs.
+     */
+    private function qualifyOrderColumnForCurrentTable(string $column): string
+    {
+        return str_contains($column, '.') ? $column : $this->getTableName() . '.' . $column;
+    }
+
+    /**
      * Habilitar Query Builder
      */
-    public function useQueryBuilder(bool $use = true): self
+    public function useQueryBuilder(bool $use = true)
     {
         $this->useQueryBuilder = $use;
         return $this;
@@ -472,7 +535,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * Establecer relaciones por defecto
      */
-    public function setDefaultRelations(array $relations): self
+    public function setDefaultRelations(array $relations)
     {
         $this->defaultRelations = $relations;
         return $this;
@@ -481,7 +544,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * Establecer paginación
      */
-    public function setPerPage(int $perPage): self
+    public function setPerPage(int $perPage)
     {
         $this->perPage = max(1, min($perPage, 100)); // Límite entre 1 y 100
         return $this;
@@ -490,7 +553,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * Establecer ordenamiento
      */
-    public function setOrderBy(string $column, string $direction = 'DESC'): self
+    public function setOrderBy(string $column, string $direction = 'DESC')
     {
         $this->orderBy = [
             $this->sanitizeColumnName($column),

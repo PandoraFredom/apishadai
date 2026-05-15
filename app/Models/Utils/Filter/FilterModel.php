@@ -2,6 +2,8 @@
 
 namespace App\Models\Utils\Filter;
 
+use Illuminate\Support\Facades\Log;
+
 class FilterModel
 {
     private array $filterItems;
@@ -39,6 +41,8 @@ class FilterModel
     // from request to model
     public static function fromRequest(array $data): self
     {
+
+    Log::info('Creating FilterModel from request data', ['data' => $data]);
         $name = $data['name'] ?? null;
         $filterItemsData = $data['filterItems'] ?? [];
         $filterItems = array_map(

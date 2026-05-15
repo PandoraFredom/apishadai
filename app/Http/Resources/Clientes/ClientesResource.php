@@ -4,17 +4,16 @@ namespace App\Http\Resources\Clientes;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use function array_key_exists;
+use function is_int;
 
 class ClientesResource extends JsonResource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @return array<string, mixed>
-     */
+
+
     public function toArray(Request $request): array
     {
-        return [
+        return   [
             'id' => $this->id,
             'docid' => $this->docid,
             'pnombre' => $this->pnombre,
@@ -24,8 +23,8 @@ class ClientesResource extends JsonResource
             'edad' => $this->edad,
             'telefono' => $this->telefono,
             'genero' => $this->genero,
-            'municipio' => $this->Municipio,
-            'departamento' => $this->Departamento,
+            'Municipio' => $this->Municipio,
+            'Departamento' => $this->Departamento,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

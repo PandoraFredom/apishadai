@@ -18,7 +18,9 @@ class SorteosRptResource extends JsonResource
             'id' => $this->id,
             'nombre' => $this->nombre,
             'fecha_inicio' => $this->fecha_inicio,
-            'estado' => $this->Estado,
+            'estado' => [
+                'descripcion' => $this->Estado->descripcion,
+            ],
         ];
     }
 }

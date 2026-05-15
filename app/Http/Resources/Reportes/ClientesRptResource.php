@@ -14,6 +14,10 @@ class ClientesRptResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'pnombre' => $this->pnombre.' '.$this->snombre,
+            'papellido' => $this->papellido.' '.$this->spaellido,
+        ];
     }
 }

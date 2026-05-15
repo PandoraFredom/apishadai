@@ -403,4 +403,10 @@ abstract class FilterRequest extends FormRequest
     {
         $this->allowedOperators = array_unique([...$this->allowedOperators, ...$operators]);
     }
+
+
+    public function testallowedkeys()
+    {
+        return $this->allowedKeys;
+    }
 }

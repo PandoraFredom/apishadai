@@ -10,9 +10,17 @@ interface SorteosRptService
 
     public function filterSorteos(FilterModel $filter);
 
+    public function getSorteosList();
+
     public function filterClientes(FilterModel $filter);
+
+    public function getClientesList();
 
     public function filterUsuarios(FilterModel $filter);
 
+    public function getUsuariosList();
+
     public function filterStocks(FilterModel $filter);
+
+    public function getStocksList();
 }

@@ -14,14 +14,14 @@ interface RepositoryInterface
     public function findById(int $id): ?Model;
     public function findOrFail(int $id): Model;
 
-    public function whereList(array $conditions, bool $usePagination = false):Collection|LengthAwarePaginator;
-    public function whereFirst(array $conditions): ?Model;
+    public function whereList(array $conditions, bool $usePagination = false, string $logicalOperator = 'AND'): Collection|LengthAwarePaginator;
+    public function whereFirst(array $conditions, string $logicalOperator = 'AND'): ?Model;
 
     public function filterAll(FilterModel $filterModel, bool $usePagination = false): Collection|LengthAwarePaginator;
     public function filterOne(FilterModel $filterModel): ?Model;
 
-    public function joinWhereList(array $conditions, array $relations = [], array $selects = [], bool $usePagination = false):Collection|LengthAwarePaginator;
-    public function joinWhereFirst(array $conditions, array $relations = [], array $selects = []): ?Model;
+    public function joinWhereList(array $conditions, array $tables = [], array $selects = [], bool $usePagination = false): Collection|LengthAwarePaginator;
+    public function joinWhereFirst(array $conditions, array $tables = [], array $selects = []): ?Model;
 
     public function create(array $data): bool;
     public function update(int $id, array $data): bool;

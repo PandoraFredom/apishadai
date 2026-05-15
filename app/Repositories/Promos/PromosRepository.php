@@ -2,8 +2,6 @@
 
 namespace App\Repositories\Promos;
 
-use App\DTOs\PromosDTO;
-use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\Promos\PromocionesService;
 use App\Interfaces\Promos\PromoEstadosService;
 use App\Models\Promociones;
@@ -19,6 +17,7 @@ class PromosRepository extends Repository implements PromocionesService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['estado'];
+        $this->orderBy = ['id', 'desc'];
     }
 
     public function get_estadosList()

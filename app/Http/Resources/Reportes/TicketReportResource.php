@@ -15,12 +15,13 @@ class TicketReportResource extends JsonResource
     public function toArray(Request $request): array
     {
             return [
-                'id' => $this->id,
                 'ntiket' => $this->ntiket,
-                'promocion' => $this->promocion,
-                'cliente' => $this->cliente,
-                'usuario' => $this->Usuario->nombre,
-                'stock' => $this->Stock->descripcion,
+                'usuario' => [
+                    'nombre' => $this->Usuario->nombre,
+                ],
+                'stock' => [
+                    'descripcion' => $this->Stock->descripcion,
+                ],
                 'created_at' => $this->created_at->format('Y-m-d H:i:s'),
         ];
     }

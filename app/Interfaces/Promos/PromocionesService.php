@@ -2,7 +2,6 @@
 
 namespace App\Interfaces\Promos;
 
-use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\RepositoryInterface;
 
 interface PromocionesService extends RepositoryInterface

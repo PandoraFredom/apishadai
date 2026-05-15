@@ -13,6 +13,7 @@ use App\Http\Resources\Vistas\VistasResourceCbx;
 use App\Interfaces\Config\PermisoService;
 use App\Interfaces\Config\TipoTiempoService;
 use App\Utils\LifetimeResolver;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PermisosController extends Controller
@@ -26,7 +27,7 @@ class PermisosController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         return $this->sendResponse(null, 'Not implemented', 501);
     }
@@ -34,7 +35,7 @@ class PermisosController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(PermisoRequest $request)
+    public function store(PermisoRequest $request): JsonResponse
     {
         try {
             $dto = PermisoDTO::fromRequest($request->validated());
@@ -78,7 +79,7 @@ class PermisosController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $id): JsonResponse
     {
         return $this->sendResponse(false, 'Not implemented', 501);
     }
@@ -86,7 +87,7 @@ class PermisosController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
         return $this->sendResponse(false, 'Not implemented', 501);
     }
@@ -94,7 +95,7 @@ class PermisosController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
         try {
             $permiso = $this->service->findOrFail($id);
@@ -113,7 +114,7 @@ class PermisosController extends Controller
         }
     }
 
-    public function findbyuser($id)
+    public function findbyuser(string $id): JsonResponse
     {
         $permisos = $this->service->listByUserId($id);
 
@@ -123,7 +124,7 @@ class PermisosController extends Controller
         return $this->sendResponse(PermisosResource::collection($permisos), 'ok');
     }
 
-    public function get_moduloList()
+    public function get_moduloList(): JsonResponse
     {
         $list = $this->service->get_ModuloListCbx();
         if (!$list) {
@@ -131,7 +132,7 @@ class PermisosController extends Controller
         }
         return $this->sendResponse(ModulosResourceCbx::collection($list), 'ok');
     }
-    public function get_vistasByModulo(int $moduloId)
+    public function get_vistasByModulo(int $moduloId): JsonResponse
     {
         $list = $this->service->get_VistasByModulo($moduloId);
         if (!$list) {
@@ -139,7 +140,7 @@ class PermisosController extends Controller
         }
         return $this->sendResponse(VistasResourceCbx::collection($list), 'ok');
     }
-    public function get_accionesByVista(int $vistaId)
+    public function get_accionesByVista(int $vistaId): JsonResponse
     {
         $list = $this->service->get_AccionesByVista($vistaId);
         if (!$list) {
@@ -147,7 +148,7 @@ class PermisosController extends Controller
         }
         return $this->sendResponse(ActionsVistasResource::collection($list), 'ok');
     }
-    public function get_tipostiempoList()
+    public function get_tipostiempoList(): JsonResponse
     {
         $list = $this->service->tiposTiempoList();
         if (!$list) {
