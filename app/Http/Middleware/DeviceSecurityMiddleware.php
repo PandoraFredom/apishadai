@@ -32,12 +32,12 @@ class DeviceSecurityMiddleware
             }
 
             UknowDevices::create($deviceInfo);
-            return $this->sendResponse(null, "Dispositivo no registrado, consultar con el administrador:", 401);
+            return $this->sendResponse(null, 'Dispositivo no registrado, consultar con el administrador:', 401);
         }
 
         $status = $device->Estado->descripcion ?? null;
         if ($status !== 'ACTIVO') {
-            return $this->sendResponse(null, 'Dispositivo desactivado,consultar con el administrador', 401);
+            return $this->sendResponse(null, 'Dispositivo desactivado\nconsultar con el administrador', 401);
         }
 
         return $next($request);

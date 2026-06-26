@@ -7,19 +7,16 @@ use Illuminate\Support\Facades\Route;
 Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 
 
-
-
 Route::group(['middleware' => ['auth:api']], function () {
-
-    require __DIR__ . '/custom/AuthModule_api.php';
     //==================================AUTH==================================
+    require __DIR__ . '/custom/AuthModule_api.php';
 
     //==================================CONFIG=================================
- require __DIR__ . '/custom/ConfigModule_api.php';
+    require __DIR__ . '/custom/ConfigModule_api.php';
 
     //==================================PROMOCIONES=============================
     require __DIR__ . '/custom/sorteos_api.php';
-    //==================================REPORTES=============================
 
+    //==================================REPORTES=============================
     require __DIR__ . '/custom/ReportesModule_api.php';
 });

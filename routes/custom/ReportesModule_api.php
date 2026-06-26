@@ -6,7 +6,7 @@ Route::prefix('reportes')->group(
     function () {
 
         /*-----------------------------Sorteos----------------*/
-        require __DIR__ . '/reportes/sorteos_api.php';
+        require __DIR__ . '/reportes/rpt_sorteos_route.php';
 
     }
 

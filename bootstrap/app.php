@@ -23,7 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api',
             [
                 \App\Http\Middleware\DeviceSecurityMiddleware::class,
-                \App\Http\Middleware\AppVersionSecurityMiddleware::class
+             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
             ]
         );
 
@@ -34,7 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 \App\Http\Middleware\MatchTokenMiddleware::class,
                 \App\Http\Middleware\ModuleSecurityMiddleware::class,
                 \App\Http\Middleware\DeviceSecurityMiddleware::class,
-                \App\Http\Middleware\AppVersionSecurityMiddleware::class
+               // \App\Http\Middleware\AppVersionSecurityMiddleware::class
             ]
         );
     })

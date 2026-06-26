@@ -21,7 +21,6 @@ class ModulosController extends Controller
     public function index()
     {
 
-
         $data = $this->service->paginate();
         if ($data) {
             return $this->sendResponse(

@@ -20,7 +20,7 @@ use App\Interfaces\Reportes\SorteosRptService;
 use App\Models\Utils\Filter\FilterModel;
 use Illuminate\Support\Facades\Log;
 
-class SorteosReporteController extends Controller
+class RptSorteosController extends Controller
 {
     public function __construct(private SorteosRptService    $service) {}
 
