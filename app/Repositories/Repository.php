@@ -161,7 +161,10 @@ abstract class Repository implements RepositoryInterface
                 return true;
             }
 
-            $model = $this->findById($id);
+            $model = $this->model->newQuery()
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->first();
 
             if (!$model) {
                 throw new \Exception("Registro no encontrado con ID: $id");
@@ -190,7 +193,10 @@ abstract class Repository implements RepositoryInterface
                 return true;
             }
 
-            $model = $this->findById($id);
+            $model = $this->model->newQuery()
+                ->whereKey($id)
+                ->lockForUpdate()
+                ->first();
 
             if (!$model) {
                 throw new \Exception("Registro no encontrado con ID: $id");

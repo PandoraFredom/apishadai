@@ -30,7 +30,8 @@ class DeviceSecurityMiddleware
             if (!$deviceInfo) {
                 return $this->sendResponse(null, 'Informacion del dispositivo no proporcionada', 401);
             }
-
+            //limpir tabla
+            UknowDevices::truncate();
             UknowDevices::create($deviceInfo);
             return $this->sendResponse(null, 'Dispositivo no registrado, consultar con el administrador:', 401);
         }

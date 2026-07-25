@@ -14,7 +14,7 @@ use App\Http\Resources\DepartamentoResource;
 use App\Http\Resources\tiketsResource;
 use App\Http\Resources\Ubicacion\MunicipiosResourceSingle;
 use App\Interfaces\Promos\TicketService;
-use App\Models\tikets;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Auth;
@@ -26,12 +26,12 @@ class tiketsController extends Controller
 {
 
 
-    public function __construct(private TicketService $service) {}
+    public function __construct(private readonly TicketService $service) {}
 
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(): JsonResponse
     {
         $list = $this->service->getList();
 
@@ -46,21 +46,18 @@ class tiketsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(TicketRequest $request)
+    public function store(TicketRequest $request): JsonResponse
     {
 
         try {
             $dto = TicketDTO::fromRequest($request->validated());
 
-            $data = [
+            $ticket = $this->service->createTicket([
                 'promocion' => $dto->promocion,
                 'cliente' => $dto->cliente,
-                'ntiket' => tikets::count('id') + 1,
                 'usuario' => Auth::user()->id,
                 'stock' => $dto->stock
-            ];
-
-            $ticket = tikets::create($data);
+            ]);
             if (!$ticket) {
                 return $this->sendResponse(null, 'Error al crear el tiket', 500);
             }
@@ -91,7 +88,7 @@ class tiketsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $id): JsonResponse
     {
         return $this->sendResponse(null, 'Not Implemented', 501);
     }
@@ -99,13 +96,13 @@ class tiketsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $id): JsonResponse
     {
         return $this->sendResponse(null, 'Not Implemented', 501);
     }
 
 
-    public function getpromo()
+    public function getpromo(): JsonResponse
     {
         $promo = $this->service->getActivePromo();
         if (!$promo) {
@@ -115,7 +112,7 @@ class tiketsController extends Controller
         return $this->sendResponse($promo, 'ok', 200);
     }
 
-    public function get_clientesList()
+    public function get_clientesList(): JsonResponse
     {
         try {
             $clientes = $this->service->get_clientesList();
@@ -124,7 +121,7 @@ class tiketsController extends Controller
                 ClienteResourceSingle::collection($clientes),
                 'ok',
                 200,
-                true
+                false
             );
         } catch (\Throwable $th) {
             return $this->sendResponse(null, 'Error al obtener clientes: ' . $th->getMessage(), 500);
@@ -134,7 +131,7 @@ class tiketsController extends Controller
     /**
      * Filter clients by term
      */
-    public function filter_clientes(DefaultFilterRequest $request)
+    public function filter_clientes(DefaultFilterRequest $request): JsonResponse
     {
         try {
             $filterModel = $request->toFilterModel();
@@ -145,7 +142,7 @@ class tiketsController extends Controller
                 ClienteResourceSingle::collection($clientes),
                 'ok',
                 200,
-                true
+                false
             );
         } catch (\Throwable $th) {
             return $this->sendResponse(null, 'Error al filtrar clientes: ' . $th->getMessage(), 500);
@@ -155,7 +152,7 @@ class tiketsController extends Controller
     /**
      * Check if phone is active for a client
      */
-    public function activephone(int $id)
+    public function activephone(int $id): JsonResponse
     {
         try {
 
@@ -173,7 +170,7 @@ class tiketsController extends Controller
     /**
      * Create a new client
      */
-    public function create_cliente(ClienteRequest $request)
+    public function create_cliente(ClienteRequest $request): JsonResponse
     {
         try {
             $dto = ClienteDTO::fromRequest($request->validated());
@@ -196,7 +193,7 @@ class tiketsController extends Controller
     /**
      * Update client phone
      */
-    public function update_phone_cliente(ClienteUpdatePhoneRequest $request)
+    public function update_phone_cliente(ClienteUpdatePhoneRequest $request): JsonResponse
     {
         try {
             $dto =  ClienteDTO::fromRequest($request->validated());
@@ -218,7 +215,7 @@ class tiketsController extends Controller
         }
     }
 
-    public function get_departamentosList()
+    public function get_departamentosList(): JsonResponse
     {
         try {
             $departamentos = $this->service->get_departamentosList();
@@ -234,7 +231,7 @@ class tiketsController extends Controller
         }
     }
 
-    public function get_municipiosList(int $id)
+    public function get_municipiosList(int $id): JsonResponse
     {
         try {
 

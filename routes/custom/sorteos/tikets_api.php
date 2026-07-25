@@ -2,21 +2,23 @@
 
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\tiketsController as ctrl;
 
-Route::prefix( 'ticket')->group(function () {
+
+Route::prefix('ticket')->group(function () {
     //rutas tikets
-    Route::get('/all', [App\Http\Controllers\API\tiketsController::class, 'index']);
-    Route::post('/create', [App\Http\Controllers\API\tiketsController::class, 'store']);
-    Route::get('/sorteoactual', [App\Http\Controllers\API\tiketsController::class, 'getpromo']);
+    Route::get('/all', [ctrl::class, 'index']);
+    Route::post('/create', [ctrl::class, 'store']);
+    Route::get('/sorteoactual', [ctrl::class, 'getpromo']);
 
     //rutas clientes
-    Route::get('/clientes', [App\Http\Controllers\API\tiketsController::class, 'get_clientesList']);
-    Route::get('/buscarcliente', [App\Http\Controllers\API\tiketsController::class, 'filter_clientes']);
-    Route::post('/creacliente', [App\Http\Controllers\API\tiketsController::class, 'create_cliente']);
-    Route::post('/updatephone', [App\Http\Controllers\API\tiketsController::class, 'update_phone_cliente']);
-    Route::get('/activephone/{id}', [App\Http\Controllers\API\tiketsController::class, 'activephone']);
+    Route::get('/clientes', [ctrl::class, 'get_clientesList']);
+    Route::get('/buscarcliente', [ctrl::class, 'filter_clientes']);
+    Route::post('/creacliente', [ctrl::class, 'create_cliente']);
+    Route::post('/updatephone', [ctrl::class, 'update_phone_cliente']);
+    Route::get('/activephone/{id}', [ctrl::class, 'activephone']);
 
     //listar departamento y municicipio
-    Route::get('/departamentos', [App\Http\Controllers\API\tiketsController::class, 'get_departamentosList']);
-    Route::get('/municipios/{id}', [App\Http\Controllers\API\tiketsController::class, 'get_municipiosList']);
+    Route::get('/departamentos', [ctrl::class, 'get_departamentosList']);
+    Route::get('/municipios/{id}', [ctrl::class, 'get_municipiosList']);
 });

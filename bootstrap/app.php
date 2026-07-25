@@ -19,22 +19,26 @@ return Application::configure(basePath: dirname(__DIR__))
         //   health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'idempotency' => \App\Http\Middleware\IdempotencyMiddleware::class,
+        ]);
+
         $middleware->group(
             'api',
             [
                 \App\Http\Middleware\DeviceSecurityMiddleware::class,
-             //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
+                //   \App\Http\Middleware\AppVersionSecurityMiddleware::class
             ]
         );
 
         $middleware->group(
             'auth:api',
             [
-                \App\Http\Middleware\JWTAuthenticationMiddleware::class,
-                \App\Http\Middleware\MatchTokenMiddleware::class,
-                \App\Http\Middleware\ModuleSecurityMiddleware::class,
+                App\Http\Middleware\JWTAuthenticationMiddleware::class,
+                App\Http\Middleware\MatchTokenMiddleware::class,
+                //  \App\Http\Middleware\ModuleSecurityMiddleware::class,
                 \App\Http\Middleware\DeviceSecurityMiddleware::class,
-               // \App\Http\Middleware\AppVersionSecurityMiddleware::class
+                // \App\Http\Middleware\AppVersionSecurityMiddleware::class
             ]
         );
     })
@@ -72,28 +76,28 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (QueryException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'message' => 'Error en la base de datos:' . $e->getMessage(),
-                    'code' => 404,
+                    'message' => 'Error en la base de datos',
+                    'code' => 500,
                     'data' => null
-                ], 401);
+                ], 500);
             }
         });
         $exceptions->render(function (ConnectionException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'message' => 'Error de conexión:' . $e->getMessage(),
+                    'message' => 'Error de conexión',
                     'code' => 503,
                     'data' => null
-                ], 401);
+                ], 503);
             }
         });
         $exceptions->render(function (Exception $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
-                    'message' => "Error General->$e",
-                    'code' => 404,
+                    'message' => "Error General",
+                    'code' => 500,
                     'data' => null
-                ], 401);
+                ], 500);
             }
         });
         //RepositoryException

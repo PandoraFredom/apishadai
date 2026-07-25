@@ -4,6 +4,7 @@ namespace App\Interfaces\Promos;
 
 use App\Http\Requests\Util\FilterRequest;
 use App\Interfaces\RepositoryInterface;
+use App\Models\tikets;
 use App\Models\Utils\Filter\FilterModel;
 
 interface TicketService extends RepositoryInterface
@@ -15,6 +16,8 @@ interface TicketService extends RepositoryInterface
     public function get_clientesList();
 
     public function filter_clientes(FilterModel $filterModel);
+
+    public function createTicket(array $data): tikets;
 
     public function activephone(string $phone, int $id): bool;
 

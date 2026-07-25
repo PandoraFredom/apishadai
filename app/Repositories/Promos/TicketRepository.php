@@ -12,6 +12,7 @@ use App\Interfaces\Ubicacion\MunicipiosService;
 use App\Models\tikets;
 use App\Models\Utils\Filter\FilterModel;
 use App\Repositories\Repository;
+use Illuminate\Support\Facades\DB;
 
 class TicketRepository extends Repository implements TicketService
 {
@@ -105,5 +106,46 @@ class TicketRepository extends Repository implements TicketService
     {
 
         return $this->clienteService->filterAll($filterModel);
+    }
+
+    public function createTicket(array $data): tikets
+    {
+        return DB::transaction(function () use ($data) {
+            $counter = DB::table('ticket_counters')
+                ->where('name', 'tikets')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$counter) {
+                DB::table('ticket_counters')->insert([
+                    'name' => 'tikets',
+                    'current_value' => (int) $this->model->newQuery()->max('ntiket'),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $counter = DB::table('ticket_counters')
+                    ->where('name', 'tikets')
+                    ->lockForUpdate()
+                    ->first();
+            }
+
+            $nextNumber = ((int) $counter->current_value) + 1;
+
+            DB::table('ticket_counters')
+                ->where('name', 'tikets')
+                ->update([
+                    'current_value' => $nextNumber,
+                    'updated_at' => now(),
+                ]);
+
+            return $this->model->newQuery()->create([
+                'promocion' => $data['promocion'],
+                'cliente' => $data['cliente'],
+                'ntiket' => $nextNumber,
+                'usuario' => $data['usuario'],
+                'stock' => $data['stock'],
+            ]);
+        }, 3);
     }
 }

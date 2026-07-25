@@ -29,7 +29,6 @@ class AppServiceProvider extends ServiceProvider
         \App\Interfaces\Config\MatchTokensService::class => \App\Repositories\Config\MatchTokensRepository::class,
         \App\Interfaces\Config\AppConfigService::class => \App\Repositories\Config\AppConfigRepository::class,
 
-
         //-------------------------------- AUTH ---------------------------------
         \App\Interfaces\Auth\AuthService::class => \App\Repositories\Auth\AuthRepository::class,
         \App\Interfaces\WorkLunch\WorkLunchService::class => \App\Repositories\WorkLunch\WorkLunchRepository::class,
@@ -48,13 +47,15 @@ class AppServiceProvider extends ServiceProvider
         //-------------------------------- REPORTES ---------------------------------
         \App\Interfaces\Reportes\SorteosRptService::class => \App\Repositories\Reportes\SorteosRptRepository::class,
 
+        //-------------------------------- FARMA ---------------------------------
+        \App\Interfaces\Proveedores\ProveedoresService::class => \App\Repositories\Proveedores\ProveedoresRepository::class,
 
 
         //-------------------------------- UTILS ---------------------------------
 
         \App\Utils\Services\SingleHashService::class => \App\Utils\Repositories\SingleHashRepository::class,
-        \App\Utils\Services\CryptoService::class => \App\Utils\Repositories\CryptoRepository::class
-
+        \App\Utils\Services\CryptoService::class => \App\Utils\Repositories\CryptoRepository::class,
+        \App\Utils\Services\Base64UtilityService::class => \App\Utils\Repositories\Base64UtilityRepository::class,
 
 
 

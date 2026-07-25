@@ -2,6 +2,10 @@
 
 namespace App\DTOs;
 
+use function Illuminate\Support\now;
+
+
+
 class ClienteDTO
 
 {
@@ -20,10 +24,15 @@ class ClienteDTO
         public readonly ?\DateTime $phone_updated_at = null,
     ) {}
 
+    /**
+     * Summary of fromRequest
+     * @param mixed $request
+     * @return ClienteDTO
+     */
     public static function fromRequest($request): self
     {
         return new self(
-            id: $request['id'] ?? null ,
+            id: $request['id'] ?? null,
             docid: $request['docid'] ?? null,
             pnombre: $request['pnombre'] ?? null,
             snombre: $request['snombre'] ?? null,

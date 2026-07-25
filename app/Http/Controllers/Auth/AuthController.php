@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
 use App\Utils\DeviceUtility;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,7 @@ class AuthController extends Controller
     ) {}
 
 
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $stage = 'inicio';
         $errorRef = uniqid('login_', true);
@@ -50,6 +51,9 @@ class AuthController extends Controller
 
             $credentials['name'] = $this->authService->hashValue($credentials['name']);
 
+
+
+
             if (!$token = Auth::attempt($credentials)) {
                 return $this->sendResponse(null, 'Credenciales incorrectas.', 401);
             }
@@ -74,6 +78,18 @@ class AuthController extends Controller
 
                 return $this->sendResponse(null, 'El usuario no tiene rol asignado', 401);
             }
+
+            $estado = $user->Estado;
+            if (!$estado || $estado->descripcion !== 'ACTIVO') {
+                Log::warning('Login rechazado: usuario inactivo', [
+                    'ref' => $errorRef,
+                    'user_id' => $user->id,
+                    'estado' => $estado ? $estado->descripcion : 'N/A',
+                ]);
+
+                return $this->sendResponse(null, 'El usuario no está activo', 401);
+            }
+
 
             $stage = 'permisos';
             $permisos = $this->authService->getPermisosUser($user->id);
@@ -123,7 +139,7 @@ class AuthController extends Controller
         }
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
         try {
             $decryptedToken = $this->authService->getDecryptedToken($request);

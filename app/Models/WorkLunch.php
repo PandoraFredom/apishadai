@@ -12,6 +12,7 @@ class WorkLunch extends Model
         'usuario',
         'device',
         'wkstart_time',
+        'work_date',
         'wkend_time',
         'lunch_start_time',
         'lunch_end_time',

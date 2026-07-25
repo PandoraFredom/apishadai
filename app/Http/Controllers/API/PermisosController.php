@@ -15,6 +15,7 @@ use App\Interfaces\Config\TipoTiempoService;
 use App\Utils\LifetimeResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PermisosController extends Controller
 {
@@ -40,17 +41,6 @@ class PermisosController extends Controller
         try {
             $dto = PermisoDTO::fromRequest($request->validated());
 
-            $existPermiso = $this->service->exists([
-                'usuario' => $dto->usuario,
-                'modulo' => $dto->modulo,
-                'vista' => $dto->vista,
-                'actionvista' => $dto->actionvista,
-            ]);
-
-            if ($existPermiso) {
-                return $this->sendResponse(false, 'El permiso ya existe', 409);
-            }
-
             $tipoT = $this->tipoTiempoService->findOrFail($dto->tipo_tiempo);
             if (!$tipoT) {
                 return $this->sendResponse(false, 'Tipo de tiempo no encontrado', 404);
@@ -58,18 +48,34 @@ class PermisosController extends Controller
 
             $lifetime = LifetimeResolver::resolve($tipoT);
 
-            $created = $this->service->create([
-                'usuario' => $dto->usuario,
-                'modulo' => $dto->modulo,
-                'vista' => $dto->vista,
-                'actionvista' => $dto->actionvista,
-                'tipo_tiempo' => $dto->tipo_tiempo,
-                'lifetime' => $lifetime,
-            ]);
+            $created = DB::transaction(function () use ($dto, $lifetime) {
+                $conditions = [
+                    'usuario' => $dto->usuario,
+                    'modulo' => $dto->modulo,
+                    'vista' => $dto->vista,
+                    'actionvista' => $dto->actionvista,
+                ];
+
+                $existPermiso = \App\Models\Permisos::query()
+                    ->where($conditions)
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($existPermiso) {
+                    return false;
+                }
+
+                return $this->service->create([
+                    ...$conditions,
+                    'tipo_tiempo' => $dto->tipo_tiempo,
+                    'lifetime' => $lifetime,
+                ]);
+            }, 3);
+
             if ($created) {
                 return $this->sendResponse(true, 'Permiso creado exitosamente', 201);
             }
-            return $this->sendResponse(false, 'Error al crear el permiso', 500);
+            return $this->sendResponse(false, 'El permiso ya existe', 409);
         } catch (\Throwable $th) {
             $this->logError('PermisosController store', $th);
             return $this->sendResponse(false, 'Error al crear el permiso: ' . $th->getMessage(), 500);

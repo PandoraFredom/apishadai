@@ -28,22 +28,16 @@ trait ErrorHandlerTrait
     /**
      * Ejecutar una transacción con manejo de errores
      */
-    protected function executeTransaction(callable $callback, string $method, array $context = []): bool
+    protected function executeTransaction(callable $callback, string $method, array $context = [], int $attempts = 3): bool
     {
         try {
-            DB::beginTransaction();
-
-            $result = $callback();
-
-            DB::commit();
+            $result = DB::transaction($callback, $attempts);
 
             return $result === false ? false : true;
         } catch (\Illuminate\Database\QueryException $e) {
-            DB::rollBack();
             $this->logDatabaseError($method, $e, $context);
             return false;
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
             $this->logGeneralError($method, $e, $context);
             return false;
         }
@@ -70,7 +64,7 @@ trait ErrorHandlerTrait
     /**
      * Log de errores generales
      */
-    protected function logGeneralError(string $method, \Exception $e, array $context = []): void
+    protected function logGeneralError(string $method, \Throwable $e, array $context = []): void
     {
         Log::error("Repository::{$method} - Error", [
             'model' => $this->getModelClass(),
@@ -117,7 +111,7 @@ trait ErrorHandlerTrait
     /**
      * Obtener trace limpio (solo últimas 5 líneas)
      */
-    protected function getCleanTrace(\Exception $e): array
+    protected function getCleanTrace(\Throwable $e): array
     {
         $trace = $e->getTrace();
         return array_slice($trace, 0, 5);

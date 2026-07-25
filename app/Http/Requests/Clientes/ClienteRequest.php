@@ -31,7 +31,7 @@ class ClienteRequest extends FormRequest
             'spaellido' => 'required|string|max:50',
             'edad' => 'required|integer',
             'telefono' => 'required|string|unique:clientes,telefono|max:10',
-            'genero' => 'required|string|max:1',
+            'genero' => 'required|string|max:10',
             'municipio.id' => 'required|integer|exists:municipios,id',
             'departamento.id' => 'required|integer|exists:departamentos,id',
         ];
@@ -45,7 +45,7 @@ class ClienteRequest extends FormRequest
             'docid.required' => 'El documento de identidad es obligatorio.',
             'docid.string' => 'El documento de identidad debe ser texto.',
             'docid.max' => 'El documento de identidad no puede exceder 13 caracteres.',
-            'docid.unique' => 'El documento de identidad ya est� registrado.',
+            'docid.unique' => 'El documento de identidad ya está registrado.',
 
             // Primer nombre
             'pnombre.required' => 'El primer nombre es obligatorio.',
@@ -69,27 +69,27 @@ class ClienteRequest extends FormRequest
 
             // Edad
             'edad.required' => 'La edad es obligatoria.',
-            'edad.integer' => 'La edad debe ser un n�mero entero.',
+            'edad.integer' => 'La edad debe ser un numero entero.',
 
             // Tel�fono
-            'telefono.required' => 'El tel�fono es obligatorio.',
-            'telefono.string' => 'El tel�fono debe ser texto.',
-            'telefono.unique' => 'El tel�fono ya est� registrado.',
-            'telefono.max' => 'El tel�fono no puede exceder 10 caracteres.',
+            'telefono.required' => 'El telefono es obligatorio.',
+            'telefono.string' => 'El telefono debe ser texto.',
+            'telefono.unique' => 'El telefono ya est registrado.',
+            'telefono.max' => 'El telefono no puede exceder 10 caracteres.',
 
             // G�nero
-            'genero.required' => 'El g�nero es obligatorio.',
-            'genero.string' => 'El g�nero debe ser texto.',
-            'genero.max' => 'El g�nero no puede exceder 1 car�cter.',
+            'genero.required' => 'El genero es obligatorio.',
+            'genero.string' => 'El genero debe ser texto.',
+            'genero.max' => 'El genero no puede exceder el limite de caracteres permitido.',
 
             // Municipio
             'municipio.id.required' => 'El municipio es obligatorio.',
-            'municipio.id.integer' => 'El municipio debe ser un n�mero entero.',
+            'municipio.id.integer' => 'El municipio debe ser un nmero entero.',
             'municipio.id.exists' => 'El municipio seleccionado no existe.',
 
             // Departamento
             'departamento.id.required' => 'El departamento es obligatorio.',
-            'departamento.id.integer' => 'El departamento debe ser un n�mero entero.',
+            'departamento.id.integer' => 'El departamento debe ser un nmero entero.',
             'departamento.id.exists' => 'El departamento seleccionado no existe.',
         ];
     }
