@@ -2,46 +2,50 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class AlertMail extends Notification implements ShouldQueue
+class AlertMail extends Notification
 {
-    use Queueable;
+    /**
+     * @param  array{
+     *     from: string,
+     *     cc: string|null,
+     *     subject: string,
+     *     data: array<string, mixed>
+     * }  $details
+     */
+    public function __construct(private readonly array $details) {}
 
-    protected $details;
-
-    public function __construct($details)
-    {
-        $this->details = $details;
-    }
-
-
-    public function via($notifiable): array
+    /**
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
     {
         return ['mail'];
     }
 
-
-    public function toMail($notifiable)
+    public function toMail(object $notifiable): MailMessage
     {
         $mailMessage = (new MailMessage)
-            ->from($this->details['from'], 'ShadaiAlerts')
+            ->from($this->details['from'], 'Shadai Alerts')
             ->subject($this->details['subject'])
             ->markdown('Notifications.RegistroESTemplate', [
                 'subject' => $this->details['subject'],
-                'body' =>  $this->details['data'],
-                'url' => url('/')
-            ])
+                'body' => $this->details['data'],
+            ]);
 
-            ->cc($this->details['cc']);
+        if ($this->details['cc'] !== null) {
+            $mailMessage->cc($this->details['cc']);
+        }
+
         return $mailMessage;
     }
 
-
-    public function toArray($notifiable): array
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
     {
         return [
             'data' => $this->details['data'],

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Interfaces\WorkLunch\WorkLunchService;
 use App\Http\Resources\WorkLunchResource;
+use App\Interfaces\WorkLunch\WorkLunchService;
+use App\Models\Device;
 use App\Utils\DeviceUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,19 @@ class WorkLunchController extends Controller
         private DeviceUtility $deviceUtility,
         private WorkLunchService $workLunchService
     ) {}
+
+    public function today()
+    {
+        $session = $this->workLunchService->todayForUser(
+            (int) Auth::id(),
+            now()->toDateString(),
+        );
+
+        return $this->sendResponse(
+            $session ? WorkLunchResource::make($session) : null,
+            $session ? 'Jornada laboral consultada.' : 'Aún no has registrado la entrada de hoy.',
+        );
+    }
 
     public function index()
     {
@@ -31,6 +45,7 @@ class WorkLunchController extends Controller
         if ($obj) {
             return $this->sendResponse(WorkLunchResource::make($obj), 'success');
         }
+
         return $this->sendResponse(null, 'No se encontro informacion', 404);
     }
 
@@ -47,9 +62,14 @@ class WorkLunchController extends Controller
     public function work(Request $request)
     {
         try {
-            $device = $this->deviceUtility->get_DeviceInfo($request);
-            if (!$device) {
-                return $this->sendResponse(null, 'Invalid Device!', 500);
+            $device = $request->attributes->get('authenticated_device');
+
+            if (! $device instanceof Device) {
+                $device = $this->deviceUtility->get_DeviceInfo($request);
+            }
+
+            if (! $device instanceof Device) {
+                return $this->sendResponse(null, 'Dispositivo no válido.', 401);
             }
 
             $session = $this->workLunchService->workService(
@@ -57,34 +77,38 @@ class WorkLunchController extends Controller
                 now()->format('Y-m-d H:i:s'),
                 $device->id
             );
-            $message = $session->wkend_time ? 'Salida Exitosa' : 'Registro Exitoso';
+            $message = $session->wkend_time
+                ? 'Salida registrada correctamente.'
+                : 'Entrada registrada correctamente.';
 
-            return $this->sendResponse(null, $message, 200);
+            return $this->sendResponse(WorkLunchResource::make($session), $message);
         } catch (\DomainException $e) {
             return $this->sendResponse(null, $e->getMessage(), $e->getCode() ?: 400);
         } catch (\Throwable $e) {
-            return $this->sendResponse(null, 'No se pudo registrar: ' . $e->getMessage(), 500);
+            $this->logError(__METHOD__, $e);
+
+            return $this->sendResponse(null, 'No se pudo registrar la jornada laboral.', 500);
         }
     }
 
     public function lunch(Request $request)
     {
         try {
-            $device = $this->deviceUtility->get_DeviceInfo($request);
-            if (!$device) {
-                return $this->sendResponse(null, 'Invalid Device!', 500);
-            }
-
-            $this->workLunchService->lunchService(
+            $session = $this->workLunchService->lunchService(
                 (int) Auth::id(),
                 now()->format('Y-m-d H:i:s')
             );
+            $message = $session->lunch_end_time
+                ? 'Fin de almuerzo registrado correctamente.'
+                : 'Inicio de almuerzo registrado correctamente.';
 
-            return $this->sendResponse(null, 'Registro Exitoso', 200);
+            return $this->sendResponse(WorkLunchResource::make($session), $message);
         } catch (\DomainException $e) {
             return $this->sendResponse(null, $e->getMessage(), $e->getCode() ?: 400);
         } catch (\Throwable $e) {
-            return $this->sendResponse(null, 'No se pudo registrar: ' . $e->getMessage(), 500);
+            $this->logError(__METHOD__, $e);
+
+            return $this->sendResponse(null, 'No se pudo registrar el almuerzo.', 500);
         }
     }
 }

@@ -13,79 +13,82 @@ use App\Models\Utils\Filter\FilterModel;
 class SorteosRptRepository implements SorteosRptService
 {
     public function __construct(
-        private TicketService $ticketService,
-        private PromocionesService $promocionesService,
-        private ClienteService $clientesService,
-        private UserRepositoryInterface $userService,
-        private StockRepositoryInterface $stocksService
+        private readonly TicketService $ticketService,
+        private readonly PromocionesService $promocionesService,
+        private readonly ClienteService $clientesService,
+        private readonly UserRepositoryInterface $userService,
+        private readonly StockRepositoryInterface $stocksService
     ) {}
 
-
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function filterClientes(FilterModel $filter)
     {
-        return $this->clientesService->filterAll($filter);
+        return $this->clientesService->filterAll($filter, true);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function filterSorteos(FilterModel $filter)
     {
-        return $this->promocionesService->filterAll($filter);
+        return $this->promocionesService->filterAll($filter, true);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function filterStocks(FilterModel $filter)
     {
-        return $this->stocksService->filterAll($filter);
+        return $this->stocksService->filterAll($filter, true);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function filterTickets(FilterModel $filter)
     {
-        return $this->ticketService->filterAll($filter);
+        return $this->ticketService->filterAll($filter, true);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function filterUsuarios(FilterModel $filter)
     {
-        return $this->userService->filterAll($filter);
+        return $this->userService->filterAll($filter, true);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getClientesList() {
+    public function getClientesList()
+    {
         return $this->clientesService->paginate();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getSorteosList() {
+    public function getSorteosList()
+    {
         return $this->promocionesService->paginate();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getStocksList() {
+    public function getStocksList()
+    {
         return $this->stocksService->paginate();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getUsuariosList() {
+    public function getUsuariosList()
+    {
         return $this->userService->paginate();
     }
 }

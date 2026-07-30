@@ -16,14 +16,17 @@ class WorkLunchResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'usuario' => $this->Usuario,
-            'device' => $this->Device,
+            'work_date' => $this->work_date,
             'wkstart_time' => $this->wkstart_time,
             'wkend_time' => $this->wkend_time,
             'lunch_start_time' => $this->lunch_start_time,
             'lunch_end_time' => $this->lunch_end_time,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'work_status' => $this->wkend_time
+                ? 'completed'
+                : ($this->wkstart_time ? 'working' : 'not_started'),
+            'lunch_status' => $this->lunch_end_time
+                ? 'completed'
+                : ($this->lunch_start_time ? 'on_lunch' : 'not_started'),
         ];
     }
 }

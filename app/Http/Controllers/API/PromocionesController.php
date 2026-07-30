@@ -50,7 +50,7 @@ class PromocionesController extends Controller
             // check if there's another active promo
             $existingActive = $this->service->get_promoActive();
             if ($existingActive) {
-                return $this->sendResponse(false, 'Ya existe otro sorteo activo. Solo puede haber un sorteo activo a la vez.', 400);
+                return $this->sendResponse(false, 'Ya existe otro sorteo activo. Solo puede haber un sorteo activo a la vez.', 404);
             }
 
 
@@ -122,7 +122,7 @@ class PromocionesController extends Controller
     public function filter(PromoFilterRequest $request)
     {
         try {
-            $list = $this->service->filterAll($request->validated(),true);
+            $list = $this->service->filterAll($request->toFilterModel(), true);
 
             if (!$list || $list->isEmpty()) {
                 return $this->sendResponse(null, 'No se encontraron sorteos.', 404);

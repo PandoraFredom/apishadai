@@ -33,7 +33,7 @@ class AuthRepository implements AuthService
      */
     public function getPermisosUser(int $userId): Collection
     {
-        $permisos = $this->permisoService->listByUserId($userId);
+        $permisos = $this->permisoService->getPermisosByUserId($userId);
 
         return $permisos
             ->filter(fn($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'

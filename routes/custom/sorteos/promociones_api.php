@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 
-    Route::prefix('sorteosl')->group(function () {
+    Route::prefix('sorteo')->group(function () {
         Route::get('/listar', [App\Http\Controllers\API\PromocionesController::class, 'index']);
         Route::get('/buscar/{id}', [App\Http\Controllers\API\PromocionesController::class, 'show']);
         Route::post('/crear', [App\Http\Controllers\API\PromocionesController::class, 'store']);

@@ -16,7 +16,6 @@ Route::prefix('sorteos')->group(
         Route::get('/list_usuarios', [App\Http\Controllers\Reportes\RptSorteosController::class, 'get_usuarios_list']);
         Route::get('/list_stocks', [App\Http\Controllers\Reportes\RptSorteosController::class, 'get_stocks_list']);
 
-
     }
 
 );

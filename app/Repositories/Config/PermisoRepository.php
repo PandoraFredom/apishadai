@@ -25,7 +25,12 @@ class PermisoRepository extends Repository implements PermisoService
     }
     public function listByUserId(int $userId)
     {
-        return $this->whereList(['usuario' => $userId]);
+        return $this->whereList(['usuario' => $userId], true);
+    }
+
+    public function getPermisosByUserId(int $userId): Collection
+    {
+        return $this->whereList(['usuario' => $userId], false);
     }
 
     public function get_ModuloListCbx()

@@ -1,25 +1,25 @@
 @component('mail::message')
-# 📅 {{ $subject }} - {{ $body['user'] }}  #{{ $body['id'] }}
+# {{ $body['event_label'] }}
+
+Se registró **{{ $body['event_label'] }}** para **{{ $body['user'] ?: 'Usuario' }}**
+el {{ $body['event_time'] ?: 'horario indicado' }}.
 
 @component('mail::table')
-| 🔹 **Campo**            | 🔸 **Valor**           |
-|-------------------------|------------------------|
-| **⏰ Entrada**           | {{ $body['start_time'] }} |
-| **🚪 Salida**            | {{ $body['end_time'] }}   |
-| **🍴 Inicio Almuerzo**   | {{ $body['lunch_start_time'] }} |
-| **⏳ Fin Almuerzo**      | {{ $body['lunch_end_time'] }}  |
-@endcomponent
-
-@component('mail::table')
-| **Duración Total**      |                        |
-|-------------------------|------------------------|
-| 🕑 Almuerzo              | {{ $body['lunchDuration'] }} |
-| 💼 Trabajo Neto         | {{ $body['workDuration'] }}  |
+| Campo | Hora |
+|:--|:--|
+| Entrada | {{ $body['start_time'] ?: '—' }} |
+| Inicio de almuerzo | {{ $body['lunch_start_time'] ?: '—' }} |
+| Fin de almuerzo | {{ $body['lunch_end_time'] ?: '—' }} |
+| Salida | {{ $body['end_time'] ?: '—' }} |
+| Duración de almuerzo | {{ $body['lunchDuration'] ?: '—' }} |
+| Duración de jornada | {{ $body['workDuration'] ?: '—' }} |
 @endcomponent
 
 @component('mail::panel')
-📍 **Ubicacion:**  
-{{ $body['stock'] }}
+**Stock:** {{ $body['stock'] ?: 'Sin stock' }}  
+**Registro:** #{{ $body['id'] }}
 @endcomponent
+
+Este correo fue generado automáticamente por Shadai.
 
 @endcomponent

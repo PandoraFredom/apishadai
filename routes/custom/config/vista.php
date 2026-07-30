@@ -7,7 +7,7 @@
         Route::get('/all', [VistasController::class, 'index']);
         Route::post('/create', [VistasController::class, 'store']);
         Route::get('/find/{id}', [VistasController::class, 'show']);
-        Route::put('/update', [VistasController::class, 'update']);
+        Route::put('/update/{id}', [VistasController::class, 'update']);
         Route::delete('/delete/{id}', [VistasController::class, 'destroy']);
         Route::get('/findbymodule/{id}', [VistasController::class, 'findbyModule']);
         Route::get('/estados', [VistasController::class, 'estadosList']);

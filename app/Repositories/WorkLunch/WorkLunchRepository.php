@@ -18,60 +18,94 @@ class WorkLunchRepository extends Repository implements WorkLunchService
         $this->orderBy = ['id', 'DESC'];
     }
 
+    public function todayForUser(int $userId, string $date): ?WorkLunch
+    {
+        return $this->model->newQuery()
+            ->where('usuario', $userId)
+            ->where(function ($query) use ($date) {
+                $query->where('work_date', $date)
+                    ->orWhere(function ($query) use ($date) {
+                        $query->whereNull('work_date')
+                            ->whereBetween('wkstart_time', [
+                                $date.' 00:00:00',
+                                $date.' 23:59:59',
+                            ]);
+                    });
+            })
+            ->first();
+    }
+
     public function workService(int $userId, string $dateTime, int $deviceId): WorkLunch
     {
-        $date    = substr($dateTime, 0, 10);
+        $date = substr($dateTime, 0, 10);
 
         $result = DB::transaction(function () use ($userId, $date, $dateTime, $deviceId) {
             $session = $this->findByUserAndDateForUpdate($userId, $date);
 
             if ($session) {
                 if ($session->wkstart_time && $session->wkend_time) {
-                    throw new \DomainException('Datos del dia ya registrados', 400);
+                    throw new \DomainException('La jornada laboral del día ya fue registrada.', 400);
+                }
+
+                if ($session->lunch_start_time && ! $session->lunch_end_time) {
+                    throw new \DomainException('Finaliza el almuerzo antes de registrar la salida.', 400);
                 }
 
                 $session->update(['wkend_time' => $dateTime]);
 
-                return $session->refresh();
+                return [
+                    'session' => $session->refresh(),
+                    'event' => 'work_ended',
+                ];
             }
 
-            return $this->model->newQuery()->create([
-                'usuario'      => $userId,
-                'device'       => $deviceId,
-                'wkstart_time' => $dateTime,
-                'work_date'    => $date,
-            ]);
+            return [
+                'session' => $this->model->newQuery()->create([
+                    'usuario' => $userId,
+                    'device' => $deviceId,
+                    'wkstart_time' => $dateTime,
+                    'work_date' => $date,
+                ]),
+                'event' => 'work_started',
+            ];
         }, 3);
 
-        $this->dispatchAlert($result->id);
+        $this->dispatchAlert($result['session'], $result['event']);
 
-        return $result;
+        return $result['session'];
     }
 
     public function lunchService(int $userId, string $dateTime): WorkLunch
     {
-        $date    = substr($dateTime, 0, 10);
+        $date = substr($dateTime, 0, 10);
 
         $result = DB::transaction(function () use ($userId, $date, $dateTime) {
             $session = $this->findByUserAndDateForUpdate($userId, $date);
 
-            if (!$session) {
-                throw new \DomainException('No se encontro una sesion de trabajo para este dia', 400);
+            if (! $session) {
+                throw new \DomainException('Primero registra la entrada de la jornada laboral.', 400);
+            }
+
+            if ($session->wkend_time) {
+                throw new \DomainException('La jornada laboral ya finalizó.', 400);
             }
 
             if ($session->lunch_start_time && $session->lunch_end_time) {
-                throw new \DomainException('Datos del dia ya registrados', 400);
+                throw new \DomainException('El almuerzo del día ya fue registrado.', 400);
             }
 
             $field = $session->lunch_start_time ? 'lunch_end_time' : 'lunch_start_time';
             $session->update([$field => $dateTime]);
 
-            return $session->refresh();
+            return [
+                'session' => $session->refresh(),
+                'event' => $field === 'lunch_start_time' ? 'lunch_started' : 'lunch_ended',
+            ];
         }, 3);
 
-        $this->dispatchAlert($result->id);
+        $this->dispatchAlert($result['session'], $result['event']);
 
-        return $result;
+        return $result['session'];
     }
 
     public function findByUserBetweenDates(int $userId, string $startDate, string $endDate): Collection
@@ -88,25 +122,14 @@ class WorkLunchRepository extends Repository implements WorkLunchService
             ['wkend_time', '<=', $endDate],
         ]);
 
-        $startCollection = $byStart instanceof Collection ? $byStart : new Collection();
-        $endCollection   = $byEnd   instanceof Collection ? $byEnd   : new Collection();
+        $startCollection = $byStart instanceof Collection ? $byStart : new Collection;
+        $endCollection = $byEnd   instanceof Collection ? $byEnd : new Collection;
 
         return $startCollection
             ->merge($endCollection)
             ->unique('id')
             ->sortByDesc('id')
             ->values();
-    }
-
-    private function findByUserAndDate(int $userId, string $date): ?WorkLunch
-    {
-        $result = $this->whereFirst([
-            ['usuario', '=', $userId],
-            ['wkstart_time', '>=', $date . ' 00:00:00'],
-            ['wkstart_time', '<=', $date . ' 23:59:59'],
-        ]);
-
-        return $result instanceof WorkLunch ? $result : null;
     }
 
     private function findByUserAndDateForUpdate(int $userId, string $date): ?WorkLunch
@@ -118,8 +141,8 @@ class WorkLunchRepository extends Repository implements WorkLunchService
                     ->orWhere(function ($query) use ($date) {
                         $query->whereNull('work_date')
                             ->whereBetween('wkstart_time', [
-                                $date . ' 00:00:00',
-                                $date . ' 23:59:59',
+                                $date.' 00:00:00',
+                                $date.' 23:59:59',
                             ]);
                     });
             })
@@ -127,8 +150,17 @@ class WorkLunchRepository extends Repository implements WorkLunchService
             ->first();
     }
 
-    private function dispatchAlert(int $sessionId): void
+    private function dispatchAlert(WorkLunch $session, string $event): void
     {
-        SendWorkLunchAlertJob::dispatch($sessionId)->afterResponse();
+        SendWorkLunchAlertJob::dispatch(
+            $session->id,
+            $event,
+            [
+                'wkstart_time' => $session->wkstart_time,
+                'wkend_time' => $session->wkend_time,
+                'lunch_start_time' => $session->lunch_start_time,
+                'lunch_end_time' => $session->lunch_end_time,
+            ],
+        );
     }
 }

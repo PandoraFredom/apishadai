@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Device;
 use App\Models\IdempotencyKey;
 use App\Utils\DeviceUtility;
 use Closure;
@@ -11,18 +12,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use stdClass;
 use Symfony\Component\HttpFoundation\Response;
+
 use function in_array;
 
 class IdempotencyMiddleware
 {
     private const string HEADER = 'Idempotency-Key';
+
     private const int TTL_HOURS = 24;
 
     public function __construct(private DeviceUtility $deviceUtility) {}
 
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$this->shouldHandle($request)) {
+        if (! $this->shouldHandle($request)) {
             return $next($request);
         }
 
@@ -38,11 +41,16 @@ class IdempotencyMiddleware
 
         $userId = optional($request->user())->id;
 
-        if (!$userId) {
+        if (! $userId) {
             return $next($request);
         }
 
-        $device = $this->deviceUtility->get_DeviceInfo($request);
+        $device = $request->attributes->get('authenticated_device');
+
+        if (! $device instanceof Device) {
+            $device = $this->deviceUtility->get_DeviceInfo($request);
+        }
+
         $requestHash = $this->requestHash($request);
         $route = $request->path();
         $record = $this->findOrCreateRecord($request, $key, $requestHash, $route, $userId, $device?->id);
@@ -55,7 +63,7 @@ class IdempotencyMiddleware
             return response()->json($record->response_body, (int) $record->response_code);
         }
 
-        if (!$record->wasRecentlyCreated && $record->status === 'processing') {
+        if (! $record->wasRecentlyCreated && $record->status === 'processing') {
             return $this->json(null, 'Solicitud en proceso', 409);
         }
 
@@ -141,10 +149,8 @@ class IdempotencyMiddleware
 
     /**
      * Summary of json
-     * @param mixed $result
-     * @param string $message
-     * @param int $code
-     * @return JsonResponse
+     *
+     * @param  mixed  $result
      */
     private function json($result, string $message, int $code): JsonResponse
     {

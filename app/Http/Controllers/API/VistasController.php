@@ -80,11 +80,11 @@ class VistasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(VistaUpdateRequest $request): JsonResponse
+    public function update(VistaUpdateRequest $request, string $id): JsonResponse
     {
         try {
             $dto = VistaDTO::fromUpdateRequest($request->Validated());
-            $update = $this->service->update($dto->id, $dto->toUpdateArray());
+            $update = $this->service->update($id, $dto->toUpdateArray());
 
             if ($update) {
                 return $this->sendResponse(true, 'Vista actualizada');

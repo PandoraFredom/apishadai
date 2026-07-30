@@ -69,11 +69,11 @@ class StocksController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StockUpdateRequest $request): JsonResponse
+    public function update(StockUpdateRequest $request, int $id): JsonResponse
     {
         try {
             $dto = StockDTO::fromUpdateRequest($request->validated());
-            $updated = $this->service->update($dto->id, $dto->toUpdateArray());
+            $updated = $this->service->update($id, $dto->toUpdateArray());
 
             if (!$updated) {
                 return $this->sendError('No se pudo actualizar el stock.', false, 404);

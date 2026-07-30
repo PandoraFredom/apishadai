@@ -8,22 +8,18 @@ use App\Http\Requests\Filters\StocksFilterRequest;
 use App\Http\Requests\Filters\TicketfilterRequest;
 use App\Http\Requests\Filters\UserFilterRequest;
 use App\Http\Requests\Reportes\SorteosFilterRequest;
-use App\Http\Resources\Clientes\ClientesResource;
 use App\Http\Resources\Reportes\ClientesRptResource;
 use App\Http\Resources\Reportes\SorteosRptResource;
 use App\Http\Resources\Reportes\StockRptResource;
 use App\Http\Resources\Reportes\TicketReportResource;
 use App\Http\Resources\Reportes\UsuarioRptResource;
 use App\Http\Resources\Stock\StocksResource;
-use App\Http\Resources\UserResource;
 use App\Interfaces\Reportes\SorteosRptService;
 use App\Models\Utils\Filter\FilterModel;
-use Illuminate\Support\Facades\Log;
 
 class RptSorteosController extends Controller
 {
-    public function __construct(private SorteosRptService    $service) {}
-
+    public function __construct(private readonly SorteosRptService $service) {}
 
     public function filter(TicketfilterRequest $request)
     {
@@ -36,7 +32,6 @@ class RptSorteosController extends Controller
             true
         );
     }
-
 
     public function filter_sorteos(SorteosFilterRequest $request)
     {
@@ -63,7 +58,6 @@ class RptSorteosController extends Controller
         );
     }
 
-
     public function filter_clientes(ClientesFilterRequest $request)
     {
         $list = $this->service->filterClientes($request->toFilterModel());
@@ -72,9 +66,10 @@ class RptSorteosController extends Controller
             ClientesRptResource::collection($list),
             'ok',
             200,
-            false
+            true
         );
     }
+
     public function get_clientes_list()
     {
         $list = $this->service->getClientesList();
@@ -86,7 +81,6 @@ class RptSorteosController extends Controller
             true
         );
     }
-
 
     public function filter_usuarios(UserFilterRequest $request)
     {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Device;
 use App\Models\UknowDevices;
 use App\Utils\DeviceUtility;
 use Closure;
@@ -10,7 +11,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DeviceSecurityMiddleware
 {
-
     public function __construct(
         private DeviceUtility $deviceUtility
 
@@ -21,18 +21,22 @@ class DeviceSecurityMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $device = $request->attributes->get('authenticated_device');
 
-        $device = $this->deviceUtility->get_DeviceInfo($request);
+        if (! $device instanceof Device) {
+            $device = $this->deviceUtility->get_DeviceInfo($request);
+        }
 
-        if (!$device) {
+        if (! $device) {
             $deviceInfo = $this->deviceUtility->getSingleInfo($request);
 
-            if (!$deviceInfo) {
+            if (! $deviceInfo) {
                 return $this->sendResponse(null, 'Informacion del dispositivo no proporcionada', 401);
             }
-            //limpir tabla
+            // limpir tabla
             UknowDevices::truncate();
             UknowDevices::create($deviceInfo);
+
             return $this->sendResponse(null, 'Dispositivo no registrado, consultar con el administrador:', 401);
         }
 
@@ -41,9 +45,10 @@ class DeviceSecurityMiddleware
             return $this->sendResponse(null, 'Dispositivo desactivado\nconsultar con el administrador', 401);
         }
 
+        $request->attributes->set('authenticated_device', $device);
+
         return $next($request);
     }
-
 
     /**
      * Envía una respuesta JSON normalizada

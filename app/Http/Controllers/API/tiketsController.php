@@ -5,27 +5,25 @@ namespace App\Http\Controllers\API;
 use App\DTOs\ClienteDTO;
 use App\DTOs\TicketDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Promos\TicketRequest;
 use App\Http\Requests\Clientes\ClienteRequest;
 use App\Http\Requests\Clientes\ClienteUpdatePhoneRequest;
+use App\Http\Requests\Promos\TicketRequest;
 use App\Http\Requests\Util\DefaultFilterRequest;
 use App\Http\Resources\Clientes\ClienteResourceSingle;
 use App\Http\Resources\DepartamentoResource;
+use App\Http\Resources\TicketPrintResource;
 use App\Http\Resources\tiketsResource;
 use App\Http\Resources\Ubicacion\MunicipiosResourceSingle;
 use App\Interfaces\Promos\TicketService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+
 use function is_numeric;
 
 class tiketsController extends Controller
 {
-
-
     public function __construct(private readonly TicketService $service) {}
 
     /**
@@ -56,27 +54,23 @@ class tiketsController extends Controller
                 'promocion' => $dto->promocion,
                 'cliente' => $dto->cliente,
                 'usuario' => Auth::user()->id,
-                'stock' => $dto->stock
+                'stock' => $dto->stock,
             ]);
-            if (!$ticket) {
+            if (! $ticket) {
                 return $this->sendResponse(null, 'Error al crear el tiket', 500);
             }
 
+            $ticket->loadMissing(['Promocion', 'Cliente', 'Stock']);
 
-            $pdf = PDF::loadView('tickets.print', compact('ticket'));
-            $pdf->setPaper([0, 0, 226.77, 600], 'portrait');
-
-            $pdfContent = $pdf->output();
-
-            // set 200 response
-            return $this->sendResponse([
-                'filename' => "ticket_{$ticket->id}.pdf",
-                'mime' => 'application/pdf',
-                'base64' => base64_encode($pdfContent),
-            ], 'Ticket created', 200);
+            return $this->sendResponse(
+                new TicketPrintResource($ticket),
+                'Ticket created',
+                200,
+            );
         } catch (\Throwable $th) {
-            Log::info('Error creating ticket: ' . request()->getContent());
-            return $this->sendResponse(null, 'Error al crear el tiket: ' . $th->getMessage(), 500);
+            Log::info('Error creating ticket: '.request()->getContent());
+
+            return $this->sendResponse(null, 'Error al crear el tiket: '.$th->getMessage(), 500);
         }
     }
 
@@ -101,11 +95,10 @@ class tiketsController extends Controller
         return $this->sendResponse(null, 'Not Implemented', 501);
     }
 
-
     public function getpromo(): JsonResponse
     {
         $promo = $this->service->getActivePromo();
-        if (!$promo) {
+        if (! $promo) {
             return $this->sendResponse(null, 'No hay Sorteos disponibles.', 404);
         }
 
@@ -124,7 +117,7 @@ class tiketsController extends Controller
                 false
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al obtener clientes: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al obtener clientes: '.$th->getMessage(), 500);
         }
     }
 
@@ -145,7 +138,7 @@ class tiketsController extends Controller
                 false
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al filtrar clientes: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al filtrar clientes: '.$th->getMessage(), 500);
         }
     }
 
@@ -156,14 +149,14 @@ class tiketsController extends Controller
     {
         try {
 
-            $active =  $this->service->activephone('', $id);
+            $active = $this->service->activephone('', $id);
 
             return $this->sendResponse(
                 $active,
                 'ok'
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al verificar teléfono: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al verificar teléfono: '.$th->getMessage(), 500);
         }
     }
 
@@ -177,7 +170,7 @@ class tiketsController extends Controller
 
             $cliente = $this->service->create_cliente($dto->toArray());
 
-            if (!$cliente) {
+            if (! $cliente) {
                 return $this->sendResponse(null, 'Error al crear el cliente', 500);
             }
 
@@ -186,7 +179,7 @@ class tiketsController extends Controller
                 'Cliente creado correctamente'
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al crear cliente: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al crear cliente: '.$th->getMessage(), 500);
         }
     }
 
@@ -196,22 +189,23 @@ class tiketsController extends Controller
     public function update_phone_cliente(ClienteUpdatePhoneRequest $request): JsonResponse
     {
         try {
-            $dto =  ClienteDTO::fromRequest($request->validated());
+            $dto = ClienteDTO::fromRequest($request->validated());
 
             $data = [
                 'telefono' => $dto->telefono,
-                'phone_updated_at' => now()
+                'phone_updated_at' => now(),
             ];
             $cliente = $this->service->update_phone_cliente($dto->id, $data);
-            if (!$cliente) {
+            if (! $cliente) {
                 return $this->sendResponse(false, 'Error al actualizar el teléfono del cliente', 500);
             }
+
             return $this->sendResponse(
                 $cliente,
                 'ok'
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al actualizar cliente: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al actualizar cliente: '.$th->getMessage(), 500);
         }
     }
 
@@ -227,7 +221,7 @@ class tiketsController extends Controller
                 false
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al obtener departamentos: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al obtener departamentos: '.$th->getMessage(), 500);
         }
     }
 
@@ -235,7 +229,7 @@ class tiketsController extends Controller
     {
         try {
 
-            if ($id <= 0 || !is_numeric($id) || $id === null) {
+            if ($id <= 0 || ! is_numeric($id) || $id === null) {
                 return $this->sendResponse(null, 'El ID del departamento es inválido.', 400);
             }
 
@@ -248,7 +242,7 @@ class tiketsController extends Controller
                 false
             );
         } catch (\Throwable $th) {
-            return $this->sendResponse(null, 'Error al obtener municipios: ' . $th->getMessage(), 500);
+            return $this->sendResponse(null, 'Error al obtener municipios: '.$th->getMessage(), 500);
         }
     }
 }
