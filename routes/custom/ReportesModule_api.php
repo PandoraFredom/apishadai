@@ -8,6 +8,9 @@ Route::prefix('reportes')->group(
         /*-----------------------------Sorteos----------------*/
         require __DIR__ . '/reportes/rpt_sorteos_route.php';
 
+        /*--------------------------Reporte WorkLunch----------*/
+        require __DIR__ . '/reportes/rpt_worklunch_route.php';
+
     }
 
 );

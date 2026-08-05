@@ -8,6 +8,7 @@ use App\Interfaces\Config\AccionesVistaService;
 use App\Interfaces\Config\AppConfigService;
 use App\Interfaces\Config\DeviceEstadoService;
 use App\Interfaces\Config\DeviceService;
+use App\Interfaces\Config\HorasLabService;
 use App\Interfaces\Config\MatchTokensService;
 use App\Interfaces\Config\ModulosRepositoryInterface;
 use App\Interfaces\Config\PermisoService;
@@ -19,11 +20,13 @@ use App\Interfaces\Config\UserEstadoRepositoryInterface;
 use App\Interfaces\Config\UserRepositoryInterface;
 use App\Interfaces\Config\VistaEstadosService;
 use App\Interfaces\Config\VistaRepositoryInterface;
+use App\Interfaces\Laboratorios\LaboratorioService;
 use App\Interfaces\Promos\PromocionesService;
 use App\Interfaces\Promos\PromoEstadosService;
 use App\Interfaces\Promos\TicketService;
 use App\Interfaces\Proveedores\ProveedoresService;
 use App\Interfaces\Reportes\SorteosRptService;
+use App\Interfaces\Reportes\WorkLunchRptService;
 use App\Interfaces\RepositoryInterface;
 use App\Interfaces\Ubicacion\DepartamentosService;
 use App\Interfaces\Ubicacion\MunicipiosService;
@@ -34,6 +37,7 @@ use App\Repositories\Config\AccionesVistaRepository;
 use App\Repositories\Config\AppConfigRepository;
 use App\Repositories\Config\DeviceEstadoRepository;
 use App\Repositories\Config\DeviceRepository;
+use App\Repositories\Config\HorasLabRepository;
 use App\Repositories\Config\MatchTokensRepository;
 use App\Repositories\Config\ModuloRepository;
 use App\Repositories\Config\PermisoRepository;
@@ -45,11 +49,13 @@ use App\Repositories\Config\UserEstadoRepository;
 use App\Repositories\Config\UserRepository;
 use App\Repositories\Config\VistaEstadosRepository;
 use App\Repositories\Config\VistaRepository;
+use App\Repositories\Laboratorios\LaboratorioRepository;
 use App\Repositories\Promos\PromoEstadosRepository;
 use App\Repositories\Promos\PromosRepository;
 use App\Repositories\Promos\TicketRepository;
 use App\Repositories\Proveedores\ProveedoresRepository;
 use App\Repositories\Reportes\SorteosRptRepository;
+use App\Repositories\Reportes\WorkLunchRptRepository;
 use App\Repositories\Repository;
 use App\Repositories\Ubicacion\DepartamentosRepository;
 use App\Repositories\Ubicacion\MunicipiosRepository;
@@ -86,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
         AccionesVistaService::class => AccionesVistaRepository::class,
         DeviceEstadoService::class => DeviceEstadoRepository::class,
         DeviceService::class => DeviceRepository::class,
+        HorasLabService::class => HorasLabRepository::class,
         MatchTokensService::class => MatchTokensRepository::class,
         AppConfigService::class => AppConfigRepository::class,
 
@@ -105,9 +112,11 @@ class AppServiceProvider extends ServiceProvider
 
         // -------------------------------- REPORTES ---------------------------------
         SorteosRptService::class => SorteosRptRepository::class,
+        WorkLunchRptService::class => WorkLunchRptRepository::class,
 
         // -------------------------------- FARMA ---------------------------------
         ProveedoresService::class => ProveedoresRepository::class,
+        LaboratorioService::class => LaboratorioRepository::class,
 
         // -------------------------------- UTILS ---------------------------------
 

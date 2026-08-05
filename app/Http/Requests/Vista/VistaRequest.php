@@ -25,7 +25,7 @@ class VistaRequest extends FormRequest
     {
         return [
             'modulo.id' => 'required|integer|exists:modulos,id',
-            'nombre' => 'required|string|max:50|unique:vistas,nombre',
+            'nombre' => 'required|string|max:50',
             'codigo' => 'required|string|max:10|unique:vistas,codigo',
             'estado.id' => 'required|integer|exists:vista_estados,id',
         ];

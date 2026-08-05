@@ -19,9 +19,11 @@ class ProveedoresController extends Controller
     {
         try {
             $list = $this->service->paginate();
+
             return $this->sendResponse(ProveedoresResource::collection($list), 'ok', 200, true);
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController index', $th);
+
             return $this->sendError('Error al listar proveedores.', null, 500);
         }
     }
@@ -30,22 +32,28 @@ class ProveedoresController extends Controller
     {
         try {
             $dto = ProveedoresDTO::onCreate($request->validated());
-            if ($dto->imagen != null) {
-                $validImage = $this->base64UtilityService->sanitize($dto->imagen);
-                if (!$validImage) {
+            $data = $dto->toArray();
+
+            if ($dto->imagen !== null) {
+                $sanitizedImage = $this->base64UtilityService->sanitize($dto->imagen);
+
+                if ($sanitizedImage === null) {
                     return $this->sendError('Imagen inválida', false, 422);
                 }
+
+                $data['imagen'] = $sanitizedImage;
             }
 
-            $created = $this->service->create($dto->toArray());
+            $created = $this->service->create($data);
 
-            if (!$created) {
+            if (! $created) {
                 return $this->sendError('Error al crear proveedor', false, 422);
             }
 
             return $this->sendResponse(true, 'Proveedor creado correctamente', 201);
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController store', $th);
+
             return $this->sendError('Error al crear proveedor.', false, 500);
         }
     }
@@ -55,13 +63,14 @@ class ProveedoresController extends Controller
         try {
             $item = $this->service->findById($id);
 
-            if (!$item) {
+            if (! $item) {
                 return $this->sendError('Proveedor no encontrado', null, 404);
             }
 
             return $this->sendResponse(ProveedoresResource::make($item), 'ok');
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController show', $th);
+
             return $this->sendError('Error al buscar proveedor.', null, 500);
         }
     }
@@ -70,23 +79,28 @@ class ProveedoresController extends Controller
     {
         try {
             $dto = ProveedoresDTO::fromUpdateRequest($request->validated());
+            $data = $dto->toUpdateArray();
 
-            if ($dto->imagen != null) {
-                $validImage = $this->base64UtilityService->sanitize($dto->imagen);
-                if (!$validImage) {
+            if ($dto->imagen !== null) {
+                $sanitizedImage = $this->base64UtilityService->sanitize($dto->imagen);
+
+                if ($sanitizedImage === null) {
                     return $this->sendError('Imagen inválida', false, 422);
                 }
+
+                $data['imagen'] = $sanitizedImage;
             }
 
-            $updated = $this->service->update($dto->id, $dto->toUpdateArray());
+            $updated = $this->service->update($dto->id, $data);
 
-            if (!$updated) {
+            if (! $updated) {
                 return $this->sendError('No se pudo actualizar el proveedor.', false, 404);
             }
 
             return $this->sendResponse(true, 'Proveedor actualizado correctamente', 200);
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController update', $th);
+
             return $this->sendError('Error al actualizar proveedor.', null, 500);
         }
     }
@@ -96,13 +110,14 @@ class ProveedoresController extends Controller
         try {
             $deleted = $this->service->delete($id);
 
-            if (!$deleted) {
+            if (! $deleted) {
                 return $this->sendError('Proveedor no disponible para eliminar.', false, 404);
             }
 
             return $this->sendResponse(true, 'Proveedor eliminado correctamente', 200);
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController destroy', $th);
+
             return $this->sendError('Error al eliminar proveedor.', null, 500);
         }
     }
@@ -112,13 +127,28 @@ class ProveedoresController extends Controller
         try {
             $image = $this->service->getImage($id);
 
-            if (!$image) {
+            if (! $image) {
                 return $this->sendError('Imagen no encontrada', null, 404);
             }
 
-            return $this->sendResponse(['image' => $image], 'ok');
+            $sanitizedImage = $this->base64UtilityService->validate($image);
+
+            if ($sanitizedImage === null) {
+                $sanitizedImage = $this->base64UtilityService->sanitize($image);
+
+                if ($sanitizedImage !== null) {
+                    $this->service->update($id, ['imagen' => $sanitizedImage]);
+                }
+            }
+
+            if ($sanitizedImage === null) {
+                return $this->sendError('La imagen almacenada no es válida', null, 422);
+            }
+
+            return $this->sendResponse(['image' => $sanitizedImage], 'ok');
         } catch (\Throwable $th) {
             $this->logError('ProveedoresController getImage', $th);
+
             return $this->sendError('Error al obtener la imagen del proveedor.', null, 500);
         }
     }

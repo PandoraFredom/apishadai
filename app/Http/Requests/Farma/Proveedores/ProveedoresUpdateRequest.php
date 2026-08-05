@@ -25,7 +25,16 @@ class ProveedoresUpdateRequest extends FormRequest
             ],
             'telefono' => 'required|string|max:20',
             'direccion' => 'required|string|max:255',
-            'imagen' => 'nullable|string|base64|max:255',
+            'imagen' => [
+                'nullable',
+                'string',
+                'max:2796204',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! is_string($value) || base64_decode($value, true) === false) {
+                        $fail('La imagen del proveedor debe ser una cadena base64 válida.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -46,8 +55,7 @@ class ProveedoresUpdateRequest extends FormRequest
             'direccion.string' => 'La direccion del proveedor debe ser una cadena de texto',
             'direccion.max' => 'La direccion del proveedor no debe exceder 255 caracteres',
             'imagen.string' => 'La imagen del proveedor debe ser una cadena de texto',
-            'imagen.max' => 'La imagen del proveedor no debe exceder 255 caracteres',
-            'imagen.base64' => 'La imagen del proveedor debe ser una cadena de texto en formato base64',
+            'imagen.max' => 'La imagen del proveedor no debe exceder 2 MB',
         ];
     }
 

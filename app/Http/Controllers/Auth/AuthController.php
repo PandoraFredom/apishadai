@@ -16,9 +16,8 @@ use Throwable;
 class AuthController extends Controller
 {
     public function __construct(
-        private AuthService $authService,
-        private DeviceUtility $deviceUtility,
-
+        private readonly AuthService $authService,
+        private readonly DeviceUtility $deviceUtility,
     ) {}
 
 

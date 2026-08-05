@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 class DeviceUtility
 {
     public function __construct(
-        private DeviceService $deviceService,
-        private SingleHashService $hashService
+        private readonly DeviceService $deviceService,
+        private readonly SingleHashService $hashService
     ) {}
 
 

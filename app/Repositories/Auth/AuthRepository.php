@@ -12,13 +12,12 @@ use App\Utils\Services\SingleHashService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
-
 class AuthRepository implements AuthService
 {
     public function __construct(
-        private DeviceUtility $deviceUtility,
-        private CryptoService $encService,
-        private PermisoService $permisoService,
+        private readonly DeviceUtility $deviceUtility,
+        private readonly CryptoService $encService,
+        private readonly PermisoService $permisoService,
         private MatchTokensService $matchTokensService,
         private SingleHashService $singleHashService
     ) {}
@@ -117,7 +116,7 @@ class AuthRepository implements AuthService
      * @param Request $request
      * @return string|null
      */
-    public function getDecryptedToken($request): ?string
+    public function getDecryptedToken(Request $request): ?string
     {
         if ($request->hasHeader('Authorization')) {
             $header = $request->header('Authorization');
@@ -142,7 +141,7 @@ class AuthRepository implements AuthService
      * @param string $token
      * @return string
      */
-    public function encryptToken(string $token, $request): string
+    public function encryptToken(string $token, Request $request): string
     {
         $deviceinfo = $this->deviceUtility->getSingleInfo($request);
 

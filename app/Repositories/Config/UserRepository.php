@@ -12,8 +12,8 @@ class UserRepository extends Repository implements UserRepositoryInterface
 {
     public function __construct(
         User $model,
-        private UserEstadoRepositoryInterface $estadoService,
-        private RolesRepositoryInterface $rolesService
+        private readonly UserEstadoRepositoryInterface $estadoService,
+        private readonly RolesRepositoryInterface $rolesService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['rol', 'estado'];

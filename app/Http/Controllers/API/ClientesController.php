@@ -16,7 +16,7 @@ use App\Interfaces\Clientes\ClienteService;
 class ClientesController extends Controller
 {
 
-    public function __construct(private ClienteService $clienteService) {}
+    public function __construct(private readonly ClienteService $clienteService) {}
 
 
     public function index()
@@ -127,7 +127,7 @@ class ClientesController extends Controller
     {
         try {
             $filterModel = $request->toFilterModel();
-            $list = $this->clienteService->filter($filterModel);
+            $list = $this->clienteService->filterAll($filterModel);
 
             if (!$list || $list->isEmpty()) {
                 return $this->sendResponse(null, 'No se encontraron clientes.', 404);
@@ -146,7 +146,7 @@ class ClientesController extends Controller
     public function checkphone(ClienteUpdatePhoneRequest $request)
     {
         $dto = ClienteDTO::fromRequest($request->validated());
-        $active =  $this->clienteService->activephone($dto->telefono, $dto->id);
+        $active =  $this->clienteService->activephone($dto->id);
 
         if (!$active) {
             return $this->sendResponse(

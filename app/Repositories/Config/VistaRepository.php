@@ -13,25 +13,25 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
 {
     public function __construct(
         Vistas $model,
-        private VistaEstadosService $vistaEstadosService,
-        private ModulosRepositoryInterface $modulosService,
-        private AccionesVistaService $accionesVistaService
+        private readonly VistaEstadosService $vistaEstadosService,
+        private readonly ModulosRepositoryInterface $modulosService,
+        private readonly AccionesVistaService $accionesVistaService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['estado', 'modulo'];
     }
 
-    public function exist_samenameWhithModuleId($name, $module)
+    public function exist_samenameWhithModuleId(string $name, int $module): ?Vistas
     {
         return $this->whereFirst(['nombre' => $name, 'modulo' => $module]);
     }
 
-    public function findbyModule($moduleId)
+    public function findbyModule(int $moduleId)
     {
         return $this->whereList(['modulo' => $moduleId]);
     }
 
-    public function findByModuloId($moduloId)
+    public function findByModuloId(int $moduloId)
     {
         return $this->whereList(['modulo' => $moduloId]);
     }
@@ -46,14 +46,14 @@ class VistaRepository extends Repository implements VistaRepositoryInterface
         return $this->modulosService->getAll();
     }
 
-    public function acctionList($vistaId)
+    public function acctionList(int $vistaId)
     {
-        return $this->accionesVistaService->findByVista((int) $vistaId);
+        return $this->accionesVistaService->findByVista($vistaId);
     }
 
-    public function deleteAccion($id)
+    public function deleteAccion(int $id)
     {
-        return $this->accionesVistaService->delete((int) $id);
+        return $this->accionesVistaService->delete($id);
     }
 
     public function createAccion(array $data)

@@ -15,10 +15,10 @@ class PermisoRepository extends Repository implements PermisoService
 {
     public function __construct(
         Permisos $model,
-        private ModulosRepositoryInterface $moduloService,
-        private VistaRepositoryInterface $vistaService,
-        private AccionesVistaService $accionesVistaService,
-        private TipoTiempoService $tipoTiempoService
+        private readonly ModulosRepositoryInterface $moduloService,
+        private readonly VistaRepositoryInterface $vistaService,
+        private readonly AccionesVistaService $accionesVistaService,
+        private readonly TipoTiempoService $tipoTiempoService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['modulo', 'vista', 'actionvista'];

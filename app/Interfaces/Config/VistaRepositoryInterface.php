@@ -5,13 +5,13 @@ use App\Interfaces\RepositoryInterface;
 
 interface VistaRepositoryInterface extends RepositoryInterface
 {
-    public function exist_samenameWhithModuleId($name, $module);
-    public function findbyModule($moduleId);
-    public function findByModuloId($moduloId);
+    public function exist_samenameWhithModuleId(string $name, int $module);
+    public function findbyModule(int $moduleId);
+    public function findByModuloId(int $moduloId);
     public function estadosList();
     public function modulosList();
 
-    public function acctionList($vistaId);
-    public function deleteAccion($id);
+    public function acctionList(int $vistaId);
+    public function deleteAccion(int $id);
     public function createAccion(array $data);
 }

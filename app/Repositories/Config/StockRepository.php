@@ -13,7 +13,7 @@ class StockRepository extends Repository implements StockRepositoryInterface
 {
     public function __construct(
         Stocks $model,
-        private StockEstadoService $stockEstadoService
+        private readonly StockEstadoService $stockEstadoService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['estado'];

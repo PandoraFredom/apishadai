@@ -15,12 +15,14 @@ Route::prefix('config')->group(function () {
     require __DIR__ . '/config/user_api.php';
     //---------------------------Permisos----------------------------------
     require __DIR__ . '/config/permisos_api.php';
+    /*--------------------------Horas laborales------------*/
+    require __DIR__ . '/reportes/horas_lab_api.php';
     //---------------------------Stocks---------------------------------
     require __DIR__ . '/config/stocks_api.php';
     //---------------------------Stock Estados---------------------------
     require __DIR__ . '/config/stocks_estado_api.php';
     //---------------------------Dispositivos---------------------------------
     require __DIR__ . '/config/device_api.php';
-        //---------------------------AppConfig---------------------------------
+    //---------------------------AppConfig---------------------------------
     require __DIR__ . '/config/app_config_api.php';
 });

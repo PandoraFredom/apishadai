@@ -3,6 +3,7 @@
 namespace App\Interfaces\Auth;
 
 use App\Models\MatchTokens;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 interface AuthService
@@ -45,7 +46,7 @@ interface AuthService
      *
      * @return string|null
      */
-    public function getDecryptedToken( $request): ?string;
+    public function getDecryptedToken(Request  $request): ?string;
 
     /**
      * Encripta un token JWT
@@ -53,7 +54,7 @@ interface AuthService
      * @param string $token
      * @return string
      */
-    public function encryptToken(string $token,  $request): string;
+    public function encryptToken(string $token, Request $request): string;
 
     /**
      * Genera un hash hmac-sha256 de un valor

@@ -19,7 +19,7 @@ class ProveedoresResource extends JsonResource
             'nombre' => $this->nombre,
             'telefono' => $this->telefono,
             'direccion' => $this->direccion,
-            'imagen' => $this->null,
+            'tiene_imagen' => (bool) ($this->tiene_imagen ?? $this->imagen),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

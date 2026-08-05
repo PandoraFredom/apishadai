@@ -15,8 +15,8 @@ class DeviceRepository  extends Repository implements DeviceService
 
     public function __construct(
         Device $model,
-        private StockRepositoryInterface $stockService,
-        private DeviceEstadoService $deviceEstadoService
+        private readonly StockRepositoryInterface $stockService,
+        private readonly DeviceEstadoService $deviceEstadoService
     ) {
         parent::__construct($model);
         $this->defaultRelations = ['estado', 'stock'];

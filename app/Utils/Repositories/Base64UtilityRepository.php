@@ -3,6 +3,7 @@
 namespace App\Utils\Repositories;
 
 use App\Utils\Services\Base64UtilityService;
+
 use function in_array;
 use function is_string;
 use function Safe\imagedestroy;
@@ -10,15 +11,15 @@ use function strlen;
 
 class Base64UtilityRepository implements Base64UtilityService
 {
-    private const MAX_IMAGE_BYTES = 65536;
+    private const MAX_IMAGE_BYTES = 2097152;
 
     private const MAX_IMAGE_PIXELS = 10000000;
+
+    private const JPEG_QUALITY = 92;
 
     private const ALLOWED_MIME_TYPES = [
         'image/jpeg',
         'image/png',
-        'image/gif',
-        'image/webp',
     ];
 
     public function sanitize(string $data): ?string
@@ -35,7 +36,6 @@ class Base64UtilityRepository implements Base64UtilityService
             $decoded === false
             || $decoded === ''
             || strlen($decoded) > self::MAX_IMAGE_BYTES
-            || $this->containsSuspiciousPayload($decoded)
         ) {
             return null;
         }
@@ -79,6 +79,46 @@ class Base64UtilityRepository implements Base64UtilityService
         return base64_encode($sanitized);
     }
 
+    public function validate(string $data): ?string
+    {
+        $base64 = $this->extractBase64Payload($data);
+
+        if ($base64 === null) {
+            return null;
+        }
+
+        $decoded = base64_decode($base64, true);
+
+        if (
+            $decoded === false
+            || $decoded === ''
+            || strlen($decoded) > self::MAX_IMAGE_BYTES
+            || ! $this->hasValidImageStructure($decoded)
+        ) {
+            return null;
+        }
+
+        $imageInfo = @getimagesizefromstring($decoded);
+
+        if ($imageInfo === false || empty($imageInfo['mime'])) {
+            return null;
+        }
+
+        $width = (int) ($imageInfo[0] ?? 0);
+        $height = (int) ($imageInfo[1] ?? 0);
+
+        if (
+            ! in_array(strtolower($imageInfo['mime']), self::ALLOWED_MIME_TYPES, true)
+            || $width <= 0
+            || $height <= 0
+            || ($width * $height) > self::MAX_IMAGE_PIXELS
+        ) {
+            return null;
+        }
+
+        return base64_encode($decoded);
+    }
+
     private function extractBase64Payload(string $data): ?string
     {
         $data = trim($data);
@@ -117,10 +157,8 @@ class Base64UtilityRepository implements Base64UtilityService
         ob_start();
 
         $encoded = match ($mimeType) {
-            'image/jpeg' => imagejpeg($image, null, 85),
+            'image/jpeg' => $this->encodeCleanJpeg($image),
             'image/png' => $this->encodeCleanPng($image),
-            'image/gif' => imagegif($image),
-            'image/webp' => function_exists('imagewebp') ? imagewebp($image, null, 85) : false,
             default => false,
         };
 
@@ -138,34 +176,23 @@ class Base64UtilityRepository implements Base64UtilityService
         imagealphablending($image, false);
         imagesavealpha($image, true);
 
-        return imagepng($image, null, 9);
+        return imagepng($image, null, 9, PNG_ALL_FILTERS);
     }
 
-    private function containsSuspiciousPayload(string $decoded): bool
+    private function encodeCleanJpeg(\GdImage $image): bool
     {
-        $payload = strtolower($decoded);
+        imageinterlace($image, true);
 
-        $blockedPatterns = [
-            '<?',
-            '<script',
-            '<svg',
-            'javascript:',
-            'data:text/html',
-            'eval(',
-            'base64_decode',
-            'shell_exec',
-            'system(',
-            'passthru(',
-            'proc_open',
-            'popen(',
-        ];
+        return imagejpeg($image, null, self::JPEG_QUALITY);
+    }
 
-        foreach ($blockedPatterns as $pattern) {
-            if (str_contains($payload, $pattern)) {
-                return true;
-            }
+    private function hasValidImageStructure(string $binary): bool
+    {
+        if (str_starts_with($binary, "\x89PNG\r\n\x1A\n")) {
+            return str_ends_with($binary, "\x00\x00\x00\x00IEND\xAE\x42\x60\x82");
         }
 
-        return false;
+        return str_starts_with($binary, "\xFF\xD8")
+            && str_ends_with($binary, "\xFF\xD9");
     }
 }
