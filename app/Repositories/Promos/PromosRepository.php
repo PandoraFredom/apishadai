@@ -12,7 +12,7 @@ class PromosRepository extends Repository implements PromocionesService
 
     public function __construct(
         Promociones $model,
-        private PromoEstadosService $promoEstadosService
+        private readonly PromoEstadosService $promoEstadosService
 
     ) {
         parent::__construct($model);

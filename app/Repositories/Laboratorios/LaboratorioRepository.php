@@ -7,10 +7,12 @@ use App\Models\Laboratorio;
 use App\Repositories\Repository;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use function array_key_exists;
+use function is_string;
 
 class LaboratorioRepository extends Repository implements LaboratorioService
 {
-    private const IMAGE_MAX_LENGTH = 2796204;
+    private const int IMAGE_MAX_LENGTH = 2796204;
 
     public function __construct(Laboratorio $model)
     {

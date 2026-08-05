@@ -20,10 +20,10 @@ class TicketRepository extends Repository implements TicketService
 
     public function __construct(
         tikets $model,
-        private ClienteService $clienteService,
-        private PromocionesService $promocionesService,
-        private DepartamentosService $departamentosService,
-        private MunicipiosService $municipiosService,
+        private readonly ClienteService $clienteService,
+        private readonly PromocionesService $promocionesService,
+        private readonly DepartamentosService $departamentosService,
+        private readonly MunicipiosService $municipiosService,
     ) {
         parent::__construct($model);
         $this->defaultRelations = [
