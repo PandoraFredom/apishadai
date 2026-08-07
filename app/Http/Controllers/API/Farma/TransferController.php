@@ -1,0 +1,173 @@
+<?php
+
+namespace App\Http\Controllers\API\Farma;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Farma\Transferencias\TransferSendRequest;
+use App\Http\Resources\Farma\LotResource;
+use App\Http\Resources\Farma\TransferResource;
+use App\Models\Device;
+use App\Repositories\Farma\TransferRepository;
+use DomainException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Throwable;
+
+class TransferController extends Controller
+{
+    public function __construct(private readonly TransferRepository $repository) {}
+
+    public function index(Request $request): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+
+        if ($stockId === null) {
+            return $this->sendError('El dispositivo no tiene un stock válido asignado.', null, 422);
+        }
+
+        $validated = $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'direccion' => ['nullable', 'in:todas,enviadas,recibidas'],
+            'estado' => ['nullable', 'integer', 'exists:transferencia_estado,id'],
+            'estado_recepcion' => ['nullable', 'integer', 'exists:transferencia_estado,id'],
+            'tipo' => ['nullable', 'integer', 'exists:transferencias_tipo,id'],
+        ]);
+
+        return $this->sendResponse(
+            TransferResource::collection($this->repository->paginate(
+                $stockId,
+                (int) ($validated['per_page'] ?? 30),
+                $validated,
+            )),
+            'ok',
+            200,
+            true,
+        );
+    }
+
+    public function show(Request $request, int $id): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+
+        if ($stockId === null) {
+            return $this->sendError('El dispositivo no tiene un stock válido asignado.', null, 422);
+        }
+
+        $transfer = $this->repository->findForStock($id, $stockId);
+
+        return $transfer === null
+            ? $this->sendError('Transferencia no encontrada para este stock.', null, 404)
+            : $this->sendResponse(TransferResource::make($transfer), 'ok');
+    }
+
+    public function options(Request $request): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+
+        return $stockId === null
+            ? $this->sendError('El dispositivo no tiene un stock válido asignado.', null, 422)
+            : $this->sendResponse($this->repository->options($stockId), 'ok');
+    }
+
+    public function lots(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'producto_id' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        return $this->sendResponse(
+            LotResource::collection($this->repository->paginateLots(
+                (int) ($validated['per_page'] ?? 30),
+                (string) ($validated['search'] ?? ''),
+                isset($validated['producto_id']) ? (int) $validated['producto_id'] : null,
+            )),
+            'ok',
+            200,
+            true,
+        );
+    }
+
+    public function send(TransferSendRequest $request): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+        $userId = $request->user()?->getAuthIdentifier();
+
+        if ($stockId === null || $userId === null) {
+            return $this->sendError('No fue posible identificar al usuario y stock de origen.', null, 422);
+        }
+
+        try {
+            $transfer = $this->repository->send($stockId, (int) $userId, $request->validated());
+
+            return $this->sendResponse(TransferResource::make($transfer), 'Transferencia guardada correctamente.', 201);
+        } catch (DomainException $exception) {
+            return $this->sendError($exception->getMessage(), null, 422);
+        } catch (Throwable $throwable) {
+            $this->logError('TransferController send', $throwable);
+
+            return $this->sendError('No se pudo guardar la transferencia.', null, 500);
+        }
+    }
+
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+        $userId = $request->user()?->getAuthIdentifier();
+
+        if ($stockId === null || $userId === null) {
+            return $this->sendError('No fue posible identificar al usuario y stock de origen.', null, 422);
+        }
+
+        $validated = $request->validate([
+            'detalles' => ['sometimes', 'array', 'max:200'],
+            'detalles.*.lote' => ['required', 'integer', 'distinct', 'exists:lotes,id'],
+            'detalles.*.cantidad' => ['required', 'integer', 'min:1', 'max:1000000'],
+        ]);
+
+        try {
+            $transfer = $this->repository->updateDetails($id, $stockId, $validated);
+
+            return $this->sendResponse(TransferResource::make($transfer), 'Transferencia actualizada correctamente.');
+        } catch (DomainException $exception) {
+            return $this->sendError($exception->getMessage(), null, 422);
+        } catch (Throwable $throwable) {
+            $this->logError('TransferController update', $throwable);
+
+            return $this->sendError('No se pudo actualizar los detalles de la transferencia.', null, 500);
+        }
+    }
+
+    public function receive(Request $request, int $id): JsonResponse
+    {
+        $stockId = $this->stockId($request);
+        $userId = $request->user()?->getAuthIdentifier();
+
+        if ($stockId === null || $userId === null) {
+            return $this->sendError('No fue posible identificar al usuario y stock de destino.', null, 422);
+        }
+
+        try {
+            $transfer = $this->repository->receive($id, $stockId, (int) $userId);
+
+            return $transfer === null
+                ? $this->sendError('Transferencia no encontrada.', null, 404)
+                : $this->sendResponse(TransferResource::make($transfer), 'Transferencia recibida correctamente.');
+        } catch (DomainException $exception) {
+            return $this->sendError($exception->getMessage(), null, 422);
+        } catch (Throwable $throwable) {
+            $this->logError('TransferController receive', $throwable);
+
+            return $this->sendError('No se pudo recibir la transferencia.', null, 500);
+        }
+    }
+
+    private function stockId(Request $request): ?int
+    {
+        $device = $request->attributes->get('authenticated_device');
+
+        return $device instanceof Device && (int) $device->stock > 0 ? (int) $device->stock : null;
+    }
+}

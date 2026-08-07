@@ -20,4 +20,7 @@ Route::prefix('farma')->group(function () {
 
     // ==================================DISTRIBUCION=============================
     require __DIR__.'/../custom/farma/distribucion_routes.php';
+
+    // ==================================TRANSFERENCIAS===========================
+    require __DIR__.'/../custom/farma/transferencias_routes.php';
 });
