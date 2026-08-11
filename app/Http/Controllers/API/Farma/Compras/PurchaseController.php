@@ -8,8 +8,8 @@ use App\Http\Requests\Farma\Compras\PurchaseDraftDetailRequest;
 use App\Http\Requests\Farma\Compras\PurchaseDraftRequest;
 use App\Http\Requests\Farma\Compras\PurchaseRequest;
 use App\Http\Resources\Farma\PurchaseResource;
-use App\Repositories\Farma\PurchaseKardexRepository;
-use App\Repositories\Farma\PurchaseRepository;
+use App\Interfaces\Farma\PurchaseKardexService;
+use App\Interfaces\Farma\PurchaseService;
 use App\Utils\Services\Base64UtilityService;
 use DomainException;
 use Illuminate\Database\QueryException;
@@ -20,8 +20,8 @@ use Throwable;
 class PurchaseController extends Controller
 {
     public function __construct(
-        private readonly PurchaseRepository $repository,
-        private readonly PurchaseKardexRepository $kardexRepository,
+        private readonly PurchaseService $repository,
+        private readonly PurchaseKardexService $kardexRepository,
         private readonly Base64UtilityService $base64Utility,
     ) {}
 

@@ -3,19 +3,21 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\VistaEstados;
 use App\Http\Resources\VistaEstadosResource;
+use App\Interfaces\Config\VistaEstadosService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class VistaEstadoController extends Controller
 {
+    public function __construct(private readonly VistaEstadosService $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = VistaEstados::all();
+        $list = $this->service->getAll();
         if ($list->count() > 0) {
             return $this->sendResponse(VistaEstadosResource::collection($list), 'success');
         }
@@ -35,7 +37,7 @@ class VistaEstadoController extends Controller
             return $this->sendResponse(null, $validate->errors(), 422);
         }
         try {
-            $list = VistaEstados::create($request->all());
+            $list = $this->service->create($request->all());
             if ($list) {
                 return $this->sendResponse(null, 'Estado creado');
             }
@@ -50,7 +52,7 @@ class VistaEstadoController extends Controller
      */
     public function show(string $id)
     {
-        $obj = VistaEstados::find($id);
+        $obj = $this->service->findById((int) $id);
         if ($obj) {
             return $this->sendResponse(VistaEstadosResource::make($obj), "success");
         }

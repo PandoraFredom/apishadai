@@ -4,17 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\DeviceEstadoResource;
-use App\Models\DeviceEstado;
+use App\Interfaces\Config\DeviceEstadoService;
 use Illuminate\Http\Request;
 
 class DeviceEstadoController extends Controller
 {
+    public function __construct(private readonly DeviceEstadoService $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = DeviceEstado::all();
+        $list = $this->service->getAll();
         if ($list->count() > 0) {
             return $this->sendResponse(DeviceEstadoResource::collection($list), 'success');
         }
@@ -34,7 +36,7 @@ class DeviceEstadoController extends Controller
      */
     public function show(string $id)
     {
-        $obj = DeviceEstado::find($id);
+        $obj = $this->service->findById((int) $id);
         if ($obj) {
             return $this->sendResponse(DeviceEstadoResource::make($obj), "success");
         }

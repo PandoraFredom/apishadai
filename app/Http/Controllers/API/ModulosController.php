@@ -14,7 +14,7 @@ class ModulosController extends Controller
 {
 
 
-    public function __construct(private ModulosRepositoryInterface $service) {}
+    public function __construct(private readonly ModulosRepositoryInterface $service) {}
     /**
      * Display a listing of the resource.
      */

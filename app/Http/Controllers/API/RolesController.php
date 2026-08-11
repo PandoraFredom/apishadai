@@ -4,17 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RolesResource;
-use App\Models\Roles;
+use App\Interfaces\Config\RolesRepositoryInterface;
 use Illuminate\Http\Request;
 
 class RolesController extends Controller
 {
+    public function __construct(private readonly RolesRepositoryInterface $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = Roles::all();
+        $list = $this->service->getAll();
 
         return $this->sendResponse(RolesResource::collection($list), 'Roles retrieved successfully.');
     }
@@ -32,7 +34,7 @@ class RolesController extends Controller
      */
     public function show(string $id)
     {
-        $role = Roles::find($id);
+        $role = $this->service->findById((int) $id);
         if ($role) {
             return $this->sendResponse(RolesResource::make($role), "success");
         }

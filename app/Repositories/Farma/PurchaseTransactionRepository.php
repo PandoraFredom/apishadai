@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\PurchaseTransactionService;
 use App\Models\Farma\Compra;
 use App\Models\Farma\CompraTransaccion;
 use App\Models\Farma\TransaccionTipo;
@@ -11,7 +12,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PurchaseTransactionRepository
+class PurchaseTransactionRepository implements PurchaseTransactionService
 {
     public function __construct(private readonly CompraTransaccion $model) {}
 

@@ -2,11 +2,12 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\ProductActiveService;
 use App\Models\Farma\ProdActivo;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class ProductActiveRepository
+class ProductActiveRepository implements ProductActiveService
 {
     /** @var array<int, string> */
     private const RELATIONS = [

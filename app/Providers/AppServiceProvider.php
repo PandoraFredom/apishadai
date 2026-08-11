@@ -4,12 +4,25 @@ namespace App\Providers;
 
 use App\Interfaces\Auth\AuthService;
 use App\Interfaces\Clientes\ClienteService;
+use App\Interfaces\Farma\DistributionService;
+use App\Interfaces\Farma\LotService;
+use App\Interfaces\Farma\ProductActiveService;
+use App\Interfaces\Farma\ProductCatalogService;
+use App\Interfaces\Farma\ProductCatalogRegistryService;
+use App\Interfaces\Farma\ProductService;
+use App\Interfaces\Farma\PurchaseCatalogService;
+use App\Interfaces\Farma\PurchaseKardexService;
+use App\Interfaces\Farma\PurchaseService;
+use App\Interfaces\Farma\PurchaseTransactionService;
+use App\Interfaces\Farma\TransferService;
 use App\Interfaces\Config\AccionesVistaService;
 use App\Interfaces\Config\AppConfigService;
 use App\Interfaces\Config\DeviceEstadoService;
+use App\Interfaces\Config\DeviceInfoService;
 use App\Interfaces\Config\DeviceService;
 use App\Interfaces\Config\HorasLabService;
 use App\Interfaces\Config\MatchTokensService;
+use App\Interfaces\Config\ModuloEstadoService;
 use App\Interfaces\Config\ModulosRepositoryInterface;
 use App\Interfaces\Config\PermisoService;
 use App\Interfaces\Config\RolesRepositoryInterface;
@@ -40,6 +53,7 @@ use App\Repositories\Config\DeviceRepository;
 use App\Repositories\Config\HorasLabRepository;
 use App\Repositories\Config\MatchTokensRepository;
 use App\Repositories\Config\ModuloRepository;
+use App\Repositories\Config\ModuloEstadoRepository;
 use App\Repositories\Config\PermisoRepository;
 use App\Repositories\Config\RolesRepository;
 use App\Repositories\Config\StockEstadoRepository;
@@ -49,6 +63,16 @@ use App\Repositories\Config\UserEstadoRepository;
 use App\Repositories\Config\UserRepository;
 use App\Repositories\Config\VistaEstadosRepository;
 use App\Repositories\Config\VistaRepository;
+use App\Repositories\Farma\DistributionRepository;
+use App\Repositories\Farma\LotRepository;
+use App\Repositories\Farma\ProductActiveRepository;
+use App\Repositories\Farma\ProductCatalogRepository;
+use App\Repositories\Farma\ProductRepository;
+use App\Repositories\Farma\PurchaseCatalogRepository;
+use App\Repositories\Farma\PurchaseKardexRepository;
+use App\Repositories\Farma\PurchaseRepository;
+use App\Repositories\Farma\PurchaseTransactionRepository;
+use App\Repositories\Farma\TransferRepository;
 use App\Repositories\Laboratorios\LaboratorioRepository;
 use App\Repositories\Promos\PromoEstadosRepository;
 use App\Repositories\Promos\PromosRepository;
@@ -60,6 +84,8 @@ use App\Repositories\Repository;
 use App\Repositories\Ubicacion\DepartamentosRepository;
 use App\Repositories\Ubicacion\MunicipiosRepository;
 use App\Repositories\WorkLunch\WorkLunchRepository;
+use App\Services\Farma\ProductCatalogRegistry;
+use App\Utils\DeviceUtility;
 use App\Utils\Repositories\Base64UtilityRepository;
 use App\Utils\Repositories\CryptoRepository;
 use App\Utils\Repositories\SingleHashRepository;
@@ -80,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
         // -------------------------------- CONFIG ---------------------------------
         RepositoryInterface::class => Repository::class,
         ModulosRepositoryInterface::class => ModuloRepository::class,
+        ModuloEstadoService::class => ModuloEstadoRepository::class,
         VistaRepositoryInterface::class => VistaRepository::class,
         VistaEstadosService::class => VistaEstadosRepository::class,
         StockRepositoryInterface::class => StockRepository::class,
@@ -91,6 +118,7 @@ class AppServiceProvider extends ServiceProvider
         TipoTiempoService::class => TipoTiempoRepository::class,
         AccionesVistaService::class => AccionesVistaRepository::class,
         DeviceEstadoService::class => DeviceEstadoRepository::class,
+        DeviceInfoService::class => DeviceUtility::class,
         DeviceService::class => DeviceRepository::class,
         HorasLabService::class => HorasLabRepository::class,
         MatchTokensService::class => MatchTokensRepository::class,
@@ -115,6 +143,17 @@ class AppServiceProvider extends ServiceProvider
         WorkLunchRptService::class => WorkLunchRptRepository::class,
 
         // -------------------------------- FARMA ---------------------------------
+        DistributionService::class => DistributionRepository::class,
+        LotService::class => LotRepository::class,
+        ProductActiveService::class => ProductActiveRepository::class,
+        ProductCatalogService::class => ProductCatalogRepository::class,
+        ProductCatalogRegistryService::class => ProductCatalogRegistry::class,
+        ProductService::class => ProductRepository::class,
+        PurchaseCatalogService::class => PurchaseCatalogRepository::class,
+        PurchaseKardexService::class => PurchaseKardexRepository::class,
+        PurchaseService::class => PurchaseRepository::class,
+        PurchaseTransactionService::class => PurchaseTransactionRepository::class,
+        TransferService::class => TransferRepository::class,
         ProveedoresService::class => ProveedoresRepository::class,
         LaboratorioService::class => LaboratorioRepository::class,
 

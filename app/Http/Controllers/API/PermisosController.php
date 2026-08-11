@@ -15,14 +15,13 @@ use App\Interfaces\Config\TipoTiempoService;
 use App\Utils\LifetimeResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class PermisosController extends Controller
 {
 
     public function __construct(
-        private PermisoService $service,
-        private TipoTiempoService $tipoTiempoService
+        private readonly PermisoService $service,
+        private readonly TipoTiempoService $tipoTiempoService
     ) {}
 
     /**
@@ -48,29 +47,14 @@ class PermisosController extends Controller
 
             $lifetime = LifetimeResolver::resolve($tipoT);
 
-            $created = DB::transaction(function () use ($dto, $lifetime) {
-                $conditions = [
-                    'usuario' => $dto->usuario,
-                    'modulo' => $dto->modulo,
-                    'vista' => $dto->vista,
-                    'actionvista' => $dto->actionvista,
-                ];
-
-                $existPermiso = \App\Models\Permisos::query()
-                    ->where($conditions)
-                    ->lockForUpdate()
-                    ->exists();
-
-                if ($existPermiso) {
-                    return false;
-                }
-
-                return $this->service->create([
-                    ...$conditions,
-                    'tipo_tiempo' => $dto->tipo_tiempo,
-                    'lifetime' => $lifetime,
-                ]);
-            }, 3);
+            $created = $this->service->createUnique([
+                'usuario' => $dto->usuario,
+                'modulo' => $dto->modulo,
+                'vista' => $dto->vista,
+                'actionvista' => $dto->actionvista,
+                'tipo_tiempo' => $dto->tipo_tiempo,
+                'lifetime' => $lifetime,
+            ]);
 
             if ($created) {
                 return $this->sendResponse(true, 'Permiso creado exitosamente', 201);

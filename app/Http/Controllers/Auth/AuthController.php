@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
-use App\Utils\DeviceUtility;
+use App\Interfaces\Config\DeviceInfoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +17,7 @@ class AuthController extends Controller
 {
     public function __construct(
         private readonly AuthService $authService,
-        private readonly DeviceUtility $deviceUtility,
+        private readonly DeviceInfoService $deviceInfoService,
     ) {}
 
 
@@ -28,7 +28,7 @@ class AuthController extends Controller
 
         try {
             $stage = 'dispositivo';
-            $deviceInfo = $this->deviceUtility->get_DeviceInfo($request);
+            $deviceInfo = $this->deviceInfoService->get_DeviceInfo($request);
 
             if ($deviceInfo == null) {
                 return $this->sendResponse(null, "Error al obtener la informacion del dispositivo", 401);

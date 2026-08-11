@@ -7,13 +7,13 @@ use App\Http\Requests\Farma\Distribucion\DistributionRequest;
 use App\Http\Resources\Farma\DistributionLotResource;
 use App\Http\Resources\Farma\DistributionProductResource;
 use App\Http\Resources\Farma\DistributionResource;
-use App\Repositories\Farma\DistributionRepository;
+use App\Interfaces\Farma\DistributionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DistributionController extends Controller
 {
-    public function __construct(private readonly DistributionRepository $repository) {}
+    public function __construct(private readonly DistributionService $repository) {}
 
     public function index(Request $request): JsonResponse
     {

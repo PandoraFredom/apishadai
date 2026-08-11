@@ -2,12 +2,13 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\PurchaseCatalogService;
 use App\Models\Farma\CompraTipo;
 use App\Models\Farma\TransaccionTipo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class PurchaseCatalogRepository
+class PurchaseCatalogRepository implements PurchaseCatalogService
 {
     public function paginate(string $catalog, int $perPage = 30): LengthAwarePaginator
     {

@@ -2,11 +2,13 @@
 
 namespace App\Utils;
 
+use App\Interfaces\Config\DeviceInfoService;
 use App\Interfaces\Config\DeviceService;
+use App\Models\Device;
 use App\Utils\Services\SingleHashService;
 use Illuminate\Http\Request;
 
-class DeviceUtility
+class DeviceUtility implements DeviceInfoService
 {
     public function __construct(
         private readonly DeviceService $deviceService,
@@ -42,6 +44,20 @@ class DeviceUtility
             'ip' => $this->hashService->genHash($info['ip']),
             'name' => $this->hashService->genHash($info['name']),
         ];
+    }
+
+    public function authenticatedDeviceId(Request $request): ?int
+    {
+        $device = $request->attributes->get('authenticated_device') ?? $this->get_DeviceInfo($request);
+
+        return $device instanceof Device ? (int) $device->getKey() : null;
+    }
+
+    public function stockId(mixed $device): ?int
+    {
+        return $device instanceof Device && (int) $device->stock > 0
+            ? (int) $device->stock
+            : null;
     }
 
     private function getIpAndDeviceName(Request $request): array

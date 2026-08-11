@@ -4,14 +4,14 @@ namespace App\Http\Controllers\API\Farma\Compras;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Compras\PurchaseCatalogRequest;
-use App\Repositories\Farma\PurchaseCatalogRepository;
+use App\Interfaces\Farma\PurchaseCatalogService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PurchaseCatalogController extends Controller
 {
-    public function __construct(private readonly PurchaseCatalogRepository $repository) {}
+    public function __construct(private readonly PurchaseCatalogService $repository) {}
 
     public function index(Request $request, string $catalogoCompra): JsonResponse
     {

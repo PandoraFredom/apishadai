@@ -4,18 +4,20 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TipoTiempoResource;
-use App\Models\TipoTiempo;
+use App\Interfaces\Config\TipoTiempoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class TipoTiempoController extends Controller
 {
+    public function __construct(private readonly TipoTiempoService $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list  = TipoTiempo::all();
+        $list  = $this->service->getAll();
         if ($list->isEmpty()) {
             return $this->sendResponse(null, 'No hay tipos de tiempo disponibles', 404);
         }
@@ -36,7 +38,7 @@ class TipoTiempoController extends Controller
             return $this->sendResponse(false, 'Error de validación: ' . $validate->errors()->first(), 400);
         }
         $data = $request->only(['nombre', 'cantidad', 'unidad']);
-        $tipoTiempo = TipoTiempo::create($data);
+        $tipoTiempo = $this->service->create($data);
         if (!$tipoTiempo) {
             return $this->sendResponse(false, 'Error al crear el tipo de tiempo', 500);
         }
@@ -48,7 +50,7 @@ class TipoTiempoController extends Controller
      */
     public function show(string $id)
     {
-        $tipoTiempo = TipoTiempo::find($id);
+        $tipoTiempo = $this->service->findById((int) $id);
         if (!$tipoTiempo) {
             return $this->sendResponse(null, 'Tipo de tiempo no encontrado', 404);
         }
@@ -60,7 +62,7 @@ class TipoTiempoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $tipoTiempo = TipoTiempo::find($id);
+        $tipoTiempo = $this->service->findById((int) $id);
         if (!$tipoTiempo) {
             return $this->sendResponse(null, 'Tipo de tiempo no encontrado', 404);
         }
@@ -75,8 +77,7 @@ class TipoTiempoController extends Controller
         }
 
         $data = $request->only(['nombre', 'cantidad', 'unidad']);
-        $tipoTiempo->update($data);
-        if (!$tipoTiempo) {
+        if (!$this->service->update((int) $id, $data)) {
             return $this->sendResponse(false, 'Error al actualizar el tipo de tiempo', 500);
         }
         return $this->sendResponse(true, 'Tipo de tiempo actualizado con éxito', 200);
@@ -87,13 +88,13 @@ class TipoTiempoController extends Controller
      */
     public function destroy(string $id)
     {
-        $tipoTiempo = TipoTiempo::find($id);
+        $tipoTiempo = $this->service->findById((int) $id);
         if (!$tipoTiempo) {
             return $this->sendResponse(null, 'Tipo de tiempo no encontrado', 404);
         }
 
        try {
-            $tipoTiempo->delete();
+            $this->service->delete((int) $id);
             return $this->sendResponse(true, 'Tipo de tiempo eliminado con éxito', 200);
         } catch (\Exception $e) {
             return $this->sendResponse(false, 'Tiempo no Disponible' , 500);

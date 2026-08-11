@@ -15,7 +15,7 @@ use Illuminate\Http\JsonResponse;
 class DeviceController extends Controller
 {
     public function __construct(
-        private DeviceService $deviceService
+        private readonly DeviceService $deviceService
     ) {}
 
     public function index(): JsonResponse

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\DistributionService;
 use App\Models\Farma\Distribucion;
 use App\Models\Farma\Lote;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class DistributionRepository
+class DistributionRepository implements DistributionService
 {
     public function __construct(
         private readonly Lote $lot,

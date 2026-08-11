@@ -10,6 +10,7 @@ use App\Interfaces\Config\TipoTiempoService;
 use App\Interfaces\Config\VistaRepositoryInterface;
 use App\Models\Permisos;
 use App\Repositories\Repository;
+use Illuminate\Support\Facades\DB;
 
 class PermisoRepository extends Repository implements PermisoService
 {
@@ -48,5 +49,28 @@ class PermisoRepository extends Repository implements PermisoService
     public function tiposTiempoList()
     {
         return $this->tipoTiempoService->getAll();
+    }
+
+    public function createUnique(array $data): bool
+    {
+        return DB::transaction(function () use ($data): bool {
+            $conditions = [
+                'usuario' => $data['usuario'],
+                'modulo' => $data['modulo'],
+                'vista' => $data['vista'],
+                'actionvista' => $data['actionvista'],
+            ];
+
+            $exists = $this->model->newQuery()
+                ->where($conditions)
+                ->lockForUpdate()
+                ->exists();
+
+            if ($exists) {
+                return false;
+            }
+
+            return (bool) $this->model->newQuery()->create($data);
+        }, 3);
     }
 }

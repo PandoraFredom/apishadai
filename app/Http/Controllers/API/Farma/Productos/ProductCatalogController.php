@@ -6,8 +6,8 @@ use App\DTOs\Farma\ProductCatalogData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Productos\ProductCatalogRequest;
 use App\Http\Resources\Farma\ProductCatalogResource;
-use App\Repositories\Farma\ProductCatalogRepository;
-use App\Services\Farma\ProductCatalogRegistry;
+use App\Interfaces\Farma\ProductCatalogService;
+use App\Interfaces\Farma\ProductCatalogRegistryService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Throwable;
@@ -15,8 +15,8 @@ use Throwable;
 class ProductCatalogController extends Controller
 {
     public function __construct(
-        private readonly ProductCatalogRepository $repository,
-        private readonly ProductCatalogRegistry $registry,
+        private readonly ProductCatalogService $repository,
+        private readonly ProductCatalogRegistryService $registry,
     ) {}
 
     public function index(string $catalogo): JsonResponse

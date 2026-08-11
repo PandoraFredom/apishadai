@@ -6,7 +6,7 @@ use App\DTOs\Farma\ProductData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Productos\ProductRequest;
 use App\Http\Resources\Farma\ProductResource;
-use App\Repositories\Farma\ProductRepository;
+use App\Interfaces\Farma\ProductService;
 use App\Utils\Services\Base64UtilityService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +16,7 @@ use Throwable;
 class ProductController extends Controller
 {
     public function __construct(
-        private readonly ProductRepository $repository,
+        private readonly ProductService $repository,
         private readonly Base64UtilityService $base64Utility,
     ) {}
 

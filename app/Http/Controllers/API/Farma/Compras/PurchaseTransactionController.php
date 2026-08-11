@@ -6,7 +6,7 @@ use App\DTOs\Farma\PurchaseTransactionData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Compras\PurchaseTransactionRequest;
 use App\Http\Resources\Farma\PurchaseTransactionResource;
-use App\Repositories\Farma\PurchaseTransactionRepository;
+use App\Interfaces\Farma\PurchaseTransactionService;
 use App\Utils\Services\Base64UtilityService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +16,7 @@ use Throwable;
 class PurchaseTransactionController extends Controller
 {
     public function __construct(
-        private readonly PurchaseTransactionRepository $repository,
+        private readonly PurchaseTransactionService $repository,
         private readonly Base64UtilityService $base64Utility,
     ) {}
 

@@ -3,17 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\WorkLunchResource;
+use App\Interfaces\Config\DeviceInfoService;
 use App\Interfaces\WorkLunch\WorkLunchService;
-use App\Models\Device;
-use App\Utils\DeviceUtility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class WorkLunchController extends Controller
 {
     public function __construct(
-        private DeviceUtility $deviceUtility,
-        private WorkLunchService $workLunchService
+        private readonly DeviceInfoService $deviceInfoService,
+        private readonly WorkLunchService $workLunchService
     ) {}
 
     public function today()
@@ -62,20 +61,15 @@ class WorkLunchController extends Controller
     public function work(Request $request)
     {
         try {
-            $device = $request->attributes->get('authenticated_device');
-
-            if (! $device instanceof Device) {
-                $device = $this->deviceUtility->get_DeviceInfo($request);
-            }
-
-            if (! $device instanceof Device) {
+            $deviceId = $this->deviceInfoService->authenticatedDeviceId($request);
+            if ($deviceId === null) {
                 return $this->sendResponse(null, 'Dispositivo no válido.', 401);
             }
 
             $session = $this->workLunchService->workService(
                 (int) Auth::id(),
                 now()->format('Y-m-d H:i:s'),
-                $device->id
+                $deviceId
             );
             $message = $session->wkend_time
                 ? 'Salida registrada correctamente.'

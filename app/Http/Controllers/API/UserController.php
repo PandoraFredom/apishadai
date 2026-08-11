@@ -99,11 +99,11 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UserUpdateRequest $request)
+    public function update(UserUpdateRequest $request, string $id)
     {
         $dto = UserDTO::fromUpdateRequest($request->all());
 
-        $updated = $this->service->update($dto->id, $dto->toArray());
+        $updated = $this->service->update($id, $dto->toArray());
 
         if (!$updated) {
             return $this->sendResponse(

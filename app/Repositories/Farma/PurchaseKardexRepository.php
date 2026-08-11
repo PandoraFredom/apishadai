@@ -2,16 +2,18 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\PurchaseKardexService;
+use App\Interfaces\Farma\PurchaseService;
 use App\Models\Farma\Compra;
 use App\Models\Farma\Lote;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
-class PurchaseKardexRepository
+class PurchaseKardexRepository implements PurchaseKardexService
 {
     public function __construct(
         private readonly Compra $purchase,
-        private readonly PurchaseRepository $purchases,
+        private readonly PurchaseService $purchases,
     ) {}
 
     public function send(int $purchaseId, int $userId): ?Compra

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\ProductService;
 use App\Models\Farma\Familia;
 use App\Models\Farma\PrincipalActivo;
 use App\Models\Farma\ProdCategoria;
@@ -17,7 +18,7 @@ use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class ProductRepository
+class ProductRepository implements ProductService
 {
     /** @var array<int, string> */
     private const RELATIONS = [

@@ -2,6 +2,7 @@
 
 namespace App\Services\Farma;
 
+use App\Interfaces\Farma\ProductCatalogRegistryService;
 use App\Models\Farma\Concentracion;
 use App\Models\Farma\FamAdministracion;
 use App\Models\Farma\Familia;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 
-class ProductCatalogRegistry
+class ProductCatalogRegistry implements ProductCatalogRegistryService
 {
     /**
      * @var array<string, array{

@@ -15,4 +15,5 @@ interface PermisoService extends RepositoryInterface
     public function get_VistasByModulo(int $moduloId);
     public function get_AccionesByVista(int $vistaId);
     public function tiposTiempoList();
+    public function createUnique(array $data): bool;
 }

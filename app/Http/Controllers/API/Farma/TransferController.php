@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Transferencias\TransferSendRequest;
 use App\Http\Resources\Farma\LotResource;
 use App\Http\Resources\Farma\TransferResource;
-use App\Models\Device;
-use App\Repositories\Farma\TransferRepository;
+use App\Interfaces\Config\DeviceInfoService;
+use App\Interfaces\Farma\TransferService;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -15,7 +15,10 @@ use Throwable;
 
 class TransferController extends Controller
 {
-    public function __construct(private readonly TransferRepository $repository) {}
+    public function __construct(
+        private readonly TransferService $repository,
+        private readonly DeviceInfoService $deviceInfoService,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -166,8 +169,6 @@ class TransferController extends Controller
 
     private function stockId(Request $request): ?int
     {
-        $device = $request->attributes->get('authenticated_device');
-
-        return $device instanceof Device && (int) $device->stock > 0 ? (int) $device->stock : null;
+        return $this->deviceInfoService->stockId($request->attributes->get('authenticated_device'));
     }
 }

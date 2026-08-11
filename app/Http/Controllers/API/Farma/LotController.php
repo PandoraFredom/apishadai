@@ -5,13 +5,13 @@ namespace App\Http\Controllers\API\Farma;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Farma\LotProductResource;
 use App\Http\Resources\Farma\LotResource;
-use App\Repositories\Farma\LotRepository;
+use App\Interfaces\Farma\LotService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class LotController extends Controller
 {
-    public function __construct(private readonly LotRepository $repository) {}
+    public function __construct(private readonly LotService $repository) {}
 
     public function index(Request $request): JsonResponse
     {

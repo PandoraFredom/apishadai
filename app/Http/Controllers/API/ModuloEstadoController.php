@@ -4,12 +4,13 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ModuloEstadoResoure;
-use App\Models\ModuloEstados;
+use App\Interfaces\Config\ModuloEstadoService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
 class ModuloEstadoController extends Controller
 {
+    public function __construct(private readonly ModuloEstadoService $service) {}
 
     /**
      * Display a listing of the resource.
@@ -19,7 +20,7 @@ class ModuloEstadoController extends Controller
     public function index()
     {
 
-        $list = ModuloEstados::all();
+        $list = $this->service->getAll();
 
         if (!$list) {
             return $this->sendResponse(null, 'No se encontraron modulos', 404);
@@ -53,7 +54,7 @@ class ModuloEstadoController extends Controller
         // Create the new modulo estado
         try {
             $data = $request->all();
-            $moduloEstado = ModuloEstados::create($data);
+            $moduloEstado = $this->service->create($data);
         } catch (\Exception $e) {
             return $this->sendResponse(null, 'Error al crear', 500);
         }
@@ -71,7 +72,7 @@ class ModuloEstadoController extends Controller
      */
     public function show(string $id)
     {
-        $obj = ModuloEstados::find($id);
+        $obj = $this->service->findById((int) $id);
         if ($obj) {
             return $this->sendResponse(ModuloEstadoResoure::make($obj), "success");
         }
@@ -90,7 +91,7 @@ class ModuloEstadoController extends Controller
             return $this->sendResponse(null, $validate->errors()->first());
         }
         $input = $request->all();
-        $update = ModuloEstados::find($id)->update($input);
+        $update = $this->service->update((int) $id, $input);
         if ($update) {
             return $this->sendResponse(null, 'Estado actualizado');
         }
@@ -103,9 +104,9 @@ class ModuloEstadoController extends Controller
     public function destroy(string $id)
     {
         try {
-            $obj = ModuloEstados::find($id);
+            $obj = $this->service->findById((int) $id);
             if ($obj) {
-                $obj->delete();
+                $this->service->delete((int) $id);
                 return $this->sendResponse(null, 'Estado eliminado');
             }
             return $this->sendResponse(null, 'No se encontro informacion', 404);

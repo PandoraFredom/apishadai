@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\TransferService;
 use App\DTOs\Farma\PurchaseData;
 use App\Models\Farma\Lote;
 use App\Models\Farma\Transferencia;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class TransferRepository
+class TransferRepository implements TransferService
 {
     private const RELATIONS = [
         'tipoDetalle:id,descripcion',

@@ -2,12 +2,13 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\ProductCatalogService;
 use App\Services\Farma\ProductCatalogRegistry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class ProductCatalogRepository
+class ProductCatalogRepository implements ProductCatalogService
 {
     public function __construct(private readonly ProductCatalogRegistry $registry) {}
 

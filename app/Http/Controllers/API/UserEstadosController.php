@@ -4,17 +4,19 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserEstadosResource;
-use App\Models\UsuarioEstado;
+use App\Interfaces\Config\UserEstadoRepositoryInterface;
 use Illuminate\Http\Request;
 
 class UserEstadosController extends Controller
 {
+    public function __construct(private readonly UserEstadoRepositoryInterface $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = UsuarioEstado::all();
+        $list = $this->service->getAll();
         if ($list->count() > 0) {
             return $this->sendResponse(UserEstadosResource::collection($list), 'success');
         }
@@ -34,7 +36,7 @@ class UserEstadosController extends Controller
      */
     public function show(string $id)
     {
-        $item = UsuarioEstado::find($id);
+        $item = $this->service->findById((int) $id);
         if ($item) {
             return $this->sendResponse(UserEstadosResource::make($item), 'success');
         }

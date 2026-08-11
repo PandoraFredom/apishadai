@@ -63,7 +63,7 @@ class tiketsController extends Controller
             $ticket->loadMissing(['Promocion', 'Cliente', 'Stock']);
 
             return $this->sendResponse(
-                new TicketPrintResource($ticket),
+                 TicketPrintResource::make($ticket),
                 'Ticket created',
                 200,
             );

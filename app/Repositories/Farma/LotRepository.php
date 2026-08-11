@@ -2,12 +2,13 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\LotService;
 use App\Models\Farma\Lote;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class LotRepository
+class LotRepository implements LotService
 {
     public function __construct(private readonly Lote $model) {}
 

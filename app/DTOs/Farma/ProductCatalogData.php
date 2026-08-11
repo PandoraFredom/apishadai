@@ -2,7 +2,7 @@
 
 namespace App\DTOs\Farma;
 
-use App\Services\Farma\ProductCatalogRegistry;
+use App\Interfaces\Farma\ProductCatalogRegistryService;
 
 class ProductCatalogData
 {
@@ -13,7 +13,7 @@ class ProductCatalogData
     public static function fromValidated(
         string $catalog,
         array $validated,
-        ProductCatalogRegistry $registry,
+        ProductCatalogRegistryService $registry,
     ): self {
         unset($validated['id']);
 

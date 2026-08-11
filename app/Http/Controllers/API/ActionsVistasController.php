@@ -4,13 +4,18 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ActionsVistasResource;
-use App\Models\ActionsVistas;
-use App\Models\Vistas;
+use App\Interfaces\Config\AccionesVistaService;
+use App\Interfaces\Config\VistaRepositoryInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ActionsVistasController extends Controller
 {
+    public function __construct(
+        private readonly AccionesVistaService $service,
+        private readonly VistaRepositoryInterface $vistaService,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -36,7 +41,7 @@ class ActionsVistasController extends Controller
 
         // Check if the vista exists
         $vistaId = $request->input('vista.id');
-        $vista = Vistas::find($vistaId);
+        $vista = $this->vistaService->findById((int) $vistaId);
         if (!$vista) {
             return $this->sendResponse(false, 'Vista no encontrada', 404);
         }
@@ -51,13 +56,12 @@ class ActionsVistasController extends Controller
             'nombre' => $request->input('nombre'),
         ];
 
-        $existingAction = ActionsVistas::where('codigo', $data['codigo'])->first();
-        if ($existingAction) {
+        if ($this->service->exists(['codigo' => $data['codigo']])) {
             return $this->sendResponse(false, 'El codigo de la accion ya existe', 422);
         }
 
 
-        $actionVista = ActionsVistas::create($data);
+        $actionVista = $this->service->create($data);
         if ($actionVista) {
             return $this->sendResponse(true, 'Action Creada', 200);
         } else {
@@ -70,7 +74,7 @@ class ActionsVistasController extends Controller
      */
     public function show(string $id)
     {
-        $actionVista = ActionsVistas::find($id);
+        $actionVista = $this->service->findById((int) $id);
         if ($actionVista) {
             return $this->sendResponse(ActionsVistasResource::make($actionVista), 'Action Vista', 200);
         } else {
@@ -91,10 +95,10 @@ class ActionsVistasController extends Controller
      */
     public function destroy(string $id)
     {
-        $actionVista = ActionsVistas::find($id);
+        $actionVista = $this->service->findById((int) $id);
         if ($actionVista) {
             try {
-                $actionVista->delete();
+                $this->service->delete((int) $id);
                 return $this->sendResponse(true, 'Action eliminada', 200);
             } catch (\Exception $e) {
                 return $this->sendResponse(false, 'Accion no disponible para eliminar', 500);
@@ -106,7 +110,7 @@ class ActionsVistasController extends Controller
 
     public function findByVista(string $vistaId)
     {
-        $actions = ActionsVistas::where('vista', $vistaId)->get();
+        $actions = $this->service->findByVista((int) $vistaId);
         if ($actions->isEmpty()) {
             return $this->sendResponse(null, 'No se encontraron acciones para esta vista', 404);
         }

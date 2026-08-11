@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Farma;
 
+use App\Interfaces\Farma\PurchaseService;
 use App\DTOs\Farma\PurchaseData;
 use App\Models\Farma\Compra;
 use App\Models\Farma\CompraDetalle;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
-class PurchaseRepository
+class PurchaseRepository implements PurchaseService
 {
     private const RELATIONS = [
         'tipoDetalle',

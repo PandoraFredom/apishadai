@@ -4,18 +4,20 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PromoEstadoResource;
-use App\Models\PromoEstado;
+use App\Interfaces\Promos\PromoEstadosService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class PromoEstadoController extends Controller
 {
+    public function __construct(private readonly PromoEstadosService $service) {}
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $list = PromoEstado::all();
+        $list = $this->service->getAll();
 
         if ($list->isEmpty()) {
             return $this->sendResponse(null, 'No hay datos para mostrar', 404);
@@ -36,7 +38,7 @@ class PromoEstadoController extends Controller
             return $this->sendResponse(false, $validate->errors()->first(), 422);
         }
         $input = $request->all();
-        $promoEstado = PromoEstado::create($input);
+        $promoEstado = $this->service->create($input);
         if ($promoEstado) {
             return $this->sendResponse(true, 'Estado de promocion creado');
         }
@@ -49,7 +51,7 @@ class PromoEstadoController extends Controller
     public function show(string $id)
     {
         //
-        $promoEstado = PromoEstado::find($id);
+        $promoEstado = $this->service->findById((int) $id);
         if ($promoEstado) {
             return $this->sendResponse(PromoEstadoResource::make($promoEstado), "success");
         }
@@ -67,10 +69,12 @@ class PromoEstadoController extends Controller
         if ($validate->fails()) {
             return $this->sendResponse(false, $validate->errors()->first(), 422);
         }
-        $promoEstado = PromoEstado::find($id);
+        $promoEstado = $this->service->findById((int) $id);
         if ($promoEstado) {
-            $promoEstado->update($request->all());
-            return $this->sendResponse(true, 'Estado de promocion actualizado');
+            if ($this->service->update((int) $id, $request->all())) {
+                return $this->sendResponse(true, 'Estado de promocion actualizado');
+            }
+            return $this->sendResponse(false, 'No se pudo actualizar la informacion', 500);
         }
         return $this->sendResponse(false, 'No se encontro informacion', 404);
     }
@@ -80,9 +84,9 @@ class PromoEstadoController extends Controller
      */
     public function destroy(string $id)
     {
-        $promoEstado = PromoEstado::find($id);
+        $promoEstado = $this->service->findById((int) $id);
         if ($promoEstado) {
-            if ($promoEstado->delete()) {
+            if ($this->service->delete((int) $id)) {
                 return $this->sendResponse(true, 'Estado de promocion eliminado');
             }
             return $this->sendResponse(false, 'No se pudo eliminar la informacion', 500);
