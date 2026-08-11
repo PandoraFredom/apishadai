@@ -9,7 +9,8 @@ Route::prefix('user')->group(function () {
 
     Route::get('/listar', [UserController::class, 'index']);
     Route::post('/crear', [UserController::class, 'store']);
-    Route::put('/actualizar/{id}', [UserController::class, 'update']);
+    Route::put('/actualizar/{id}', [UserController::class, 'update'])
+        ->whereNumber('id');
     Route::get('/buscar/{id}', [UserController::class, 'show']);
     Route::delete('/eliminar/{id}', [UserController::class, 'destroy']);
 

@@ -101,9 +101,11 @@ class UserController extends Controller
      */
     public function update(UserUpdateRequest $request, string $id)
     {
+    try {
+
         $dto = UserDTO::fromUpdateRequest($request->all());
 
-        $updated = $this->service->update($id, $dto->toArray());
+        $updated = $this->service->update((int) $id, $dto->toArray());
 
         if (!$updated) {
             return $this->sendResponse(
@@ -117,6 +119,15 @@ class UserController extends Controller
             'Usuario actualizado con exito',
             200
         );
+    }
+
+    catch (\Exception $e) {
+            return $this->sendResponse(
+                false,
+                'Error al actualizar el usuario: ',
+                500
+            );
+        }
     }
 
     /**
