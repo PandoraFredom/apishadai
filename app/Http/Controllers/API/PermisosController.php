@@ -111,7 +111,7 @@ class PermisosController extends Controller
         if ($permisos->isEmpty()) {
             return $this->sendResponse([], 'No se Encontraron Datos');
         }
-        return $this->sendResponse(PermisosResource::collection($permisos), 'ok', 200,true);
+        return $this->sendResponse(PermisosResource::collection($permisos), 'ok', 200,false);
     }
 
     public function get_moduloList(): JsonResponse

@@ -77,11 +77,11 @@ class DeviceController extends Controller
         }
     }
 
-    public function update(DeviceUpdateRequest $request): JsonResponse
+    public function update(DeviceUpdateRequest $request,int $id): JsonResponse
     {
         try {
             $dto = DeviceDTO::fromUpdateRequest($request->validated(), $request['id']);
-            $updated = $this->deviceService->update($dto->id, $dto->toUpdateArray());
+            $updated = $this->deviceService->update($id, $dto->toUpdateArray());
 
             if (!$updated) {
                 return $this->sendError(

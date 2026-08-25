@@ -17,8 +17,6 @@ class VistaEstadosResource extends JsonResource
         return [
             'id' => $this->id,
             'descripcion' => $this->descripcion,
-            'created_at' => null,
-            'updated_at' => null
         ];
     }
 }

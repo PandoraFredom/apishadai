@@ -21,13 +21,13 @@ class ModulosController extends Controller
     public function index()
     {
 
-        $data = $this->service->paginate();
+        $data = $this->service->getAll();
         if ($data) {
             return $this->sendResponse(
                 ModulosResource::collection($data),
                 'success',
                 200,
-                true
+                false
             );
         }
         return $this->sendResponse(null, 'No se encontro informacion', 404);

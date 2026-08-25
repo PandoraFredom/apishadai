@@ -16,14 +16,17 @@ class VistasResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'modulo' => $this->Modulo,
             'nombre' => $this->nombre,
             'codigo' => $this->codigo,
-            'estado' => $this->Estado,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'modulo' => [
+                'id' => $this->Modulo->id,
+                'nombre' => $this->Modulo->nombre,
+            ],
+            'estado' => [
+                'id' => $this->Estado->id,
+                'descripcion' => $this->Estado->descripcion,
+            ],
+
         ];
     }
-
-
 }

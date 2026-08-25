@@ -16,7 +16,7 @@ class HorasLabRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'usuario.id' => 'required|integer|exists:users,id|unique:horas_lab,usuario',
+            'usuario.id' => 'required|integer|exists:users,id',
             'horas_lab' => 'required|integer|min:1|max:24',
             'horas_lunch' => 'required|integer|min:1|max:160',
         ];

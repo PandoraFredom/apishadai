@@ -17,8 +17,8 @@ class DeviceEstadoResource extends JsonResource
         return [
             'id' => $this->id,
             'descripcion' => $this->descripcion,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'created_at' => null,
+            'updated_at' => null
         ];
     }
 }

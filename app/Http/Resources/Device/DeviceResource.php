@@ -17,11 +17,14 @@ class DeviceResource extends JsonResource
         return [
             'id' => $this->id,
             'displayname' => $this->displayname,
-            'stock' => $this->Stock,
-            'estado' => $this->Estado,
+            'stock' => [
+                'descripcion' => $this->Stock->descripcion,
+            ],
+            'estado' => [
+                'descripcion' => $this->Estado->descripcion,
+            ],
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
             'updated_at' => $this->updated_at?->format('Y-m-d H:i:s'),
         ];
-
     }
 }

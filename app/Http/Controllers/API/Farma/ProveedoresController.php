@@ -75,7 +75,7 @@ class ProveedoresController extends Controller
         }
     }
 
-    public function update(ProveedoresUpdateRequest $request): JsonResponse
+    public function update(ProveedoresUpdateRequest $request, int $id): JsonResponse
     {
         try {
             $dto = ProveedoresDTO::fromUpdateRequest($request->validated());
@@ -91,7 +91,7 @@ class ProveedoresController extends Controller
                 $data['imagen'] = $sanitizedImage;
             }
 
-            $updated = $this->service->update($dto->id, $data);
+            $updated = $this->service->update($id, $data);
 
             if (! $updated) {
                 return $this->sendError('No se pudo actualizar el proveedor.', false, 404);

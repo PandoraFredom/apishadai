@@ -17,10 +17,6 @@ class ModulosResourceCbx extends JsonResource
         return [
             'id' => $this->id,
             'nombre' => $this->nombre,
-            'codigo' => '',
-            'estado' => null,
-            'created_at' => null,
-            'updated_at' => null
         ];
     }
 }

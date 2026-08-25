@@ -14,12 +14,9 @@ class HorasLabResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'usuario' => [
-                'id' => $this->User?->id,
-                'nombre' => $this->User?->nombre,
-            ],
-            'horas_lab' => $this->horas_lab,
-            'horas_lunch' => $this->horas_lunch,
+            'usuario' => $this->usuario,
+            'horas_lab' => $this->horas_lab ?? 0,
+            'horas_lunch' => $this->horas_lunch ?? 0,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

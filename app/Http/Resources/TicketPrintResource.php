@@ -22,6 +22,7 @@ class TicketPrintResource extends JsonResource
             'cliente_i' =>  $this->Cliente->docid,
             'cliente_t' =>  $this->Cliente->telefono,
             'stock' =>  $this->Stock->descripcion,
+            'create_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }

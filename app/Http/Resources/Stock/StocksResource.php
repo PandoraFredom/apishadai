@@ -19,9 +19,12 @@ class StocksResource extends JsonResource
             'descripcion' => $this->descripcion,
             'telefono' => $this->telefono,
             'ubicacion' => $this->ubicacion,
-            'estado' => $this->Estado,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at
+            'estado' => [
+                'id' => $this->Estado->id,
+                'descripcion' => $this->Estado->descripcion
+            ],
+            'created_at' => null,
+            'updated_at' => null
         ];
     }
 }

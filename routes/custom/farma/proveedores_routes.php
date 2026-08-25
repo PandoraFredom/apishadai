@@ -7,7 +7,7 @@ Route::prefix('proveedores')->group(function () {
     Route::get('/listar', [ProveedoresController::class, 'index']);
     Route::post('/crear', [ProveedoresController::class, 'store']);
     Route::get('/buscar/{id}', [ProveedoresController::class, 'show']);
-    Route::put('/actualizar', [ProveedoresController::class, 'update']);
+    Route::put('/actualizar/{id}', [ProveedoresController::class, 'update']);
     Route::delete('/eliminar/{id}', [ProveedoresController::class, 'destroy']);
 
     Route::get('/imagen/{id}', [ProveedoresController::class, 'getImage']);

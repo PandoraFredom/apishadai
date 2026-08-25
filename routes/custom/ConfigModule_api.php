@@ -16,7 +16,7 @@ Route::prefix('config')->group(function () {
     //---------------------------Permisos----------------------------------
     require __DIR__ . '/config/permisos_api.php';
     /*--------------------------Horas laborales------------*/
-    require __DIR__ . '/reportes/horas_lab_api.php';
+    require __DIR__ . '/config/horas_lab_api.php';
     //---------------------------Stocks---------------------------------
     require __DIR__ . '/config/stocks_api.php';
     //---------------------------Stock Estados---------------------------

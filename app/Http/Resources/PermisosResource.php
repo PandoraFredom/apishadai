@@ -25,9 +25,7 @@ class PermisosResource extends JsonResource
             'actionvista' => [
                 'nombre' => $this->Actionvista->nombre,
             ],
-            'tipo_tiempo' => [
-                'nombre' => $this->TipoTiempo->nombre,
-            ],
+            'created_at' => $this->created_at,
         ];
     }
 }
