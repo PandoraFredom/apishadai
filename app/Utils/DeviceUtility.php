@@ -16,6 +16,7 @@ class DeviceUtility implements DeviceInfoService
     ) {}
 
 
+    #[\Override]
     public function get_DeviceInfo(Request  $request)
     {
 
@@ -32,6 +33,7 @@ class DeviceUtility implements DeviceInfoService
         return $device;
     }
 
+    #[\Override]
     public function getSingleInfo(Request  $request): ?array
     {
         $info = $this->getIpAndDeviceName($request);
@@ -46,6 +48,7 @@ class DeviceUtility implements DeviceInfoService
         ];
     }
 
+    #[\Override]
     public function authenticatedDeviceId(Request $request): ?int
     {
         $device = $request->attributes->get('authenticated_device') ?? $this->get_DeviceInfo($request);
@@ -53,6 +56,7 @@ class DeviceUtility implements DeviceInfoService
         return $device instanceof Device ? (int) $device->getKey() : null;
     }
 
+    #[\Override]
     public function stockId(mixed $device): ?int
     {
         return $device instanceof Device && (int) $device->stock > 0

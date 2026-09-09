@@ -43,6 +43,7 @@ use App\Interfaces\Reportes\WorkLunchRptService;
 use App\Interfaces\RepositoryInterface;
 use App\Interfaces\Ubicacion\DepartamentosService;
 use App\Interfaces\Ubicacion\MunicipiosService;
+use App\Interfaces\Utils\BibliaService;
 use App\Interfaces\WorkLunch\WorkLunchService;
 use App\Repositories\Auth\AuthRepository;
 use App\Repositories\Cliente\ClienteRepository;
@@ -83,6 +84,7 @@ use App\Repositories\Reportes\WorkLunchRptRepository;
 use App\Repositories\Repository;
 use App\Repositories\Ubicacion\DepartamentosRepository;
 use App\Repositories\Ubicacion\MunicipiosRepository;
+use App\Repositories\Utils\BibliaRepository;
 use App\Repositories\WorkLunch\WorkLunchRepository;
 use App\Services\Farma\ProductCatalogRegistry;
 use App\Utils\DeviceUtility;
@@ -159,6 +161,7 @@ class AppServiceProvider extends ServiceProvider
 
         // -------------------------------- UTILS ---------------------------------
 
+        BibliaService::class => BibliaRepository::class,
         SingleHashService::class => SingleHashRepository::class,
         CryptoService::class => CryptoRepository::class,
         Base64UtilityService::class => Base64UtilityRepository::class,

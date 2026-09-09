@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\StockEstadoDTO;
+use App\DTO\StockEstadoDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StockEstadoRequest;
 use App\Http\Requests\StockEstadoUpdateRequest;

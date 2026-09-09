@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\DTOs\HorasLabDTO;
+use App\DTO\HorasLabDTO;
 use App\Http\Requests\HorasLab\HorasLabRequest;
 use App\Http\Requests\HorasLab\HorasLabUpdateRequest;
 use App\Http\Resources\HorasLabResource;

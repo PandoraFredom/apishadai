@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API\Farma;
 
-use App\DTOs\ProveedoresDTO;
+use App\DTO\ProveedoresDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Proveedores\ProveedoresRequest;
 use App\Http\Requests\Farma\Proveedores\ProveedoresUpdateRequest;

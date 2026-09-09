@@ -4,24 +4,9 @@ namespace App\Http\Requests\Util;
 
 class DefaultFilterRequest extends FilterRequest
 {
-    protected array $allowedKeys = [
-        'docid',
-        'pnombre',
-        'papellido',
-    ];
-
     protected array $allowedOperators = [
-        '=',
-        '!=',
-        'LIKE',
-        'LIKE_LEFT',
-        'LIKE_RIGHT',
-        'LIKE_ALL',
-        'IN',
-        '>',
-        '<',
-        '>=',
-        '<=',
-        'BETWEEN',
+        'pnombre' => ['LIKE_ALL', 'AND'],
+        'papellido' => ['LIKE_ALL', 'AND'],
+        'docid' => ['LIKE_ALL', 'OR'],
     ];
 }

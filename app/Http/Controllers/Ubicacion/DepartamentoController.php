@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Ubicacion;
 
-use App\DTOs\DepartamentoDTO;
+use App\DTO\DepartamentoDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ubicacion\DepartamentoRequest;
 use App\Http\Resources\DepartamentoResource;

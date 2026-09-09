@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Farma;
+namespace App\DTO\Farma;
 
 class PurchaseTransactionData
 {

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\ModulosDTO;
+use App\DTO\ModulosDTO;
 use App\Http\Controllers\Controller;
 
 use App\Http\Requests\Modulo\ModuloRequest;

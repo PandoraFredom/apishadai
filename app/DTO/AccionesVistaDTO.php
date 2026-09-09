@@ -1,8 +1,6 @@
 <?php
 
-namespace App\DTOs;
-
-use Illuminate\Support\Facades\Log;
+namespace App\DTO;
 
 class AccionesVistaDTO
 {

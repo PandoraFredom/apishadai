@@ -2,25 +2,36 @@
 
 namespace App\Repositories\Reportes;
 
-use App\DTOs\Reportes\WorkLunchReportFilterDTO;
+use App\DTO\Reportes\WorkLunchReportFilterDTO;
+use App\Interfaces\Config\UserRepositoryInterface;
 use App\Interfaces\Reportes\WorkLunchRptService;
-use App\Models\WorkLunch;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Interfaces\WorkLunch\WorkLunchService;
+use App\Models\Utils\Filter\FilterItem;
+use App\Models\Utils\Filter\FilterModel;
+use Illuminate\Support\Collection;
 
 class WorkLunchRptRepository implements WorkLunchRptService
 {
     public function __construct(
-        private readonly WorkLunch $model,
+        private readonly WorkLunchService $service,
+        private readonly UserRepositoryInterface $userService,
     ) {}
 
-    public function filter(WorkLunchReportFilterDTO $filter): LengthAwarePaginator
+    #[\Override]
+    public function filter(WorkLunchReportFilterDTO $filter): Collection
     {
-        return $this->model->newQuery()
-            ->with(['User', 'Device.Stock'])
-            ->where('usuario', $filter->usuario)
-            ->whereBetween('work_date', [$filter->desde, $filter->hasta])
-            ->orderByDesc('work_date')
-            ->orderByDesc('wkstart_time')
-            ->paginate(30);
+        $filterModel = new FilterModel(
+            'worklunch_report',
+            new FilterItem('usuario', $filter->usuario, '='),
+            new FilterItem('work_date', [$filter->desde, $filter->hasta], 'BETWEEN'),
+        );
+
+        return $this->service->filterAll($filterModel, false);
+    }
+
+    #[\Override]
+    public function getUsuariosList(): Collection
+    {
+        return $this->userService->getAll();
     }
 }

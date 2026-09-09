@@ -5,6 +5,9 @@ namespace App\Http\Requests\Reportes;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use function array_key_exists;
+use function in_array;
+use function is_array;
 
 class WorkLunchFilterRequest extends FormRequest
 {
@@ -13,9 +16,64 @@ class WorkLunchFilterRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('filterItem') && ! $this->has('filterItems')) {
+            $this->merge(['filterItems' => $this->input('filterItem')]);
+        }
+
+        if ($this->has('usuario') || $this->has('work_date')) {
+            return;
+        }
+
+        $filterItems = $this->input('filterItems');
+        if (! is_array($filterItems)) {
+            return;
+        }
+
+        $filter = [];
+        foreach ($filterItems as $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            $key = $item['key'] ?? null;
+            if (in_array($key, ['usuario', 'work_date'], true)
+                && ! array_key_exists($key, $filter)
+            ) {
+                $filter[$key] = $item['value'] ?? null;
+            }
+        }
+
+        $this->merge($filter);
+    }
+
     public function rules(): array
     {
         return [
+            'name' => [
+                'sometimes',
+                'nullable',
+                'string',
+                'max:150',
+            ],
+            'filterItems' => [
+                'sometimes',
+                'array',
+                'size:2',
+            ],
+            'filterItems.*' => [
+                'required',
+                'array:key,value',
+            ],
+            'filterItems.*.key' => [
+                'required',
+                'string',
+                'in:usuario,work_date',
+            ],
+            'filterItems.*.value' => [
+                'required',
+            ],
             'usuario' => [
                 'bail',
                 'required',

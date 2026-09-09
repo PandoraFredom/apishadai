@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\AccionesVistaDTO;
-use App\DTOs\VistaDTO;
+use App\DTO\AccionesVistaDTO;
+use App\DTO\VistaDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AccionesVistaRequest;
 use App\Http\Requests\Vista\VistaRequest;

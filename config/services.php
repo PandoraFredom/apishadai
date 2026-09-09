@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'biblia' => [
+        'url' => env('BIBLE_API', env('BIBLE_APi')),
+        'ca_bundle' => env('BIBLE_API_CA_BUNDLE'),
+        'connect_timeout' => env('BIBLE_API_CONNECT_TIMEOUT', 5),
+        'timeout' => env('BIBLE_API_TIMEOUT', 10),
+    ],
+
 ];

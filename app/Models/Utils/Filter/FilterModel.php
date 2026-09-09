@@ -42,7 +42,7 @@ class FilterModel
     public static function fromRequest(array $data): self
     {
 
-    Log::info('Creating FilterModel from request data', ['data' => $data]);
+   // Log::info('Creating FilterModel from request data', ['data' => $data]);
         $name = $data['name'] ?? null;
         $filterItemsData = $data['filterItems'] ?? [];
         $filterItems = array_map(

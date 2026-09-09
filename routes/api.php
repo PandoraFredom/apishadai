@@ -4,24 +4,27 @@
 use Illuminate\Support\Facades\Route;
 
 
-
 Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 
+Route::group(
+    ['middleware' => ['auth:api', 'idempotency']],
+    function () {
+        //==================================AUTH==================================
+        require __DIR__ . '/custom/AuthModule_api.php';
 
+        //==================================CONFIG=================================
+        require __DIR__ . '/custom/ConfigModule_api.php';
 
-Route::group(['middleware' => ['auth:api', 'idempotency']], function () {
-    //==================================AUTH==================================
-    require __DIR__ . '/custom/AuthModule_api.php';
+        //==================================PROMOCIONES=============================
+        require __DIR__ . '/custom/sorteos_api.php';
 
-    //==================================CONFIG=================================
-    require __DIR__ . '/custom/ConfigModule_api.php';
+        //==================================REPORTES=============================
+        require __DIR__ . '/custom/ReportesModule_api.php';
 
-    //==================================PROMOCIONES=============================
-    require __DIR__ . '/custom/sorteos_api.php';
+        //==================================FARMACIA=============================
+        require __DIR__ . '/custom/farmaModulo_routes.php';
 
-    //==================================REPORTES=============================
-    require __DIR__ . '/custom/ReportesModule_api.php';
-
-    //==================================FARMACIA=============================
-    require __DIR__ . '/custom/farmaModulo_routes.php';
-});
+        //==================================UTILIDADES============================
+        require __DIR__ . '/custom/utils_api.php';
+    }
+);

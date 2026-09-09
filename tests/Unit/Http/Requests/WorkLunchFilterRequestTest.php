@@ -45,6 +45,39 @@ class WorkLunchFilterRequestTest extends TestCase
         $this->assertFalse($validator->fails());
     }
 
+    public function test_it_adapts_the_shapi_filter_model_contract(): void
+    {
+        $request = WorkLunchFilterRequest::create(
+            '/api/reportes/worklunch/filter',
+            'GET',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'name' => 'worklunch_report',
+                'filterItems' => [
+                    [
+                        'key' => 'usuario',
+                        'value' => 7,
+                    ],
+                    [
+                        'key' => 'work_date',
+                        'value' => ['2026-07-01', '2026-07-31'],
+                    ],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        );
+        $request->setContainer($this->app);
+        $request->validateResolved();
+
+        $this->assertSame(7, $request->validated('usuario'));
+        $this->assertSame(
+            ['2026-07-01', '2026-07-31'],
+            $request->validated('work_date'),
+        );
+    }
+
     public function test_it_rejects_a_reversed_or_incomplete_range(): void
     {
         $reversed = Validator::make([

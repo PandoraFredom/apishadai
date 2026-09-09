@@ -2,10 +2,13 @@
 
 namespace App\Interfaces\Reportes;
 
-use App\DTOs\Reportes\WorkLunchReportFilterDTO;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\DTO\Reportes\WorkLunchReportFilterDTO;
+
+use Illuminate\Support\Collection;
 
 interface WorkLunchRptService
 {
-    public function filter(WorkLunchReportFilterDTO $filter): LengthAwarePaginator;
+    public function filter(WorkLunchReportFilterDTO $filter): Collection;
+
+    public function getUsuariosList(): Collection;
 }

@@ -25,9 +25,7 @@ class PromocionesFilterTest extends TestCase
             'filterItems' => [
                 [
                     'key' => 'nombre',
-                    'value' => '%Navidad%',
-                    'operator' => 'LIKE',
-                    'logicalOperator' => 'OR',
+                    'value' => 'Navidad',
                 ],
             ],
         ]);

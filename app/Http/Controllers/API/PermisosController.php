@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\PermisoDTO;
+use App\DTO\PermisoDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Permiso\PermisoRequest;
 use App\Http\Resources\ActionsVistasResource;

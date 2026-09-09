@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\DTOs\DeviceDTO;
+use App\DTO\DeviceDTO;
 use App\Http\Requests\Device\DeviceRequest;
 use App\Http\Requests\Device\DeviceUpdateRequest;
 use App\Http\Resources\DeviceEstadoResource;

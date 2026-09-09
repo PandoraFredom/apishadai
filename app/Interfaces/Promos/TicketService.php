@@ -19,7 +19,7 @@ interface TicketService extends RepositoryInterface
 
     public function createTicket(array $data): tikets;
 
-    public function activephone(string $phone, int $id): bool;
+    public function activephone( int $id): bool;
 
     public function create_cliente(array $data);
 

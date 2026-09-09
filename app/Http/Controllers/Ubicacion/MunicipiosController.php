@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Ubicacion;
 
-use App\DTOs\MunicipioDTO;
+use App\DTO\MunicipioDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Ubicacion\MunicipioRequest;
 use App\Http\Resources\MunicipiosResource;

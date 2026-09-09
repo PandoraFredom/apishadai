@@ -15,7 +15,7 @@ use App\Http\Resources\Reportes\TicketReportResource;
 use App\Http\Resources\Reportes\UsuarioRptResource;
 use App\Http\Resources\Stock\StocksResource;
 use App\Interfaces\Reportes\SorteosRptService;
-use App\Models\Utils\Filter\FilterModel;
+use Illuminate\Support\Facades\Log;
 
 class RptSorteosController extends Controller
 {
@@ -36,7 +36,7 @@ class RptSorteosController extends Controller
     public function filter_sorteos(SorteosFilterRequest $request)
     {
 
-        $list = $this->service->filterSorteos(FilterModel::fromRequest($request->validated()));
+        $list = $this->service->filterSorteos($request->toFilterModel());
 
         return $this->sendResponse(
             SorteosRptResource::collection($list),
@@ -60,7 +60,10 @@ class RptSorteosController extends Controller
 
     public function filter_clientes(ClientesFilterRequest $request)
     {
-        $list = $this->service->filterClientes($request->toFilterModel());
+        $filter = $request->toFilterModel();
+
+
+        $list = $this->service->filterClientes($filter);
 
         return $this->sendResponse(
             ClientesRptResource::collection($list),

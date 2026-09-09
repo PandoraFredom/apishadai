@@ -33,7 +33,7 @@ class WorkLunchController extends Controller
         return $this->sendResponse(null, 'Not implemented', 501);
     }
 
-    public function store(Request $request)
+    public function store()
     {
         return $this->sendResponse(null, 'Not implemented', 501);
     }
@@ -48,12 +48,12 @@ class WorkLunchController extends Controller
         return $this->sendResponse(null, 'No se encontro informacion', 404);
     }
 
-    public function update(Request $request, string $id)
+    public function update()
     {
         return $this->sendResponse(null, 'Not implemented', 501);
     }
 
-    public function destroy(string $id)
+    public function destroy()
     {
         return $this->sendResponse(null, 'Not implemented', 501);
     }
@@ -75,13 +75,13 @@ class WorkLunchController extends Controller
                 ? 'Salida registrada correctamente.'
                 : 'Entrada registrada correctamente.';
 
-            return $this->sendResponse(WorkLunchResource::make($session), $message);
+            return $this->sendResponse(true, $message);
         } catch (\DomainException $e) {
-            return $this->sendResponse(null, $e->getMessage(), $e->getCode() ?: 400);
+            return $this->sendResponse(false, $e->getMessage(), $e->getCode() ?: 400);
         } catch (\Throwable $e) {
             $this->logError(__METHOD__, $e);
 
-            return $this->sendResponse(null, 'No se pudo registrar la jornada laboral.', 500);
+            return $this->sendResponse(false, 'No se pudo registrar la jornada laboral.', 500);
         }
     }
 
@@ -96,13 +96,13 @@ class WorkLunchController extends Controller
                 ? 'Fin de almuerzo registrado correctamente.'
                 : 'Inicio de almuerzo registrado correctamente.';
 
-            return $this->sendResponse(WorkLunchResource::make($session), $message);
+            return $this->sendResponse(true, $message);
         } catch (\DomainException $e) {
-            return $this->sendResponse(null, $e->getMessage(), $e->getCode() ?: 400);
+            return $this->sendResponse(false, $e->getMessage(), $e->getCode() ?: 400);
         } catch (\Throwable $e) {
             $this->logError(__METHOD__, $e);
 
-            return $this->sendResponse(null, 'No se pudo registrar el almuerzo.', 500);
+            return $this->sendResponse(false, 'No se pudo registrar el almuerzo.', 500);
         }
     }
 }

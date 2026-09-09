@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API\Farma\Productos;
 
-use App\DTOs\Farma\ProductCatalogData;
+use App\DTO\Farma\ProductCatalogData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Productos\ProductCatalogRequest;
 use App\Http\Resources\Farma\ProductCatalogResource;

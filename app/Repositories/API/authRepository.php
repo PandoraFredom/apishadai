@@ -12,6 +12,7 @@ class AuthRepository extends BaseRepository
         $this->model = $model;
     }
 
+    #[\Override]
     public function getAllowedMethods(): array
     {
         return [

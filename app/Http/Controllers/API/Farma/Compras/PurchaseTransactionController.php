@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API\Farma\Compras;
 
-use App\DTOs\Farma\PurchaseTransactionData;
+use App\DTO\Farma\PurchaseTransactionData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Compras\PurchaseTransactionRequest;
 use App\Http\Resources\Farma\PurchaseTransactionResource;

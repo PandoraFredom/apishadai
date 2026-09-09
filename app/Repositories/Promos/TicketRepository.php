@@ -36,6 +36,7 @@ class TicketRepository extends Repository implements TicketService
         $this->orderBy = ['id', 'DESC'];
     }
 
+    #[\Override]
     public function getList()
     {
         return $this->joinWhereList(
@@ -64,50 +65,56 @@ class TicketRepository extends Repository implements TicketService
     }
 
 
+    #[\Override]
     public function getActivePromo()
     {
         return $this->promocionesService->get_promoActive();
     }
 
+    #[\Override]
     public function get_clientesList()
     {
         return $this->clienteService->paginate();
     }
 
-    public function activephone(string $phone, int $id): bool
+    #[\Override]
+    public function activephone( int $id): bool
     {
         return $this->clienteService->activephone($id);
     }
 
+    #[\Override]
     public function create_cliente(array $data)
     {
         return $this->clienteService->create($data);
     }
 
+    #[\Override]
     public function update_phone_cliente(int $id, array $data)
     {
         return $this->clienteService->update($id, $data);
     }
 
+    #[\Override]
     public function get_departamentosList()
     {
         return $this->departamentosService->getAll();
     }
+    #[\Override]
     public function get_municipiosList(int $departamento_id)
     {
         return $this->municipiosService->getByDepartamento($departamento_id);
     }
 
 
-    /**
-     * @inheritDoc
-     */
+
     public function filter_clientes(FilterModel $filterModel)
     {
 
         return $this->clienteService->filterAll($filterModel);
     }
 
+    #[\Override]
     public function createTicket(array $data): tikets
     {
         return DB::transaction(function () use ($data) {

@@ -23,6 +23,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function filterClientes(FilterModel $filter)
     {
         return $this->clientesService->filterAll($filter, true);
@@ -31,6 +32,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function filterSorteos(FilterModel $filter)
     {
         return $this->promocionesService->filterAll($filter, true);
@@ -39,6 +41,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function filterStocks(FilterModel $filter)
     {
         return $this->stocksService->filterAll($filter, true);
@@ -47,6 +50,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function filterTickets(FilterModel $filter)
     {
         return $this->ticketService->filterAll($filter, true);
@@ -55,6 +59,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function filterUsuarios(FilterModel $filter)
     {
         return $this->userService->filterAll($filter, true);
@@ -63,6 +68,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function getClientesList()
     {
         return $this->clientesService->paginate();
@@ -71,6 +77,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function getSorteosList()
     {
         return $this->promocionesService->paginate();
@@ -79,6 +86,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function getStocksList()
     {
         return $this->stocksService->paginate();
@@ -87,6 +95,7 @@ class SorteosRptRepository implements SorteosRptService
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function getUsuariosList()
     {
         return $this->userService->paginate();

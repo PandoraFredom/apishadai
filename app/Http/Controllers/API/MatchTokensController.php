@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\MatchTokenDTO;
+use App\DTO\MatchTokenDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\MatchTokenRequest;
 use App\Http\Requests\MatchTokenUpdateRequest;

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\ClienteDTO;
-use App\DTOs\TicketDTO;
+use App\DTO\ClienteDTO;
+use App\DTO\TicketDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Clientes\ClienteRequest;
 use App\Http\Requests\Clientes\ClienteUpdatePhoneRequest;

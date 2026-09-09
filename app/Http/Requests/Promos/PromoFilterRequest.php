@@ -6,14 +6,8 @@ use App\Http\Requests\Util\FilterRequest;
 
 class PromoFilterRequest extends FilterRequest
 {
-    protected array $allowedKeys = [
-        'nombre',
-        'descripcion',
-    ];
-
     protected array $allowedOperators = [
-        '=',
-        '!=',
-        'LIKE',
+        'nombre' => ['LIKE_ALL', 'AND'],
+        'descripcion' => ['LIKE_ALL', 'AND'],
     ];
 }

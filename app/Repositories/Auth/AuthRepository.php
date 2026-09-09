@@ -30,12 +30,13 @@ class AuthRepository implements AuthService
      * @param int $userId
      * @return Collection
      */
+    #[\Override]
     public function getPermisosUser(int $userId): Collection
     {
         $permisos = $this->permisoService->getPermisosByUserId($userId);
 
         return $permisos
-            ->filter(fn($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'
+               ->filter(fn($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'
                 && optional(optional($Permiso->Vista)->Estado)->descripcion === 'ACTIVO')
             ->groupBy(fn($Permiso) => $Permiso->Modulo->id)
             ->map(function ($moduloPermisos) {

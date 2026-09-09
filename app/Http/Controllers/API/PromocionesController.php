@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\DTOs\PromosDTO;
+use App\DTO\PromosDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Promos\PromosRequest;
 use App\Http\Requests\Promos\PromosUpdateRequest;

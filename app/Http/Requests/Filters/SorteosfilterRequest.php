@@ -7,8 +7,7 @@ use App\Http\Requests\Util\FilterRequest;
 
 class SorteosfilterRequest extends FilterRequest
 {
-     protected $allowedKeys = ['nombre'];
-
-    protected $allowedOperators = ['=', 'LIKE'];
+    protected array $allowedOperators = [
+        'nombre' => ['LIKE_ALL', 'AND'],
+    ];
 }
-

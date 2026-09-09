@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API\Farma;
 
-use App\DTOs\LaboratorioDTO;
+use App\DTO\LaboratorioDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Laboratorios\LaboratorioRequest;
 use App\Http\Requests\Farma\Laboratorios\LaboratorioUpdateRequest;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Reportes;
+namespace App\DTO\Reportes;
 
 class WorkLunchReportFilterDTO
 {

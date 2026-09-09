@@ -18,7 +18,9 @@ class ClientesRptResource extends JsonResource
             'id' => $this->id,
             'docid' => $this->docid,
             'pnombre' => $this->pnombre.' '.$this->snombre,
+            'snombre' => $this->snombre,
             'papellido' => $this->papellido.' '.$this->spaellido,
+            'spaellido' => $this->spaellido,
         ];
     }
 }

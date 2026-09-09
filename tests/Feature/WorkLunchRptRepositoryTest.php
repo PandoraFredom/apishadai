@@ -3,17 +3,23 @@
 namespace Tests\Feature;
 
 use App\DTOs\Reportes\WorkLunchReportFilterDTO;
+use App\Interfaces\Config\UserRepositoryInterface;
 use App\Interfaces\Reportes\WorkLunchRptService;
+use App\Models\User;
 use App\Models\WorkLunch;
 use App\Repositories\Reportes\WorkLunchRptRepository;
+use App\Repositories\WorkLunch\WorkLunchRepository;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Mockery;
 use Tests\TestCase;
 
 class WorkLunchRptRepositoryTest extends TestCase
 {
     private WorkLunchRptRepository $repository;
+    private UserRepositoryInterface $userRepository;
 
     protected function setUp(): void
     {
@@ -70,7 +76,11 @@ class WorkLunchRptRepositoryTest extends TestCase
         $this->insertSession(7, '2026-06-30');
         $this->insertSession(8, '2026-07-15');
 
-        $this->repository = new WorkLunchRptRepository(new WorkLunch);
+        $this->userRepository = Mockery::mock(UserRepositoryInterface::class);
+        $this->repository = new WorkLunchRptRepository(
+            new WorkLunchRepository(new WorkLunch),
+            $this->userRepository,
+        );
     }
 
     protected function tearDown(): void
@@ -100,18 +110,33 @@ class WorkLunchRptRepositoryTest extends TestCase
             hasta: '2026-07-31',
         ));
 
-        $this->assertSame(2, $report->total());
+        $this->assertCount(2, $report);
         $this->assertSame(
             ['2026-07-31', '2026-07-01'],
-            $report->getCollection()->pluck('work_date')->all(),
+            $report->pluck('work_date')->all(),
         );
-        $this->assertTrue($report->getCollection()->every(
+        $this->assertTrue($report->every(
             fn (WorkLunch $session): bool => $session->usuario === 7,
         ));
         $this->assertSame(
             'Sucursal Centro',
-            $report->getCollection()->first()?->Device?->Stock?->descripcion,
+            $report->first()?->Device?->Stock?->descripcion,
         );
+    }
+
+    public function test_it_returns_the_users_from_the_user_repository(): void
+    {
+        $users = new EloquentCollection([
+            (new User)->forceFill(['id' => 7, 'nombre' => 'Usuario reportado']),
+            (new User)->forceFill(['id' => 8, 'nombre' => 'Otro usuario']),
+        ]);
+
+        $this->userRepository
+            ->shouldReceive('getAll')
+            ->once()
+            ->andReturn($users);
+
+        $this->assertSame($users, $this->repository->getUsuariosList());
     }
 
     private function insertSession(int $userId, string $date): void
