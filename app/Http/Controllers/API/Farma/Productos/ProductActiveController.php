@@ -49,11 +49,11 @@ class ProductActiveController extends Controller
             : $this->sendResponse(ProductActiveResource::make($association), 'ok');
     }
 
-    public function update(ProductActiveRequest $request): JsonResponse
+    public function update(ProductActiveRequest $request, int $id): JsonResponse
     {
         try {
             $data = ProductActiveData::fromValidated($request->validated());
-            $association = $this->repository->update($request->integer('id'), $data->toArray());
+            $association = $this->repository->update($id, $data->toArray());
 
             return $association === null
                 ? $this->sendError('Asociación no encontrada.', null, 404)

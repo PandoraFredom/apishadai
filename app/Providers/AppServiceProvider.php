@@ -7,8 +7,14 @@ use App\Interfaces\Clientes\ClienteService;
 use App\Interfaces\Farma\DistributionService;
 use App\Interfaces\Farma\LotService;
 use App\Interfaces\Farma\ProductActiveService;
-use App\Interfaces\Farma\ProductCatalogService;
-use App\Interfaces\Farma\ProductCatalogRegistryService;
+use App\Interfaces\Farma\ProdUnidadService;
+use App\Interfaces\Farma\ProdEstadoService;
+use App\Interfaces\Farma\ProdCategoriaService;
+use App\Interfaces\Farma\FamPresentacionService;
+use App\Interfaces\Farma\FamAdministracionService;
+use App\Interfaces\Farma\FamiliaService;
+use App\Interfaces\Farma\ConcentracionService;
+use App\Interfaces\Farma\PrincipalActivoService;
 use App\Interfaces\Farma\ProductService;
 use App\Interfaces\Farma\PurchaseCatalogService;
 use App\Interfaces\Farma\PurchaseKardexService;
@@ -67,7 +73,14 @@ use App\Repositories\Config\VistaRepository;
 use App\Repositories\Farma\DistributionRepository;
 use App\Repositories\Farma\LotRepository;
 use App\Repositories\Farma\ProductActiveRepository;
-use App\Repositories\Farma\ProductCatalogRepository;
+use App\Repositories\Farma\ProdUnidadRepository;
+use App\Repositories\Farma\ProdEstadoRepository;
+use App\Repositories\Farma\ProdCategoriaRepository;
+use App\Repositories\Farma\FamPresentacionRepository;
+use App\Repositories\Farma\FamAdministracionRepository;
+use App\Repositories\Farma\FamiliaRepository;
+use App\Repositories\Farma\ConcentracionRepository;
+use App\Repositories\Farma\PrincipalActivoRepository;
 use App\Repositories\Farma\ProductRepository;
 use App\Repositories\Farma\PurchaseCatalogRepository;
 use App\Repositories\Farma\PurchaseKardexRepository;
@@ -86,7 +99,6 @@ use App\Repositories\Ubicacion\DepartamentosRepository;
 use App\Repositories\Ubicacion\MunicipiosRepository;
 use App\Repositories\Utils\BibliaRepository;
 use App\Repositories\WorkLunch\WorkLunchRepository;
-use App\Services\Farma\ProductCatalogRegistry;
 use App\Utils\DeviceUtility;
 use App\Utils\Repositories\Base64UtilityRepository;
 use App\Utils\Repositories\CryptoRepository;
@@ -148,8 +160,14 @@ class AppServiceProvider extends ServiceProvider
         DistributionService::class => DistributionRepository::class,
         LotService::class => LotRepository::class,
         ProductActiveService::class => ProductActiveRepository::class,
-        ProductCatalogService::class => ProductCatalogRepository::class,
-        ProductCatalogRegistryService::class => ProductCatalogRegistry::class,
+        ProdUnidadService::class => ProdUnidadRepository::class,
+        ProdEstadoService::class => ProdEstadoRepository::class,
+        ProdCategoriaService::class => ProdCategoriaRepository::class,
+        FamPresentacionService::class => FamPresentacionRepository::class,
+        FamAdministracionService::class => FamAdministracionRepository::class,
+        FamiliaService::class => FamiliaRepository::class,
+        ConcentracionService::class => ConcentracionRepository::class,
+        PrincipalActivoService::class => PrincipalActivoRepository::class,
         ProductService::class => ProductRepository::class,
         PurchaseCatalogService::class => PurchaseCatalogRepository::class,
         PurchaseKardexService::class => PurchaseKardexRepository::class,

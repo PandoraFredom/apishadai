@@ -2,11 +2,20 @@
 
 namespace App\Http\Requests\Farma\Productos;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class ProductActiveRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $this->merge(['id' => $this->route('id')]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -15,7 +24,7 @@ class ProductActiveRequest extends FormRequest
     public function rules(): array
     {
         $updating = $this->isMethod('PUT') || $this->isMethod('PATCH');
-        $id = $updating ? $this->integer('id') : null;
+        $id = $updating ? (int) $this->route('id') : null;
 
         return [
             ...($updating ? ['id' => ['required', 'integer', 'exists:prod_activo,id']] : []),
@@ -38,5 +47,15 @@ class ProductActiveRequest extends FormRequest
             '*.exists' => 'El valor seleccionado para :attribute no existe.',
             '*.unique' => 'El principio activo ya está asociado con este producto.',
         ];
+    }
+
+    /** @throws HttpResponseException */
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(response()->json([
+            'message' => $validator->errors()->first(),
+            'code' => 400,
+            'data' => null,
+        ], 400));
     }
 }

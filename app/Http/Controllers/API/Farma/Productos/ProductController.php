@@ -86,10 +86,9 @@ class ProductController extends Controller
             : $this->sendResponse(ProductResource::make($product), 'ok');
     }
 
-    public function update(ProductRequest $request): JsonResponse
+    public function update(ProductRequest $request, int $id): JsonResponse
     {
         try {
-            $id = $request->integer('id');
             $productData = ProductData::fromValidated($request->validated());
             $data = $productData->toArray();
 

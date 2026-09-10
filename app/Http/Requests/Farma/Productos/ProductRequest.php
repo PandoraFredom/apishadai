@@ -2,13 +2,19 @@
 
 namespace App\Http\Requests\Farma\Productos;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $this->merge(['id' => $this->route('id')]);
+        }
+
         $data = [];
 
         foreach (['codigo', 'codigobar', 'descripcion'] as $field) {
@@ -38,7 +44,7 @@ class ProductRequest extends FormRequest
     public function rules(): array
     {
         $updating = $this->isMethod('PUT') || $this->isMethod('PATCH');
-        $id = $updating ? $this->integer('id') : null;
+        $id = $updating ? (int) $this->route('id') : null;
 
         return [
             ...($updating ? ['id' => ['required', 'integer', 'exists:productos,id']] : []),
@@ -84,5 +90,15 @@ class ProductRequest extends FormRequest
             '*.max' => 'El campo :attribute excede la longitud permitida.',
             'imagen.max' => 'La imagen no debe exceder 1 MB.',
         ];
+    }
+
+    /** @throws HttpResponseException */
+    protected function failedValidation(Validator $validator): void
+    {
+        throw new HttpResponseException(response()->json([
+            'message' => $validator->errors()->first(),
+            'code' => 400,
+            'data' => null,
+        ], 400));
     }
 }

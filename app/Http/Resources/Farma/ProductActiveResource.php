@@ -20,7 +20,7 @@ class ProductActiveResource extends JsonResource
                 'codigobar' => $this->productoDetalle->codigobar,
                 'descripcion' => $this->productoDetalle->descripcion,
             ]),
-            'principio_activo' => ProductCatalogResource::make($this->whenLoaded('principioActivo')),
+            'principio_activo' => PrincipalActivoResource::make($this->whenLoaded('principioActivo')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

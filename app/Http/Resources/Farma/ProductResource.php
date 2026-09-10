@@ -21,12 +21,12 @@ class ProductResource extends JsonResource
             'unidad_id' => $this->unidad,
             'familia_id' => $this->familia,
             'estado_id' => $this->estado,
-            'categoria' => ProductCatalogResource::make($this->whenLoaded('categoriaDetalle')),
+            'categoria' => ProdCategoriaResource::make($this->whenLoaded('categoriaDetalle')),
             'laboratorio' => $this->whenLoaded('laboratorioDetalle'),
-            'unidad' => ProductCatalogResource::make($this->whenLoaded('unidadDetalle')),
-            'familia' => ProductCatalogResource::make($this->whenLoaded('familiaDetalle')),
-            'estado' => ProductCatalogResource::make($this->whenLoaded('estadoDetalle')),
-            'principios_activos' => ProductCatalogResource::collection(
+            'unidad' => ProdUnidadResource::make($this->whenLoaded('unidadDetalle')),
+            'familia' => FamiliaResource::make($this->whenLoaded('familiaDetalle')),
+            'estado' => ProdEstadoResource::make($this->whenLoaded('estadoDetalle')),
+            'principios_activos' => PrincipalActivoResource::collection(
                 $this->whenLoaded('principiosActivos'),
             ),
             'created_at' => $this->created_at,
