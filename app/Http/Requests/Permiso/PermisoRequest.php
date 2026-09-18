@@ -2,24 +2,15 @@
 
 namespace App\Http\Requests\Permiso;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class PermisoRequest extends FormRequest
+class PermisoRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -32,7 +23,7 @@ class PermisoRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'usuario.id.required' => 'El campo usuario es obligatorio.',
@@ -55,21 +46,5 @@ class PermisoRequest extends FormRequest
             'tipo_tiempo.id.integer' => 'El campo tipo de tiempo debe ser un número entero.',
             'tipo_tiempo.id.exists' => 'El tipo de tiempo seleccionado no existe.',
         ];
-    }
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

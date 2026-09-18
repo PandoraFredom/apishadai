@@ -2,15 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-
-class MatchTokenRequest extends FormRequest
+class MatchTokenRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -20,7 +13,7 @@ class MatchTokenRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'usuario.required' => 'El usuario es requerido',

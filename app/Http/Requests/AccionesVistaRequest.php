@@ -2,24 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class AccionesVistaRequest extends FormRequest
+class AccionesVistaRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -29,8 +19,9 @@ class AccionesVistaRequest extends FormRequest
             'nombre' => 'required|string|max:80',
         ];
     }
+
     // messages
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'vista.id.required' => 'El campo vista es obligatorio.',
@@ -40,26 +31,9 @@ class AccionesVistaRequest extends FormRequest
             'codigo.string' => 'El campo código debe ser una cadena de texto.',
             'codigo.max' => 'El campo código no debe exceder los 20 caracteres.',
 
-
             'nombre.required' => 'El campo nombre es obligatorio.',
             'nombre.string' => 'El campo nombre debe ser una cadena de texto.',
             'nombre.max' => 'El campo nombre no debe exceder los 100 caracteres.',
         ];
-    }
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

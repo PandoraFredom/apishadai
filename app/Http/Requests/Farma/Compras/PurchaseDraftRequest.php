@@ -2,16 +2,11 @@
 
 namespace App\Http\Requests\Farma\Compras;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class PurchaseDraftRequest extends FormRequest
+class PurchaseDraftRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -38,7 +33,7 @@ class PurchaseDraftRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Farma\Productos;
 use App\DTO\Farma\FamiliaData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Productos\FamiliaRequest;
+use App\Http\Resources\Farma\FamiliaOptionResource;
 use App\Http\Resources\Farma\FamiliaResource;
 use App\Interfaces\Farma\FamiliaService;
 use Illuminate\Database\QueryException;
@@ -27,11 +28,29 @@ class FamiliaController extends Controller
         );
     }
 
+    public function administraciones(): JsonResponse
+    {
+        return $this->sendResponse(
+            FamiliaOptionResource::collection($this->repository->administraciones()),
+            'ok',
+        );
+    }
+
+    public function presentaciones(): JsonResponse
+    {
+        return $this->sendResponse(
+            FamiliaOptionResource::collection($this->repository->presentaciones()),
+            'ok',
+        );
+    }
+
     public function store(FamiliaRequest $request): JsonResponse
     {
         try {
             $data = FamiliaData::fromValidated($request->validated());
-            $this->repository->create($data->toArray());
+            if (! $this->repository->create($data->toArray())) {
+                return $this->sendError('No se pudo crear el registro.', false, 422);
+            }
 
             return $this->sendResponse(
                 true,
@@ -47,7 +66,7 @@ class FamiliaController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $model = $this->repository->find($id);
+        $model = $this->repository->findById($id);
 
         return $model === null
             ? $this->sendError('Registro no encontrado.', null, 404)
@@ -58,9 +77,9 @@ class FamiliaController extends Controller
     {
         try {
             $data = FamiliaData::fromValidated($request->validated());
-            $model = $this->repository->update($id, $data->toArray());
+            $updated = $this->repository->update($id, $data->toArray());
 
-            return $model === null
+            return ! $updated
                 ? $this->sendError('Registro no encontrado.', false, 404)
                 : $this->sendResponse(true, 'Registro actualizado correctamente.');
         } catch (Throwable $throwable) {

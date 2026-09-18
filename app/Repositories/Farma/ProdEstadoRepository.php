@@ -2,62 +2,29 @@
 
 namespace App\Repositories\Farma;
 
+use App\DTO\Farma\ProdEstadoData;
 use App\Interfaces\Farma\ProdEstadoService;
 use App\Models\Farma\ProdEstado;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\Repository;
 
-class ProdEstadoRepository implements ProdEstadoService
+class ProdEstadoRepository extends Repository implements ProdEstadoService
 {
-    public function __construct(private readonly ProdEstado $model) {}
-
-    public function paginate(int $perPage = 30): LengthAwarePaginator
+    public function __construct(ProdEstado $model)
     {
-        return $this->model
-            ->newQuery()
-            ->orderByDesc('id')
-            ->paginate(max(1, min($perPage, 100)));
+        parent::__construct($model);
+        $this->perPage = 30;
+        $this->orderBy = ['id', 'DESC'];
     }
 
     /** @param array<string, mixed> $data */
-    public function create(array $data): ProdEstado
+    protected function sanitizeData(array $data): array
     {
-        return DB::transaction(function () use ($data): ProdEstado {
-            $model = $this->model->newQuery()->create($data);
-
-            return $model;
-        });
+        return ProdEstadoData::sanitize($data);
     }
 
-    public function find(int $id): ?ProdEstado
+    protected function filterEmptyData(array $data): array
     {
-        return $this->model
-            ->newQuery()
-            ->find($id);
-    }
-
-    /** @param array<string, mixed> $data */
-    public function update(int $id, array $data): ?ProdEstado
-    {
-        return DB::transaction(function () use ($id, $data): ?ProdEstado {
-            $model = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            if ($model === null) {
-                return null;
-            }
-
-            $model->update($data);
-
-            return $model->fresh();
-        });
-    }
-
-    public function delete(int $id): bool
-    {
-        return DB::transaction(function () use ($id): bool {
-            $model = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            return $model !== null && (bool) $model->delete();
-        });
+        // La descripción nullable puede limpiarse explícitamente.
+        return $data;
     }
 }

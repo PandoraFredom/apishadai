@@ -2,16 +2,11 @@
 
 namespace App\Http\Requests\Farma\Compras;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class PurchaseCatalogRequest extends FormRequest
+class PurchaseCatalogRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     protected function prepareForValidation(): void
     {
         $this->merge(['descripcion' => trim(strip_tags((string) $this->input('descripcion')))]);

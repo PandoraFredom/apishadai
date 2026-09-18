@@ -444,7 +444,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * Filtrar datos vacíos
      */
-    private function filterEmptyData(array $data): array
+    protected function filterEmptyData(array $data): array
     {
         return array_filter($data, function ($value) {
             if ($value === null) return false;
@@ -457,7 +457,7 @@ abstract class Repository implements RepositoryInterface
     /**
      * Construir query base con relaciones
      */
-    private function buildBaseQuery()
+    protected function buildBaseQuery()
     {
         $query = $this->model->newQuery();
 

@@ -2,15 +2,12 @@
 
 namespace App\Http\Requests\Farma\Laboratorios;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 
-class LaboratorioRequest extends FormRequest
+use function is_string;
+
+class LaboratorioRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -30,7 +27,7 @@ class LaboratorioRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'nombre.required' => 'El nombre del laboratorio es requerido.',

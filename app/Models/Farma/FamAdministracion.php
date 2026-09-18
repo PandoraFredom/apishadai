@@ -11,7 +11,7 @@ class FamAdministracion extends Model
 
     protected $fillable = ['descripcion'];
 
-    public function familias(): HasMany
+    public function familia(): HasMany
     {
         return $this->hasMany(Familia::class, 'administracion');
     }

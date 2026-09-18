@@ -52,7 +52,7 @@ class Producto extends Model
         return $this->belongsTo(ProdUnidad::class, 'unidad');
     }
 
-    public function familiaDetalle(): BelongsTo
+    public function Familia(): BelongsTo
     {
         return $this->belongsTo(Familia::class, 'familia');
     }

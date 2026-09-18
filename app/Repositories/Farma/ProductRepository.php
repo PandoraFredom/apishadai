@@ -11,115 +11,115 @@ use App\Models\Farma\Producto;
 use App\Models\Farma\ProdUnidad;
 use App\Models\Laboratorio;
 use App\Models\Proveedores;
+use App\Repositories\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
-class ProductRepository implements ProductService
+class ProductRepository extends Repository implements ProductService
 {
     /** @var array<int, string> */
     private const RELATIONS = [
         'categoriaDetalle',
         'laboratorioDetalle:id,nombre,telefono,direccion',
         'unidadDetalle',
-        'familiaDetalle.presentacionDetalle',
-        'familiaDetalle.administracionDetalle',
+        'Familia.Presentacion',
+        'Familia.Administracion',
         'estadoDetalle',
         'principiosActivos.concentracionDetalle',
     ];
 
-    public function __construct(private readonly Producto $model) {}
+    public function __construct(Producto $model)
+    {
+        parent::__construct($model);
+        $this->perPage = 30;
+        $this->orderBy = ['id', 'DESC'];
+        $this->defaultRelations = self::RELATIONS;
+    }
 
     public function paginate(
-        int $perPage = 30,
+        ?int $perPage = null,
         ?string $search = null,
         ?int $laboratory = null,
         ?int $provider = null,
     ): LengthAwarePaginator {
-        $query = $this->baseQuery();
+        if ($perPage !== null) {
+            $this->setPerPage($perPage);
+        }
         $search = trim((string) $search);
 
-        if ($search !== '') {
-            $query->where(static function (Builder $query) use ($search): void {
-                $query
-                    ->where('descripcion', 'like', "%{$search}%")
-                    ->orWhere('codigo', 'like', "%{$search}%")
-                    ->orWhere('codigobar', 'like', "%{$search}%");
-            });
+        if ($search === '' && ! $laboratory && ! $provider) {
+            return parent::paginate();
         }
 
-        if ($laboratory !== null && $laboratory > 0) {
-            $query->where('laboratorio', $laboratory);
-        }
+        return $this->executeQuery(function () use ($search, $laboratory, $provider) {
+            $query = $this->buildBaseQuery();
 
-        if ($provider !== null && $provider > 0) {
-            $query->whereExists(static function (QueryBuilder $query) use ($provider): void {
-                $query
-                    ->selectRaw('1')
-                    ->from('compra_detalle')
-                    ->join('compras', 'compras.id', '=', 'compra_detalle.compra')
-                    ->whereColumn('compra_detalle.producto', 'productos.id')
-                    ->where('compras.proveedor', $provider);
-            });
-        }
+            if ($search !== '') {
+                $query->where(static function (Builder $query) use ($search): void {
+                    $query
+                        ->where('descripcion', 'like', "%{$search}%")
+                        ->orWhere('codigo', 'like', "%{$search}%")
+                        ->orWhere('codigobar', 'like', "%{$search}%");
+                });
+            }
 
-        return $query
-            ->orderByDesc('id')
-            ->paginate(max(1, min($perPage, 100)));
-    }
+            if ($laboratory !== null && $laboratory > 0) {
+                $query->where('laboratorio', $laboratory);
+            }
 
-    public function find(int $id): ?Producto
-    {
-        /** @var Producto|null */
-        return $this->baseQuery()->find($id);
+            if ($provider !== null && $provider > 0) {
+                $query->whereExists(static function (QueryBuilder $query) use ($provider): void {
+                    $query
+                        ->selectRaw('1')
+                        ->from('compra_detalle')
+                        ->join('compras', 'compras.id', '=', 'compra_detalle.compra')
+                        ->whereColumn('compra_detalle.producto', 'productos.id')
+                        ->where('compras.proveedor', $provider);
+                });
+            }
+
+            return $query
+                ->orderByDesc('id')
+                ->paginate($this->perPage);
+        }, 'paginate', $this->getEmptyPaginator());
     }
 
     /** @param array<string, mixed> $data */
-    public function create(array $data, array $principiosActivos = []): Producto
+    public function create(array $data, array $principiosActivos = []): bool
     {
-        return DB::transaction(function () use ($data, $principiosActivos): Producto {
-            /** @var Producto $product */
-            $product = $this->model->newQuery()->create($data);
+        return $this->executeTransaction(function () use ($data, $principiosActivos): bool {
+            if (! parent::create($data)) {
+                return false;
+            }
+
+            $product = $this->model->newQuery()->where('codigo', $this->sanitizeData($data)['codigo'])->firstOrFail();
             $product->principiosActivos()->sync($this->uniqueIds($principiosActivos));
 
-            return $this->find((int) $product->getKey()) ?? $product;
-        });
+            return true;
+        }, 'createWithPrinciples');
     }
 
     /**
      * @param  array<string, mixed>  $data
      * @param  array<int, int>|null  $principiosActivos
      */
-    public function update(int $id, array $data, ?array $principiosActivos = null): ?Producto
+    public function update(int $id, array $data, ?array $principiosActivos = null): bool
     {
-        return DB::transaction(function () use ($id, $data, $principiosActivos): ?Producto {
-            /** @var Producto|null $product */
-            $product = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            if ($product === null) {
-                return null;
+        return $this->executeTransaction(function () use ($id, $data, $principiosActivos): bool {
+            if (! parent::update($id, $data)) {
+                return false;
             }
 
-            $product->update($data);
-
             if ($principiosActivos !== null) {
+                $product = $this->model->newQuery()->findOrFail($id);
                 $product->principiosActivos()->sync($this->uniqueIds($principiosActivos));
             }
 
-            return $this->find($id);
-        });
-    }
-
-    public function delete(int $id): bool
-    {
-        return DB::transaction(function () use ($id): bool {
-            $product = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            return $product !== null && (bool) $product->delete();
-        });
+            return true;
+        }, 'updateWithPrinciples', ['id' => $id]);
     }
 
     public function getImage(int $id): ?string
@@ -139,7 +139,7 @@ class ProductRepository implements ProductService
             'id', 'abreviatura_c', 'cantidad_c', 'abreviatura_v', 'cantidad_v',
         ]);
         $families = Familia::query()
-            ->with(['presentacionDetalle:id,descripcion', 'administracionDetalle:id,descripcion'])
+            ->with(['Presentacion:id,descripcion', 'Administracion:id,descripcion'])
             ->orderBy('descripcion')
             ->get(['id', 'presentacion', 'administracion', 'descripcion']);
         $states = ProdEstado::query()->orderBy('descripcion')->get(['id', 'descripcion']);
@@ -170,8 +170,8 @@ class ProductRepository implements ProductService
                 'id' => (int) $family->id,
                 'label' => (string) $family->descripcion,
                 'nombre' => (string) $family->descripcion,
-                'presentacion' => (string) ($family->presentacionDetalle?->descripcion ?? ''),
-                'administracion' => (string) ($family->administracionDetalle?->descripcion ?? ''),
+                'presentacion' => (string) ($family->Presentacion?->descripcion ?? ''),
+                'administracion' => (string) ($family->Administracion?->descripcion ?? ''),
             ])->all(),
             'estados' => $this->labeled($states, 'descripcion'),
             'principios_activos' => $principles->map(static function (PrincipalActivo $principle): array {
@@ -187,9 +187,9 @@ class ProductRepository implements ProductService
         ];
     }
 
-    private function baseQuery(): Builder
+    protected function buildBaseQuery(): Builder
     {
-        return $this->model->newQuery()
+        return parent::buildBaseQuery()
             ->select([
                 'id',
                 'categoria',
@@ -203,8 +203,31 @@ class ProductRepository implements ProductService
                 'created_at',
                 'updated_at',
             ])
-            ->selectRaw('imagen IS NOT NULL AS tiene_imagen')
-            ->with(self::RELATIONS);
+            ->selectRaw('imagen IS NOT NULL AS tiene_imagen');
+    }
+
+    protected function sanitizeData(array $data): array
+    {
+        $image = $data['imagen'] ?? null;
+        unset($data['imagen']);
+        $sanitized = parent::sanitizeData(array_intersect_key($data, array_flip($this->model->getFillable())));
+
+        // La imagen ya fue validada por el controlador; no truncar ni alterar sus bytes.
+        if ($image !== null) {
+            $sanitized['imagen'] = $image;
+        }
+
+        return $sanitized;
+    }
+
+    protected function filterEmptyData(array $data): array
+    {
+        $filtered = parent::filterEmptyData($data);
+        if (array_key_exists('codigobar', $data) && $data['codigobar'] === null) {
+            $filtered['codigobar'] = null;
+        }
+
+        return $filtered;
     }
 
     /**

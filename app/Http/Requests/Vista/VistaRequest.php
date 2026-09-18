@@ -2,24 +2,15 @@
 
 namespace App\Http\Requests\Vista;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class VistaRequest extends FormRequest
+class VistaRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -31,7 +22,7 @@ class VistaRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'modulo.id.required' => 'El campo modulo es obligatorio.',
@@ -53,21 +44,5 @@ class VistaRequest extends FormRequest
             'estado.id.exists' => 'El estado seleccionado no existe.',
 
         ];
-    }
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

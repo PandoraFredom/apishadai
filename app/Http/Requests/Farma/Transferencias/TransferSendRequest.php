@@ -2,15 +2,10 @@
 
 namespace App\Http\Requests\Farma\Transferencias;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 
-class TransferSendRequest extends FormRequest
+class TransferSendRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -22,7 +17,7 @@ class TransferSendRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',

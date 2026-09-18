@@ -4,9 +4,22 @@ namespace App\Http\Controllers\API\Farma\Productos;
 
 use App\DTO\Farma\ProductData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Farma\Productos\FamiliaFilterRequest;
+use App\Http\Requests\Farma\Productos\LaboratorioFilterRequest;
 use App\Http\Requests\Farma\Productos\ProductRequest;
+use App\Http\Requests\Farma\Productos\ProdUnidadFilterRequest;
+use App\Http\Resources\Farma\FamiliaResource;
+use App\Http\Resources\Farma\ProdCategoriaResource;
+use App\Http\Resources\Farma\ProdEstadoResource;
 use App\Http\Resources\Farma\ProductResource;
+use App\Http\Resources\Farma\ProdUnidadResource;
+use App\Http\Resources\Laboratorios\LaboratorioResource;
+use App\Interfaces\Farma\FamiliaService;
+use App\Interfaces\Farma\ProdCategoriaService;
+use App\Interfaces\Farma\ProdEstadoService;
 use App\Interfaces\Farma\ProductService;
+use App\Interfaces\Farma\ProdUnidadService;
+use App\Interfaces\Laboratorios\LaboratorioService;
 use App\Utils\Services\Base64UtilityService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +31,11 @@ class ProductController extends Controller
     public function __construct(
         private readonly ProductService $repository,
         private readonly Base64UtilityService $base64Utility,
+        private readonly LaboratorioService $laboratorios,
+        private readonly FamiliaService $familias,
+        private readonly ProdUnidadService $unidades,
+        private readonly ProdEstadoService $estados,
+        private readonly ProdCategoriaService $categorias,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -43,9 +61,68 @@ class ProductController extends Controller
         );
     }
 
-    public function options(): JsonResponse
+    public function laboratorios(): JsonResponse
     {
-        return $this->sendResponse($this->repository->options(), 'ok');
+        return $this->sendResponse(
+            LaboratorioResource::collection($this->laboratorios->paginate()),
+            'ok', 200, true,
+        );
+    }
+
+    public function filterLaboratorios(LaboratorioFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            LaboratorioResource::collection($this->laboratorios->filterAll($request->toFilterModel(), true)),
+            'ok', 200, true,
+        );
+    }
+
+    public function familias(): JsonResponse
+    {
+        return $this->sendResponse(
+            FamiliaResource::collection($this->familias->paginate()),
+            'ok', 200, true,
+        );
+    }
+
+    public function filterFamilias(FamiliaFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            FamiliaResource::collection($this->familias->filterAll($request->toFilterModel(), true)),
+            'ok', 200, true,
+        );
+    }
+
+    public function unidades(): JsonResponse
+    {
+        return $this->sendResponse(
+            ProdUnidadResource::collection($this->unidades->paginate()),
+            'ok', 200, true,
+        );
+    }
+
+    public function filterUnidades(ProdUnidadFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            ProdUnidadResource::collection($this->unidades->filterAll($request->toFilterModel(), true)),
+            'ok', 200, true,
+        );
+    }
+
+    public function estados(): JsonResponse
+    {
+        return $this->sendResponse(
+            ProdEstadoResource::collection($this->estados->paginate()),
+            'ok', 200, true,
+        );
+    }
+
+    public function categorias(): JsonResponse
+    {
+        return $this->sendResponse(
+            ProdCategoriaResource::collection($this->categorias->paginate()),
+            'ok', 200, true,
+        );
     }
 
     public function store(ProductRequest $request): JsonResponse
@@ -62,11 +139,12 @@ class ProductController extends Controller
                 }
             }
 
+            if (! $this->repository->create($data, $productData->principiosActivos ?? [])) {
+                return $this->sendError('No se pudo crear el producto.', false, 422);
+            }
+
             return $this->sendResponse(
-                ProductResource::make($this->repository->create(
-                    $data,
-                    $productData->principiosActivos ?? [],
-                )),
+                true,
                 'Producto creado correctamente.',
                 201,
             );
@@ -79,7 +157,7 @@ class ProductController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $product = $this->repository->find($id);
+        $product = $this->repository->findById($id);
 
         return $product === null
             ? $this->sendError('Producto no encontrado.', null, 404)
@@ -100,15 +178,15 @@ class ProductController extends Controller
                 }
             }
 
-            $product = $this->repository->update(
+            $updated = $this->repository->update(
                 $id,
                 $data,
                 $productData->principiosActivos,
             );
 
-            return $product === null
-                ? $this->sendError('Producto no encontrado.', null, 404)
-                : $this->sendResponse(ProductResource::make($product), 'Producto actualizado correctamente.');
+            return ! $updated
+                ? $this->sendError('No se pudo actualizar el producto.', false, 404)
+                : $this->sendResponse(true, 'Producto actualizado correctamente.');
         } catch (Throwable $throwable) {
             $this->logError('ProductController update', $throwable);
 

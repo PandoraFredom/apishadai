@@ -2,24 +2,15 @@
 
 namespace App\Http\Requests\Clientes;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class ClienteUpdateRequest extends FormRequest
+class ClienteUpdateRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -31,14 +22,14 @@ class ClienteUpdateRequest extends FormRequest
             'papellido' => 'required|string|max:50',
             'spaellido' => 'required|string|max:50',
             'edad' => 'required|integer|min:1|max:2',
-            'telefono' => "required|string|max:10|unique:clientes,telefono",
+            'telefono' => 'required|string|max:10|unique:clientes,telefono',
             'genero' => 'required|string|max:1',
             'municipio.id' => 'required|integer|exists:municipios,id',
             'departamento.id' => 'required|integer|exists:departamentos,id',
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'id.required' => 'El campo ID es obligatorio.',
@@ -87,21 +78,5 @@ class ClienteUpdateRequest extends FormRequest
             'departamento.id.integer' => 'El campo Departamento debe ser un número entero.',
             'departamento.id.exists' => 'El Departamento seleccionado no es válido.',
         ];
-    }
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

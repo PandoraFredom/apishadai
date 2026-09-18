@@ -2,18 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
-class StockUpdateRequest extends FormRequest
+class StockUpdateRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -30,7 +22,7 @@ class StockUpdateRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'id.required' => 'El id del stock es requerido',
@@ -48,16 +40,5 @@ class StockUpdateRequest extends FormRequest
             'estado.id.integer' => 'El estado debe ser un número entero',
             'estado.id.exists' => 'El estado seleccionado no existe',
         ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

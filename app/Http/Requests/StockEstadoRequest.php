@@ -2,17 +2,8 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
-
-class StockEstadoRequest extends FormRequest
+class StockEstadoRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -20,7 +11,7 @@ class StockEstadoRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'descripcion.required' => 'La descripcion es requerida',
@@ -28,16 +19,5 @@ class StockEstadoRequest extends FormRequest
             'descripcion.max' => 'La descripcion no debe exceder 200 caracteres',
             'descripcion.unique' => 'La descripcion ya existe',
         ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

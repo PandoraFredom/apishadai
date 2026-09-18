@@ -17,12 +17,12 @@ class Familia extends Model
         return ['presentacion' => 'integer', 'administracion' => 'integer'];
     }
 
-    public function presentacionDetalle(): BelongsTo
+    public function Presentacion(): BelongsTo
     {
         return $this->belongsTo(FamPresentacion::class, 'presentacion');
     }
 
-    public function administracionDetalle(): BelongsTo
+    public function Administracion(): BelongsTo
     {
         return $this->belongsTo(FamAdministracion::class, 'administracion');
     }

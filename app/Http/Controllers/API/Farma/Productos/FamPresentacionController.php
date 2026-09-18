@@ -29,7 +29,9 @@ class FamPresentacionController extends Controller
     {
         try {
             $data = FamPresentacionData::fromValidated($request->validated());
-            $this->repository->create($data->toArray());
+            if (! $this->repository->create($data->toArray())) {
+                return $this->sendError('No se pudo crear el registro.', false, 422);
+            }
 
             return $this->sendResponse(
                 true,
@@ -45,7 +47,7 @@ class FamPresentacionController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $model = $this->repository->find($id);
+        $model = $this->repository->findById($id);
 
         return $model === null
             ? $this->sendError('Registro no encontrado.', null, 404)
@@ -56,9 +58,9 @@ class FamPresentacionController extends Controller
     {
         try {
             $data = FamPresentacionData::fromValidated($request->validated());
-            $model = $this->repository->update($id, $data->toArray());
+            $updated = $this->repository->update($id, $data->toArray());
 
-            return $model === null
+            return ! $updated
                 ? $this->sendError('Registro no encontrado.', false, 404)
                 : $this->sendResponse(true, 'Registro actualizado correctamente.');
         } catch (Throwable $throwable) {

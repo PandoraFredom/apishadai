@@ -2,18 +2,13 @@
 
 namespace App\Http\Requests\Farma\Compras;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Validator;
 
-class PurchaseTransactionRequest extends FormRequest
+class PurchaseTransactionRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     protected function prepareForValidation(): void
     {
         if ($this->exists('nro')) {
@@ -39,7 +34,7 @@ class PurchaseTransactionRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',

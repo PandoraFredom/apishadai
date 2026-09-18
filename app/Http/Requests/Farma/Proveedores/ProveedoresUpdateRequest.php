@@ -2,17 +2,11 @@
 
 namespace App\Http\Requests\Farma\Proveedores;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class ProveedoresUpdateRequest extends FormRequest
+class ProveedoresUpdateRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -38,7 +32,7 @@ class ProveedoresUpdateRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'id.required' => 'El id del proveedor es requerido',
@@ -57,16 +51,5 @@ class ProveedoresUpdateRequest extends FormRequest
             'imagen.string' => 'La imagen del proveedor debe ser una cadena de texto',
             'imagen.max' => 'La imagen del proveedor no debe exceder 2 MB',
         ];
-    }
-
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

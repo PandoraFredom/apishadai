@@ -2,16 +2,11 @@
 
 namespace App\Http\Requests\Farma\Laboratorios;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class LaboratorioUpdateRequest extends FormRequest
+class LaboratorioUpdateRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -37,7 +32,7 @@ class LaboratorioUpdateRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'id.required' => 'El identificador del laboratorio es requerido.',

@@ -3,12 +3,10 @@
 namespace App\Http\Requests\Farma\Productos;
 
 use App\DTO\Farma\FamAdministracionData;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class FamAdministracionRequest extends FormRequest
+class FamAdministracionRequest extends BaseRequest
 {
     protected function prepareForValidation(): void
     {
@@ -17,11 +15,6 @@ class FamAdministracionRequest extends FormRequest
         }
 
         $this->merge(FamAdministracionData::sanitize($this->all()));
-    }
-
-    public function authorize(): bool
-    {
-        return true;
     }
 
     public function rules(): array
@@ -38,7 +31,7 @@ class FamAdministracionRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',
@@ -48,15 +41,5 @@ class FamAdministracionRequest extends FormRequest
             '*.integer' => 'El campo :attribute debe ser un número entero.',
             '*.min' => 'El campo :attribute debe ser mayor que cero.',
         ];
-    }
-
-    /** @throws HttpResponseException */
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ], 400));
     }
 }

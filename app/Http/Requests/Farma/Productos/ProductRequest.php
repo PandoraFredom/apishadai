@@ -2,12 +2,10 @@
 
 namespace App\Http\Requests\Farma\Productos;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class ProductRequest extends FormRequest
+class ProductRequest extends BaseRequest
 {
     protected function prepareForValidation(): void
     {
@@ -34,11 +32,6 @@ class ProductRequest extends FormRequest
         }
 
         $this->merge($data);
-    }
-
-    public function authorize(): bool
-    {
-        return true;
     }
 
     public function rules(): array
@@ -81,7 +74,7 @@ class ProductRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',
@@ -90,15 +83,5 @@ class ProductRequest extends FormRequest
             '*.max' => 'El campo :attribute excede la longitud permitida.',
             'imagen.max' => 'La imagen no debe exceder 1 MB.',
         ];
-    }
-
-    /** @throws HttpResponseException */
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ], 400));
     }
 }

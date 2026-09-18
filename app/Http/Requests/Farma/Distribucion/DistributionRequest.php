@@ -2,15 +2,10 @@
 
 namespace App\Http\Requests\Farma\Distribucion;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\BaseRequest;
 
-class DistributionRequest extends FormRequest
+class DistributionRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     protected function prepareForValidation(): void
     {
         $this->merge([
@@ -32,7 +27,7 @@ class DistributionRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'precio.required' => 'El precio es obligatorio.',

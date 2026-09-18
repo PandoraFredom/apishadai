@@ -5,8 +5,10 @@ namespace App\Repositories\Laboratorios;
 use App\Interfaces\Laboratorios\LaboratorioService;
 use App\Models\Laboratorio;
 use App\Repositories\Repository;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+
 use function array_key_exists;
 use function is_string;
 
@@ -23,12 +25,16 @@ class LaboratorioRepository extends Repository implements LaboratorioService
 
     public function paginate(): LengthAwarePaginator
     {
-        return $this->model
-            ->newQuery()
-            ->select(['id', 'nombre', 'telefono', 'direccion', 'created_at', 'updated_at'])
-            ->selectRaw('imagen IS NOT NULL AS tiene_imagen')
+        return $this->buildBaseQuery()
             ->orderByDesc('id')
             ->paginate($this->perPage);
+    }
+
+    protected function buildBaseQuery(): Builder
+    {
+        return parent::buildBaseQuery()
+            ->select(['id', 'nombre', 'telefono', 'direccion', 'created_at', 'updated_at'])
+            ->selectRaw('imagen IS NOT NULL AS tiene_imagen');
     }
 
     public function update(int $id, array $data): bool

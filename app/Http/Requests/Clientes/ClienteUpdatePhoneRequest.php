@@ -2,24 +2,15 @@
 
 namespace App\Http\Requests\Clientes;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Validation\ValidationException;
+use App\Http\Requests\BaseRequest;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class ClienteUpdatePhoneRequest extends FormRequest
+class ClienteUpdatePhoneRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -29,9 +20,7 @@ class ClienteUpdatePhoneRequest extends FormRequest
         ];
     }
 
-
-
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'id.required' => 'El campo id es obligatorio.',
@@ -43,22 +32,5 @@ class ClienteUpdatePhoneRequest extends FormRequest
             'telefono.max' => 'El campo teléfono no debe exceder los 10 caracteres.',
             'telefono.unique' => 'El teléfono ya está en uso por otro cliente.',
         ];
-    }
-
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 }

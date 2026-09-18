@@ -2,24 +2,14 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class LoginRequest extends FormRequest
+class LoginRequest extends BaseRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -29,8 +19,7 @@ class LoginRequest extends FormRequest
         ];
     }
 
-
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'name.required' => 'El campo nombre es obligatorio.',
@@ -40,21 +29,5 @@ class LoginRequest extends FormRequest
             'password.string' => 'El campo contraseña debe ser una cadena de texto.',
             'password.max' => 'El campo contraseña no debe exceder los 100 caracteres.',
         ];
-    }
-
-    /**
-     * Summary of failedValidation
-     * @param Validator $validator
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 422,
-            'data' => false,
-        ];
-
-        throw new HttpResponseException(response()->json($response, 422));
     }
 }

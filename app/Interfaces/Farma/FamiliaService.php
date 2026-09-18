@@ -2,18 +2,12 @@
 
 namespace App\Interfaces\Farma;
 
-use App\Models\Farma\Familia;
-use Illuminate\Pagination\LengthAwarePaginator;
+use App\Interfaces\RepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 
-interface FamiliaService
+interface FamiliaService extends RepositoryInterface
 {
-    public function paginate(int $perPage = 30): LengthAwarePaginator;
+    public function administraciones(): Collection;
 
-    public function create(array $data): Familia;
-
-    public function find(int $id): ?Familia;
-
-    public function update(int $id, array $data): ?Familia;
-
-    public function delete(int $id): bool;
+    public function presentaciones(): Collection;
 }

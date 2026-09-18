@@ -30,8 +30,12 @@ class ProductActiveController extends Controller
         try {
             $data = ProductActiveData::fromValidated($request->validated());
 
+            if (! $this->repository->create($data->toArray())) {
+                return $this->sendError('No se pudo crear la asociación.', false, 422);
+            }
+
             return $this->sendResponse(
-                ProductActiveResource::make($this->repository->create($data->toArray())),
+                true,
                 'Principio activo asociado correctamente.',
                 201,
             );
@@ -42,7 +46,7 @@ class ProductActiveController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $association = $this->repository->find($id);
+        $association = $this->repository->findById($id);
 
         return $association === null
             ? $this->sendError('Asociación no encontrada.', null, 404)
@@ -53,12 +57,12 @@ class ProductActiveController extends Controller
     {
         try {
             $data = ProductActiveData::fromValidated($request->validated());
-            $association = $this->repository->update($id, $data->toArray());
+            $updated = $this->repository->update($id, $data->toArray());
 
-            return $association === null
-                ? $this->sendError('Asociación no encontrada.', null, 404)
+            return ! $updated
+                ? $this->sendError('No se pudo actualizar la asociación.', false, 404)
                 : $this->sendResponse(
-                    ProductActiveResource::make($association),
+                    true,
                     'Asociación actualizada correctamente.',
                 );
         } catch (Throwable $throwable) {

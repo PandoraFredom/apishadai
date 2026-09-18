@@ -2,64 +2,40 @@
 
 namespace App\Repositories\Farma;
 
+use App\DTO\Farma\FamiliaData;
+use App\Interfaces\Farma\FamAdministracionService;
 use App\Interfaces\Farma\FamiliaService;
+use App\Interfaces\Farma\FamPresentacionService;
 use App\Models\Farma\Familia;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\Repository;
+use Illuminate\Database\Eloquent\Collection;
 
-class FamiliaRepository implements FamiliaService
+class FamiliaRepository extends Repository implements FamiliaService
 {
-    public function __construct(private readonly Familia $model) {}
+    public function __construct(
+        Familia $model,
+        private readonly FamAdministracionService $administracionService,
+        private readonly FamPresentacionService $presentacionService,
+    ) {
+        parent::__construct($model);
+        $this->perPage = 30;
+        $this->orderBy = ['id', 'DESC'];
+        $this->defaultRelations = ['Presentacion', 'Administracion'];
+    }
 
-    public function paginate(int $perPage = 30): LengthAwarePaginator
+    public function administraciones(): Collection
     {
-        return $this->model
-            ->newQuery()
-            ->with(['presentacionDetalle', 'administracionDetalle'])
-            ->orderByDesc('id')
-            ->paginate(max(1, min($perPage, 100)));
+        return $this->administracionService->getAll();
+    }
+
+    public function presentaciones(): Collection
+    {
+        return $this->presentacionService->getAll();
     }
 
     /** @param array<string, mixed> $data */
-    public function create(array $data): Familia
+    protected function sanitizeData(array $data): array
     {
-        return DB::transaction(function () use ($data): Familia {
-            $model = $this->model->newQuery()->create($data);
-
-            return $model->load(['presentacionDetalle', 'administracionDetalle']);
-        });
-    }
-
-    public function find(int $id): ?Familia
-    {
-        return $this->model
-            ->newQuery()
-            ->with(['presentacionDetalle', 'administracionDetalle'])
-            ->find($id);
-    }
-
-    /** @param array<string, mixed> $data */
-    public function update(int $id, array $data): ?Familia
-    {
-        return DB::transaction(function () use ($id, $data): ?Familia {
-            $model = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            if ($model === null) {
-                return null;
-            }
-
-            $model->update($data);
-
-            return $model->fresh(['presentacionDetalle', 'administracionDetalle']);
-        });
-    }
-
-    public function delete(int $id): bool
-    {
-        return DB::transaction(function () use ($id): bool {
-            $model = $this->model->newQuery()->lockForUpdate()->find($id);
-
-            return $model !== null && (bool) $model->delete();
-        });
+        return FamiliaData::sanitize($data);
     }
 }

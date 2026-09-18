@@ -3,12 +3,10 @@
 namespace App\Http\Requests\Farma\Productos;
 
 use App\DTO\Farma\FamiliaData;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
-class FamiliaRequest extends FormRequest
+class FamiliaRequest extends BaseRequest
 {
     protected function prepareForValidation(): void
     {
@@ -17,11 +15,6 @@ class FamiliaRequest extends FormRequest
         }
 
         $this->merge(FamiliaData::sanitize($this->all()));
-    }
-
-    public function authorize(): bool
-    {
-        return true;
     }
 
     public function rules(): array
@@ -46,25 +39,15 @@ class FamiliaRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             '*.required' => 'El campo :attribute es obligatorio.',
-            '*.unique' => 'El valor de :attribute ya existe.',
+            'descripcion.unique' => 'Ya existe una familia con la misma descripcion, tipo de administracion y tipo de presentacion.',
             '*.exists' => 'El valor seleccionado para :attribute no existe.',
             '*.max' => 'El campo :attribute excede la longitud permitida.',
             '*.integer' => 'El campo :attribute debe ser un número entero.',
             '*.min' => 'El campo :attribute debe ser mayor que cero.',
         ];
-    }
-
-    /** @throws HttpResponseException */
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ], 400));
     }
 }

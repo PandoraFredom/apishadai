@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests\Util;
 
+use App\Http\Requests\BaseRequest;
 use App\Models\Utils\Filter\FilterItem;
 use App\Models\Utils\Filter\FilterModel;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Validation\ValidationRule;
 use LogicException;
+
 use function in_array;
 
-abstract class FilterRequest extends FormRequest
+abstract class FilterRequest extends BaseRequest
 {
     /**
      * Mapa campo => [operador interno, conector lógico].
@@ -41,11 +41,6 @@ abstract class FilterRequest extends FormRequest
     ];
 
     protected int $maxValueLength = 100;
-
-    public function authorize(): bool
-    {
-        return true;
-    }
 
     protected function prepareForValidation(): void
     {
@@ -82,7 +77,7 @@ abstract class FilterRequest extends FormRequest
     }
 
     /**
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -99,7 +94,7 @@ abstract class FilterRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                'in:' . implode(',', $this->getAllowedKeys()),
+                'in:'.implode(',', $this->getAllowedKeys()),
             ],
             'filterItems.*.value' => [
                 'required',
@@ -110,7 +105,7 @@ abstract class FilterRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'name.string' => 'El nombre debe ser texto',
@@ -160,20 +155,6 @@ abstract class FilterRequest extends FormRequest
                 }
             }
         });
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        $response = [
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ];
-        http_response_code(400);
-        exit(json_encode($response));
     }
 
     /**

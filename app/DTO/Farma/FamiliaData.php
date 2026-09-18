@@ -35,7 +35,12 @@ class FamiliaData
             $value = $data[$field];
 
             if (in_array($field, ['presentacion', 'administracion'], true)) {
-                $sanitized[$field] = (int) $value;
+                // The desktop client sends related catalog objects containing an id.
+                $value = is_array($value) ? ($value['id'] ?? null) : $value;
+                $value = is_int($value) || is_string($value) ? $value : null;
+                $sanitized[$field] = is_string($value) && filter_var($value, FILTER_VALIDATE_INT) !== false
+                    ? (int) $value
+                    : $value;
 
                 continue;
             }

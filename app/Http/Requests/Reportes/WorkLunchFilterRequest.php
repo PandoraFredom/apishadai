@@ -2,20 +2,14 @@
 
 namespace App\Http\Requests\Reportes;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseRequest;
+
 use function array_key_exists;
 use function in_array;
 use function is_array;
 
-class WorkLunchFilterRequest extends FormRequest
+class WorkLunchFilterRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     protected function prepareForValidation(): void
     {
         if ($this->has('filterItem') && ! $this->has('filterItems')) {
@@ -97,7 +91,7 @@ class WorkLunchFilterRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'usuario.required' => 'El usuario es obligatorio.',
@@ -112,14 +106,5 @@ class WorkLunchFilterRequest extends FormRequest
             'work_date.1.date_format' => 'La fecha final debe usar el formato Y-m-d.',
             'work_date.1.after_or_equal' => 'La fecha final debe ser igual o posterior a la fecha inicial.',
         ];
-    }
-
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ], 400));
     }
 }

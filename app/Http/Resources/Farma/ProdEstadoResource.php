@@ -2,17 +2,21 @@
 
 namespace App\Http\Resources\Farma;
 
+
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+
 
 class ProdEstadoResource extends JsonResource
 {
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        $data = parent::toArray($request);
-        unset($data['pivot']);
 
-        return $data;
+        return [
+            'id' => $this->id,
+            'descripcion' => $this->descripcion,
+
+        ];
     }
 }

@@ -6,7 +6,12 @@ use App\DTO\Farma\ProdUnidadData;
 use App\Http\Requests\Farma\Productos\ProdUnidadRequest;
 use App\Http\Resources\Farma\ProductActiveResource;
 use App\Http\Resources\Farma\ProductResource;
+use App\Interfaces\Farma\FamAdministracionService;
+use App\Interfaces\Farma\FamPresentacionService;
 use App\Interfaces\Farma\ProdCategoriaService;
+use App\Interfaces\Farma\ProdEstadoService;
+use App\Interfaces\Farma\ProductService;
+use App\Interfaces\RepositoryInterface;
 use App\Models\Farma\Concentracion;
 use App\Models\Farma\FamAdministracion;
 use App\Models\Farma\Familia;
@@ -20,6 +25,8 @@ use App\Models\Farma\ProdUnidad;
 use App\Models\Laboratorio;
 use App\Repositories\Farma\ProductActiveRepository;
 use App\Repositories\Farma\ProductRepository;
+use App\Repositories\Repository;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
@@ -62,8 +69,8 @@ class ProductDomainTest extends TestCase
                 'categoriaDetalle',
                 'laboratorioDetalle',
                 'unidadDetalle',
-                'familiaDetalle.presentacionDetalle',
-                'familiaDetalle.administracionDetalle',
+                'Familia.Presentacion',
+                'Familia.Administracion',
                 'estadoDetalle',
                 'principiosActivos.concentracionDetalle',
             ])
@@ -73,9 +80,9 @@ class ProductDomainTest extends TestCase
         $this->assertInstanceOf(ProdCategoria::class, $product->categoriaDetalle);
         $this->assertInstanceOf(Laboratorio::class, $product->laboratorioDetalle);
         $this->assertInstanceOf(ProdUnidad::class, $product->unidadDetalle);
-        $this->assertInstanceOf(Familia::class, $product->familiaDetalle);
-        $this->assertInstanceOf(FamPresentacion::class, $product->familiaDetalle->presentacionDetalle);
-        $this->assertInstanceOf(FamAdministracion::class, $product->familiaDetalle->administracionDetalle);
+        $this->assertInstanceOf(Familia::class, $product->Familia);
+        $this->assertInstanceOf(FamPresentacion::class, $product->Familia->Presentacion);
+        $this->assertInstanceOf(FamAdministracion::class, $product->Familia->Administracion);
         $this->assertInstanceOf(ProdEstado::class, $product->estadoDetalle);
         $this->assertInstanceOf(PrincipalActivo::class, $product->principiosActivos->first());
         $this->assertInstanceOf(Concentracion::class, $product->principiosActivos->first()->concentracionDetalle);
@@ -87,7 +94,7 @@ class ProductDomainTest extends TestCase
         [$seededProduct] = $this->seedProductDomain();
         $repository = new ProductRepository(new Producto);
 
-        $product = $repository->find($seededProduct->id);
+        $product = $repository->findById($seededProduct->id);
 
         $this->assertNotNull($product);
         $this->assertTrue((bool) $product->tiene_imagen);
@@ -101,8 +108,15 @@ class ProductDomainTest extends TestCase
         );
 
         $this->assertSame($product->categoria, $payload['categoria_id']);
-        $this->assertSame('Categoría prueba', $payload['categoria']['nombre']);
-        $this->assertSame('Laboratorio prueba', $payload['laboratorio']['nombre']);
+        $this->assertSame(['id' => $product->categoria, 'nombre' => 'Categoría prueba'], $payload['categoria']);
+        $this->assertSame(['id' => $product->laboratorio, 'direccion' => 'Tegucigalpa'], $payload['laboratorio']);
+        $this->assertSame(['id' => $product->unidad, 'cantidad_v' => 20], $payload['unidad']);
+        $this->assertSame([
+            'id' => $product->familia,
+            'presentacion' => ['id' => $product->Familia->Presentacion->id, 'descripcion' => 'Tableta'],
+            'administracion' => ['id' => $product->Familia->Administracion->id, 'descripcion' => 'Oral'],
+        ], $payload['familia']);
+        $this->assertSame(['id' => $product->estado, 'descripcion' => 'Activo'], $payload['estado']);
         $this->assertArrayNotHasKey('imagen', $payload);
         $this->assertArrayNotHasKey('imagen', $payload['laboratorio']);
         $this->assertArrayNotHasKey('pivot', $payload['principios_activos'][0]);
@@ -138,7 +152,7 @@ class ProductDomainTest extends TestCase
         [$product, $seededActive] = $this->seedProductDomain();
         $repository = new ProductActiveRepository(new ProdActivo);
 
-        $active = $repository->find($seededActive->id);
+        $active = $repository->findById($seededActive->id);
         $payload = json_decode(
             json_encode(ProductActiveResource::make($active)->resolve(request()), JSON_THROW_ON_ERROR),
             true,
@@ -225,11 +239,246 @@ class ProductDomainTest extends TestCase
         ];
     }
 
+    #[DataProvider('familyCombinations')]
+    public function test_family_uniqueness_checks_the_entire_combination(
+        string $method,
+        bool $differentDescription,
+        bool $differentAdministration,
+        bool $differentPresentation,
+        bool $nestedRelations,
+    ): void {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $administration = FamAdministracion::query()->create(['descripcion' => 'Tópica']);
+        $presentation = FamPresentacion::query()->create(['descripcion' => 'Crema']);
+        $base = $this->catalogBase('familias');
+        $input = [
+            'descripcion' => $differentDescription ? 'Antibiótico' : 'Analgésico',
+            'administracion' => $differentAdministration ? $administration->id : 1,
+            'presentacion' => $differentPresentation ? $presentation->id : 1,
+        ];
+        $path = $base.'/crear';
+        $target = null;
+
+        if ($method === 'PUT') {
+            $target = Familia::query()->create([
+                'descripcion' => 'Familia por actualizar',
+                'administracion' => 1,
+                'presentacion' => 1,
+            ]);
+            $path = $this->updatePath($base, $target->id);
+        }
+
+        $count = Familia::query()->count();
+        // Exercise the same sanitization used by real create and update requests.
+        $payload = [
+            ...$input,
+            'descripcion' => ' <b>'.$input['descripcion'].'</b> ',
+        ];
+        if ($nestedRelations) {
+            $payload['administracion'] = ['id' => $input['administracion']];
+            $payload['presentacion'] = ['id' => $input['presentacion']];
+        }
+        $response = $this->json($method, $path, $payload);
+
+        if (! $differentDescription && ! $differentAdministration && ! $differentPresentation) {
+            $response->assertStatus(422)->assertJsonPath('message',
+                'Ya existe una familia con la misma descripcion, tipo de administracion y tipo de presentacion.',
+            );
+            $this->assertDatabaseCount('familia', $count);
+            if ($target !== null) {
+                $this->assertSame('Familia por actualizar', $target->fresh()->descripcion);
+            }
+
+            return;
+        }
+
+        $response->assertStatus($method === 'POST' ? 201 : 200)->assertJsonPath('data', true);
+        $this->assertDatabaseHas('familia', $target === null ? $input : ['id' => $target->id, ...$input]);
+        $this->assertDatabaseCount('familia', $count + ($method === 'POST' ? 1 : 0));
+    }
+
+    public function test_family_update_accepts_its_own_combination_with_nested_and_scalar_ids(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+
+        $this->putJson($this->updatePath($this->catalogBase('familias'), 1), [
+            'descripcion' => 'Analgésico',
+            'presentacion' => ['id' => '1', 'descripcion' => 'Tableta'],
+            'administracion' => '1',
+        ])->assertOk()->assertJsonPath('data', true);
+        $this->assertDatabaseCount('familia', 1);
+        $this->assertDatabaseHas('familia', [
+            'id' => 1, 'descripcion' => 'Analgésico', 'presentacion' => 1, 'administracion' => 1,
+        ]);
+    }
+
+    public function test_family_rejects_missing_or_invalid_related_ids_without_writing(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $base = $this->catalogBase('familias');
+        $original = (array) DB::table('familia')->where('id', 1)->first();
+
+        foreach (['POST' => $base.'/crear', 'PUT' => $this->updatePath($base, 1)] as $method => $path) {
+            foreach (['presentacion', 'administracion'] as $field) {
+                foreach ([[], ['descripcion' => 'Sin ID'], ['id' => []], ['id' => true], ['id' => '1abc'], ['id' => 1.5], ['id' => 999999]] as $invalid) {
+                    $this->assertCatalogValidationFails($method, $path, [
+                        'descripcion' => 'Nueva familia',
+                        'presentacion' => 1,
+                        'administracion' => 1,
+                        $field => $invalid,
+                    ], $field);
+                }
+            }
+        }
+
+        $this->assertDatabaseCount('familia', 1);
+        $this->assertSame($original, (array) DB::table('familia')->where('id', 1)->first());
+    }
+
+    public static function familyCombinations(): array
+    {
+        $cases = [];
+        foreach (['POST', 'PUT'] as $method) {
+            foreach ([false, true] as $description) {
+                foreach ([false, true] as $administration) {
+                    foreach ([false, true] as $presentation) {
+                        $name = sprintf('%s description=%d administration=%d presentation=%d',
+                            $method, $description, $administration, $presentation);
+                        $cases[$name.' scalar'] = [$method, $description, $administration, $presentation, false];
+                        $cases[$name.' nested'] = [$method, $description, $administration, $presentation, true];
+                    }
+                }
+            }
+        }
+
+        return $cases;
+    }
+
+    public function test_product_catalog_lists_return_paginated_records_and_family_relations(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $base = $this->productResourceBase('ProductController');
+
+        $this->getJson($base.'/laboratorios')->assertOk()
+            ->assertJsonPath('data.0.nombre', 'Laboratorio prueba')
+            ->assertJsonPath('data.0.tiene_imagen', true)
+            ->assertJsonMissingPath('data.0.imagen')
+            ->assertJsonPath('meta.total', 1);
+        $this->getJson($base.'/familias')->assertOk()
+            ->assertJsonPath('data.0.descripcion', 'Analgésico')
+            ->assertJsonPath('data.0.presentacion.descripcion', 'Tableta')
+            ->assertJsonPath('data.0.administracion.descripcion', 'Oral')
+            ->assertJsonPath('meta.total', 1);
+        $this->getJson($base.'/unidades')->assertOk()
+            ->assertJsonPath('data.0.abreviatura_c', 'CAJ')
+            ->assertJsonPath('data.0.abreviatura_v', 'UND')
+            ->assertJsonPath('meta.total', 1);
+        $this->getJson($base.'/estados')->assertOk()
+            ->assertJsonPath('data.0.id', 1)
+            ->assertJsonPath('data.0.descripcion', 'Activo')
+            ->assertJsonPath('meta.total', 1);
+        $this->getJson($base.'/categorias')->assertOk()
+            ->assertJsonPath('data.0.id', 1)
+            ->assertJsonPath('data.0.nombre', 'Categoría prueba')
+            ->assertJsonPath('meta.total', 1);
+    }
+
+    #[DataProvider('productCatalogFilters')]
+    public function test_product_catalog_filters_search_partial_values(string $catalog, array $items, int $matches): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        Laboratorio::query()->create(['nombre' => 'Otro laboratorio']);
+        Familia::query()->create(['descripcion' => 'Vitaminas', 'presentacion' => 1, 'administracion' => 1]);
+        ProdUnidad::query()->create([
+            'abreviatura_c' => 'PAQ', 'abreviatura_v' => 'CAJ', 'cantidad_c' => 1, 'cantidad_v' => 5,
+        ]);
+        $base = $this->productResourceBase('ProductController');
+
+        $response = $this->getJson($base.'/filter_'.$catalog.'?'.http_build_query([
+            'filterItems' => $items,
+        ]))->assertOk()->assertJsonPath('meta.total', $matches)->assertJsonCount($matches, 'data');
+        if ($catalog === 'laboratorios') {
+            $response->assertJsonMissingPath('data.0.imagen')->assertJsonPath('data.0.tiene_imagen', true);
+        }
+        if ($catalog === 'familias' && $matches > 0) {
+            $response->assertJsonPath('data.0.presentacion.descripcion', 'Tableta');
+        }
+    }
+
+    public static function productCatalogFilters(): array
+    {
+        return [
+            'laboratorio nombre' => ['laboratorios', [['key' => 'nombre', 'value' => 'prueb']], 1],
+            'familia descripcion' => ['familias', [['key' => 'descripcion', 'value' => 'lgés']], 1],
+            'unidad compra' => ['unidades', [['key' => 'abreviatura_c', 'value' => 'PA']], 1],
+            'unidad venta' => ['unidades', [['key' => 'abreviatura_v', 'value' => 'UN']], 1],
+            'unidad compra o venta' => ['unidades', [
+                ['key' => 'abreviatura_v', 'value' => 'CA'],
+                ['key' => 'abreviatura_c', 'value' => 'CA'],
+            ], 2],
+            'sin resultados' => ['familias', [['key' => 'descripcion', 'value' => 'Inexistente']], 0],
+        ];
+    }
+
+    public function test_product_catalog_filters_reject_unconfigured_fields_and_client_operators(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $base = $this->productResourceBase('ProductController');
+
+        foreach (['laboratorios' => 'nombre', 'familias' => 'descripcion', 'unidades' => 'abreviatura_c'] as $catalog => $key) {
+            foreach ([
+                [['key' => 'id', 'value' => '1']],
+                [['key' => $key, 'value' => 'test', 'operator' => '=']],
+                [['key' => $key, 'value' => 'test', 'logicalOperator' => 'OR']],
+            ] as $items) {
+                $this->getJson($base.'/filter_'.$catalog.'?'.http_build_query(['filterItems' => $items]))
+                    ->assertStatus(422)->assertJsonPath('code', 422)
+                    ->assertJsonStructure(['message', 'code', 'data' => ['errors'], 'meta'])
+                    ->assertJsonPath('meta', null);
+            }
+        }
+    }
+
+    public function test_product_catalog_lists_and_filters_paginate(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        for ($index = 0; $index < 31; $index++) {
+            ProdEstado::query()->create(['descripcion' => 'Estado extra '.$index]);
+            ProdCategoria::query()->create(['nombre' => 'Categoría extra '.$index]);
+            Laboratorio::query()->create(['nombre' => 'Laboratorio extra '.$index]);
+            Familia::query()->create(['descripcion' => 'Familia extra '.$index, 'presentacion' => 1, 'administracion' => 1]);
+            ProdUnidad::query()->create([
+                'abreviatura_c' => 'CAJ', 'abreviatura_v' => 'UND', 'cantidad_c' => 2, 'cantidad_v' => $index + 1,
+            ]);
+        }
+        $base = $this->productResourceBase('ProductController');
+        foreach (['laboratorios' => ['nombre', 'Laboratorio'], 'familias' => ['descripcion', 'extra'], 'unidades' => ['abreviatura_c', 'CAJ']] as $catalog => [$key, $value]) {
+            $this->getJson($base.'/'.$catalog.'?page=2')->assertOk()
+                ->assertJsonPath('meta.total', 32)->assertJsonPath('meta.current_page', 2)->assertJsonCount(2, 'data');
+            $this->getJson($base.'/filter_'.$catalog.'?'.http_build_query([
+                'page' => 2, 'filterItems' => [['key' => $key, 'value' => $value]],
+            ]))->assertOk()->assertJsonPath('meta.current_page', 2)
+                ->assertJsonCount($catalog === 'familias' ? 1 : 2, 'data');
+        }
+        foreach (['estados', 'categorias'] as $catalog) {
+            $this->getJson($base.'/'.$catalog.'?page=2')->assertOk()
+                ->assertJsonPath('meta.total', 32)->assertJsonPath('meta.current_page', 2)->assertJsonCount(2, 'data');
+        }
+    }
+
     public function test_product_route_files_keep_urls_and_middleware(): void
     {
+        $this->withoutMiddleware();
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with($route->uri(), 'api/farma/productos/'));
-        $this->assertCount(52, $routes);
+        $this->assertCount(61, $routes);
 
         foreach ($routes as $route) {
             $this->assertStringNotContainsString('{catalogo}', $route->uri());
@@ -239,10 +488,15 @@ class ProductDomainTest extends TestCase
             if (in_array('PUT', $route->methods(), true)) {
                 $this->assertMatchesRegularExpression('~/(?:update|actualizar)/\{id\}$~', $route->uri());
             }
+            if (in_array($route->getActionMethod(), ['show', 'update', 'destroy'], true)) {
+                $this->assertSame('[0-9]+', $route->wheres['id'] ?? null);
+                $this->json($route->methods()[0], '/'.str_replace('{id}', 'invalid', $route->uri()))
+                    ->assertNotFound();
+            }
         }
 
         $this->assertCount(10, $routes->filter(fn ($route) => in_array('PUT', $route->methods(), true)));
-        foreach (['listar', 'opciones', 'buscar/1', 'imagen/1', 'activos/listar'] as $path) {
+        foreach (['listar', 'laboratorios', 'familias', 'unidades', 'estados', 'categorias', 'filter_laboratorios', 'filter_familias', 'filter_unidades', 'buscar/1', 'imagen/1', 'activos/listar'] as $path) {
             $controller = str_starts_with($path, 'activos/') ? 'ProductActiveController' : 'ProductController';
             $base = $this->productResourceBase($controller);
             $path = str_replace('activos/', '', $path);
@@ -272,8 +526,8 @@ class ProductDomainTest extends TestCase
         $this->assertDatabaseHas('prod_estado', ['descripcion' => null]);
 
         $this->getJson($this->catalogBase('familias').'/buscar/1')->assertOk()
-            ->assertJsonPath('data.presentacion_detalle.descripcion', 'Tableta')
-            ->assertJsonPath('data.administracion_detalle.descripcion', 'Oral');
+            ->assertJsonPath('data.presentacion', ['id' => 1, 'descripcion' => 'Tableta'])
+            ->assertJsonPath('data.administracion', ['id' => 1, 'descripcion' => 'Oral']);
         $this->getJson($this->catalogBase('principios-activos').'/buscar/1')->assertOk()
             ->assertJsonPath('data.concentracion_detalle.valor', '500 mg');
         $this->assertCatalogValidationFails('POST', $this->catalogBase('principios-activos').'/crear', [
@@ -282,13 +536,55 @@ class ProductDomainTest extends TestCase
         $this->getJson($base.'/desconocido/listar')->assertNotFound();
     }
 
+    public function test_family_lists_delegate_to_catalog_services_and_return_only_id_and_description(): void
+    {
+        $this->withoutMiddleware();
+        $this->mock(FamAdministracionService::class)
+            ->shouldReceive('getAll')->once()->andReturn(new Collection([
+                (new FamAdministracion)->forceFill(['id' => 7, 'descripcion' => 'Oral', 'created_at' => now(), 'extra' => 'hidden']),
+            ]));
+        $this->mock(FamPresentacionService::class)
+            ->shouldReceive('getAll')->once()->andReturn(new Collection([
+                (new FamPresentacion)->forceFill(['id' => 8, 'descripcion' => 'Tableta', 'created_at' => now(), 'extra' => 'hidden']),
+            ]));
+        $base = $this->catalogBase('familias');
+
+        $this->getJson($base.'/administraciones')->assertOk()->assertExactJson([
+            'message' => 'ok', 'code' => 200, 'data' => [['id' => 7, 'descripcion' => 'Oral']],
+        ]);
+        $this->getJson($base.'/presentaciones')->assertOk()->assertExactJson([
+            'message' => 'ok', 'code' => 200, 'data' => [['id' => 8, 'descripcion' => 'Tableta']],
+        ]);
+    }
+
+    public function test_family_lists_return_empty_arrays_and_all_catalog_options_without_pagination(): void
+    {
+        $this->withoutMiddleware();
+        $base = $this->catalogBase('familias');
+
+        foreach (['administraciones' => 'fam_administracion', 'presentaciones' => 'fam_presentacion'] as $path => $table) {
+            $this->getJson($base.'/'.$path)->assertOk()->assertExactJson([
+                'message' => 'ok', 'code' => 200, 'data' => [],
+            ]);
+
+            $records = [];
+            for ($id = 1; $id <= 31; $id++) {
+                $records[] = ['id' => $id, 'descripcion' => 'Opción '.$id];
+            }
+            DB::table($table)->insert($records);
+            $this->getJson($base.'/'.$path)->assertOk()->assertExactJson([
+                'message' => 'ok', 'code' => 200, 'data' => array_reverse($records),
+            ]);
+        }
+    }
+
     public function test_catalog_write_failures_return_false(): void
     {
         $this->withoutMiddleware();
         $this->seedProductDomain();
         $repository = $this->mock(ProdCategoriaService::class);
         $repository->shouldReceive('create')->once()->andThrow(new \RuntimeException('Write failed'));
-        $repository->shouldReceive('update')->once()->andReturnNull();
+        $repository->shouldReceive('update')->once()->andReturnFalse();
         $repository->shouldReceive('delete')->once()->andThrow(new QueryException(
             'sqlite', 'delete from prod_categorias where id = ?', [1], new \PDOException('Referenced record', 23000),
         ));
@@ -302,6 +598,89 @@ class ProductDomainTest extends TestCase
             ->assertStatus(409)->assertJsonPath('data', false);
     }
 
+    public function test_catalog_controller_respects_false_from_the_base_repository(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $repository = $this->mock(ProdCategoriaService::class);
+        $repository->shouldReceive('create')->once()->andReturnFalse();
+        $repository->shouldReceive('update')->once()->andReturnFalse();
+        $repository->shouldReceive('delete')->once()->andReturnFalse();
+        $base = $this->catalogBase('categorias');
+
+        $this->postJson($base.'/crear', ['nombre' => 'Nueva'])
+            ->assertStatus(422)->assertJsonPath('data', false);
+        $this->putJson($this->updatePath($base, 1), ['nombre' => 'Nueva'])
+            ->assertNotFound()->assertJsonPath('data', false);
+        $this->deleteJson($base.'/eliminar/1')->assertNotFound()->assertJsonPath('data', false);
+    }
+
+    public function test_product_repositories_support_inherited_reads_and_boolean_writes(): void
+    {
+        $this->seedProductDomain();
+        foreach (['ProdUnidad', 'ProdEstado', 'ProdCategoria', 'FamPresentacion', 'FamAdministracion',
+            'Familia', 'Concentracion', 'PrincipalActivo', 'ProductActive', 'Product'] as $name) {
+            $repository = app('App\\Interfaces\\Farma\\'.$name.'Service');
+            $this->assertInstanceOf(RepositoryInterface::class, $repository);
+            $this->assertInstanceOf(Repository::class, $repository);
+            $this->assertCount(1, $repository->getAll());
+            $this->assertSame(1, $repository->findById(1)->id);
+            $this->assertSame(1, $repository->whereFirst(['id' => 1])->id);
+            $this->assertSame(1, $repository->setPerPage(1)->paginate()->perPage());
+            $this->assertFalse($repository->update(999999, ['id' => 999999]));
+            $this->assertFalse($repository->delete(999999));
+        }
+
+        $categories = app(ProdCategoriaService::class);
+        $this->assertFalse($categories->create(['nombre' => 'Categoría prueba']));
+        $this->assertTrue($categories->create(['nombre' => 'Nueva categoría']));
+        $id = $categories->whereFirst(['nombre' => 'Nueva categoría'])->id;
+        $this->assertTrue($categories->update($id, ['nombre' => 'Actualizada']));
+        $this->assertTrue($categories->delete($id));
+    }
+
+    public function test_inherited_writes_preserve_nullable_fields_and_product_image(): void
+    {
+        [$product] = $this->seedProductDomain();
+        $states = app(ProdEstadoService::class);
+        $this->assertTrue($states->update(1, ['descripcion' => null]));
+        $this->assertDatabaseHas('prod_estado', ['id' => 1, 'descripcion' => null]);
+
+        $repository = app(ProductService::class);
+        $image = base64_encode(str_repeat('image-data', 300));
+        $this->assertTrue($repository->update($product->id, ['imagen' => $image, 'codigobar' => null]));
+        $this->assertSame($image, $repository->getImage($product->id));
+        $this->assertDatabaseHas('productos', ['id' => $product->id, 'codigobar' => null]);
+        $this->assertArrayNotHasKey('imagen', $repository->findById($product->id)->getAttributes());
+
+        $data = $product->only(['categoria', 'laboratorio', 'unidad', 'familia', 'codigo', 'descripcion', 'estado']);
+        $data['codigo'] = 'NEW-PRODUCT';
+        $data['imagen'] = $image;
+        $this->assertTrue($repository->create($data, [1, 1]));
+        $created = $repository->whereFirst(['codigo' => 'NEW-PRODUCT']);
+        $this->assertSame([1], $created->principiosActivos->pluck('id')->all());
+        $this->assertSame($image, $repository->getImage($created->id));
+    }
+
+    public function test_product_writes_roll_back_when_active_principle_sync_fails(): void
+    {
+        [$product] = $this->seedProductDomain();
+        $repository = app(ProductService::class);
+        $principle = PrincipalActivo::query()->create(['nombre' => 'Otro activo', 'concentracion' => 1]);
+        DB::unprepared("CREATE TRIGGER reject_active_insert BEFORE INSERT ON prod_activo BEGIN SELECT RAISE(ABORT, 'Test sync failure'); END");
+
+        $data = $product->only(['categoria', 'laboratorio', 'unidad', 'familia', 'codigo', 'codigobar', 'descripcion', 'estado']);
+        $data['codigo'] = 'ROLLBACK-CREATE';
+        $data['codigobar'] = null;
+        $this->assertFalse($repository->create($data, [$principle->id]));
+        $this->assertDatabaseMissing('productos', ['codigo' => 'ROLLBACK-CREATE']);
+
+        $this->assertFalse($repository->update($product->id, ['descripcion' => 'No debe persistir'], [$principle->id]));
+        $this->assertSame($product->descripcion, $product->fresh()->descripcion);
+        $this->assertSame([1], $product->fresh()->principiosActivos->pluck('id')->all());
+        $this->assertSame(0, DB::transactionLevel());
+    }
+
     public function test_product_update_uses_route_id_and_accepts_body_without_id(): void
     {
         $this->withoutMiddleware();
@@ -310,10 +689,10 @@ class ProductDomainTest extends TestCase
         $input = $product->only(['categoria', 'laboratorio', 'unidad', 'familia', 'codigo', 'codigobar', 'descripcion', 'estado']);
 
         $this->putJson($this->updatePath($base, $product->id), $input)
-            ->assertOk()->assertJsonPath('data.id', $product->id);
+            ->assertOk()->assertJsonPath('data', true);
         $input['descripcion'] = 'Producto actualizado por URL';
         $this->putJson($this->updatePath($base, $product->id), ['id' => 999999, ...$input])
-            ->assertOk()->assertJsonPath('data.descripcion', $input['descripcion']);
+            ->assertOk()->assertJsonPath('data', true);
         $this->assertDatabaseHas('productos', ['id' => $product->id, 'descripcion' => $input['descripcion']]);
         $this->assertCatalogValidationFails('PUT', $this->updatePath($base, '999999'), ['id' => $product->id, ...$input], 'id');
         $this->putJson($this->updatePath($base, ''), ['id' => $product->id, ...$input])->assertNotFound();
@@ -328,7 +707,7 @@ class ProductDomainTest extends TestCase
         $input = ['producto' => $product->id, 'pactivo' => $association->pactivo];
 
         $this->putJson($this->updatePath($base, $association->id), $input)
-            ->assertOk()->assertJsonPath('data.id', $association->id);
+            ->assertOk()->assertJsonPath('data', true);
         $principle = PrincipalActivo::query()->create(['nombre' => 'Nuevo activo', 'concentracion' => 1]);
         $input['pactivo'] = $principle->id;
         $this->putJson($this->updatePath($base, $association->id), ['id' => 999999, ...$input])->assertOk();
@@ -338,7 +717,7 @@ class ProductDomainTest extends TestCase
         $this->putJson($this->updatePath($base, 'invalid'), $input)->assertNotFound();
     }
 
-    public function test_validation_returns_only_the_first_error_and_does_not_write(): void
+    public function test_validation_returns_the_first_message_and_all_errors_without_writing(): void
     {
         $this->withoutMiddleware();
         $this->seedProductDomain();
@@ -346,10 +725,15 @@ class ProductDomainTest extends TestCase
         $original = (array) DB::table('familia')->where('id', 1)->first();
 
         foreach (['POST' => $base.'/crear', 'PUT' => $this->updatePath($base, 1)] as $method => $path) {
-            $this->json($method, $path, [])->assertStatus(400)->assertExactJson([
+            $this->json($method, $path, [])->assertStatus(422)->assertExactJson([
                 'message' => 'El campo presentacion es obligatorio.',
-                'code' => 400,
-                'data' => null,
+                'code' => 422,
+                'data' => ['errors' => [
+                    'presentacion' => ['El campo presentacion es obligatorio.'],
+                    'administracion' => ['El campo administracion es obligatorio.'],
+                    'descripcion' => ['El campo descripcion es obligatorio.'],
+                ]],
+                'meta' => null,
             ]);
         }
 
@@ -396,14 +780,16 @@ class ProductDomainTest extends TestCase
     private function assertCatalogValidationFails(string $method, string $uri, array $input, ?string $field = null): void
     {
         $response = $this->json($method, $uri, $input)
-            ->assertStatus(400)
+            ->assertStatus(422)
             ->assertHeader('Content-Type', 'application/json')
-            ->assertJsonPath('code', 400)
-            ->assertJsonPath('data', null);
-        $this->assertSame(['message', 'code', 'data'], array_keys($response->json()));
+            ->assertJsonPath('code', 422)
+            ->assertJsonPath('meta', null);
+        $this->assertSame(['message', 'code', 'data', 'meta'], array_keys($response->json()));
         $this->assertNotEmpty($response->json('message'));
+        $this->assertNotEmpty($response->json('data.errors'));
 
         if ($field !== null) {
+            $response->assertJsonValidationErrors($field, 'data.errors');
             $this->assertStringContainsString(str_replace('_', ' ', $field), $response->json('message'));
         }
     }
@@ -437,7 +823,8 @@ class ProductDomainTest extends TestCase
             [$secondPrinciple->id],
         );
 
-        $this->assertNotNull($updated);
+        $this->assertTrue($updated);
+        $updated = $repository->findById($product->id);
         $this->assertSame('Producto actualizado', $updated->descripcion);
         $this->assertSame(
             [$secondPrinciple->id],

@@ -2,17 +2,10 @@
 
 namespace App\Http\Requests\HorasLab;
 
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Requests\BaseRequest;
 
-class HorasLabRequest extends FormRequest
+class HorasLabRequest extends BaseRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     public function rules(): array
     {
         return [
@@ -22,7 +15,7 @@ class HorasLabRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    protected function customMessages(): array
     {
         return [
             'usuario.id.required' => 'El usuario es obligatorio.',
@@ -38,14 +31,5 @@ class HorasLabRequest extends FormRequest
             'horas_lunch.min' => 'Los minutos de almuerzo deben ser al menos 1.',
             'horas_lunch.max' => 'Los minutos de almuerzo no pueden exceder 160.',
         ];
-    }
-
-    protected function failedValidation(Validator $validator): void
-    {
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->errors()->first(),
-            'code' => 400,
-            'data' => null,
-        ], 400));
     }
 }
