@@ -4,13 +4,14 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 
 class RepositoryException extends Exception
 {
     protected array $context = [];
 
     public function __construct(
-        string $message = "",
+        string $message = '',
         int $code = 0,
         ?\Throwable $previous = null,
         array $context = []
@@ -36,12 +37,12 @@ class RepositoryException extends Exception
      */
     public function report(): void
     {
-        \Illuminate\Support\Facades\Log::error('RepositoryException', [
+        Log::error('RepositoryException', [
             'message' => $this->getMessage(),
             'code' => $this->getCode(),
             'file' => $this->getFile(),
             'line' => $this->getLine(),
-            'context' => $this->context
+            'context' => $this->context,
         ]);
     }
 
@@ -51,6 +52,7 @@ class RepositoryException extends Exception
     public function setContext(array $context): self
     {
         $this->context = $context;
+
         return $this;
     }
 

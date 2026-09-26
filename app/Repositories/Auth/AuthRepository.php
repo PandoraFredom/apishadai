@@ -22,13 +22,8 @@ class AuthRepository implements AuthService
         private SingleHashService $singleHashService
     ) {}
 
-
-
     /**
      * Obtiene los permisos de un usuario agrupados por módulo > vista > acciones
-     *
-     * @param int $userId
-     * @return Collection
      */
     #[\Override]
     public function getPermisosUser(int $userId): Collection
@@ -36,9 +31,9 @@ class AuthRepository implements AuthService
         $permisos = $this->permisoService->getPermisosByUserId($userId);
 
         return $permisos
-               ->filter(fn($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'
-                && optional(optional($Permiso->Vista)->Estado)->descripcion === 'ACTIVO')
-            ->groupBy(fn($Permiso) => $Permiso->Modulo->id)
+            ->filter(fn ($Permiso) => optional(optional($Permiso->Modulo)->Estado)->descripcion === 'ACTIVO'
+             && optional(optional($Permiso->Vista)->Estado)->descripcion === 'ACTIVO')
+            ->groupBy(fn ($Permiso) => $Permiso->Modulo->id)
             ->map(function ($moduloPermisos) {
                 $modulo = $moduloPermisos->first()->Modulo;
 
@@ -46,27 +41,24 @@ class AuthRepository implements AuthService
                     'modulo_l' => [
                         'codigo' => $modulo->codigo,
                     ],
-                    'vistas_l' => $moduloPermisos->groupBy(fn($permiso) => $permiso->Vista->id)->map(function ($vistaPermisos) {
+                    'vistas_l' => $moduloPermisos->groupBy(fn ($permiso) => $permiso->Vista->id)->map(function ($vistaPermisos) {
                         $vista = $vistaPermisos->first()->Vista;
 
                         return [
                             'vistai' => [
                                 'codigo' => $vista->codigo,
                             ],
-                            'accionesi' => $vistaPermisos->pluck('Actionvista')->filter()->map(fn($accion) => [
+                            'accionesi' => $vistaPermisos->pluck('Actionvista')->filter()->map(fn ($accion) => [
                                 'codigo' => $accion->codigo,
-                            ])->values()
+                            ])->values(),
                         ];
-                    })->values()
+                    })->values(),
                 ];
             })->values();
     }
 
     /**
      * Elimina todos los tokens de coincidencia de un usuario
-     *
-     * @param int $userId
-     * @return void
      */
     public function deleteMatchTokenUser(int $userId): void
     {
@@ -75,9 +67,6 @@ class AuthRepository implements AuthService
 
     /**
      * Elimina un token de coincidencia por su valor
-     *
-     * @param string $token
-     * @return bool
      */
     public function deleteMatchTokenByToken(string $token): bool
     {
@@ -93,8 +82,7 @@ class AuthRepository implements AuthService
     /**
      * Crea un nuevo registro de MatchToken para el usuario
      *
-     * @param array $data ['usuario' => int, 'device' => int, 'token' => string]
-     * @return MatchTokens|null
+     * @param  array  $data  ['usuario' => int, 'device' => int, 'token' => string]
      */
     public function createMatchToken(array $data): ?MatchTokens
     {
@@ -104,7 +92,7 @@ class AuthRepository implements AuthService
             return $this->matchTokensService->whereFirst([
                 ['usuario', '=', $data['usuario']],
                 ['device', '=', $data['device']],
-                ['token', '=', $data['token']]
+                ['token', '=', $data['token']],
             ]);
         }
 
@@ -113,9 +101,6 @@ class AuthRepository implements AuthService
 
     /**
      * Obtiene el token desencriptado del header de autorización
-     *
-     * @param Request $request
-     * @return string|null
      */
     public function getDecryptedToken(Request $request): ?string
     {
@@ -126,27 +111,25 @@ class AuthRepository implements AuthService
                 $token = substr($header, 7);
                 $deviceinfo = $this->deviceUtility->getSingleInfo($request);
 
-                if (!$deviceinfo) {
+                if (! $deviceinfo) {
                     return null;
                 }
 
                 return $this->encService->decrypt($token, $deviceinfo['ip']);
             }
         }
+
         return null;
     }
 
     /**
      * Encripta un token JWT
-     *
-     * @param string $token
-     * @return string
      */
     public function encryptToken(string $token, Request $request): string
     {
         $deviceinfo = $this->deviceUtility->getSingleInfo($request);
 
-        if (!$deviceinfo) {
+        if (! $deviceinfo) {
             throw new \RuntimeException('Informacion del dispositivo no proporcionada');
         }
 
@@ -155,9 +138,6 @@ class AuthRepository implements AuthService
 
     /**
      * Genera un hash hmac-sha256 de un valor
-     *
-     * @param string $value
-     * @return string
      */
     public function hashValue(string $value): string
     {

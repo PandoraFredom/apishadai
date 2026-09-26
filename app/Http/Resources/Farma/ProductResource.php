@@ -12,17 +12,32 @@ class ProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'categoria_id' => $this->categoria,
+            'laboratorio_id' => $this->laboratorio,
+            'unidad_id' => $this->unidad,
+            'familia_id' => $this->familia,
+            'estado_id' => $this->estado,
             'codigo' => $this->codigo,
             'codigobar' => $this->codigobar,
             'descripcion' => $this->descripcion,
             'categoria' => $this->whenLoaded('categoriaDetalle', fn ($categoria): array => $categoria->only(['id', 'nombre'])),
-            'laboratorio' => $this->whenLoaded('laboratorioDetalle', fn ($laboratorio): array => $laboratorio->only(['id', 'nombre'])),
-            'unidad' => $this->whenLoaded('unidadDetalle', fn ($unidad): array => $unidad->only(['id', 'cantidad_c','cantidad_v'])),
+            'laboratorio' => $this->whenLoaded('laboratorioDetalle', fn ($laboratorio): array => $laboratorio->only(['id', 'nombre', 'direccion'])),
+            'unidad' => $this->whenLoaded('unidadDetalle', fn ($unidad): array => $unidad->only(['id', 'abreviatura_c', 'cantidad_c', 'abreviatura_v', 'cantidad_v'])),
             'familia' => $this->whenLoaded('Familia', fn ($familia): array => [
                 'id' => $familia->id,
                 'descripcion' => $familia->descripcion,
+                'presentacion' => [
+                    'id' => $familia->Presentacion->id,
+                    'descripcion' => $familia->Presentacion->descripcion,
+                ],
+                'administracion' => [
+                    'id' => $familia->Administracion->id,
+                    'descripcion' => $familia->Administracion->descripcion,
+                ],
             ]),
             'estado' => $this->whenLoaded('estadoDetalle', fn ($estado): array => $estado->only(['id', 'descripcion'])),
+            'tiene_imagen' => (bool) $this->tiene_imagen,
+            'principios_activos' => PrincipalActivoResource::collection($this->whenLoaded('principiosActivos')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

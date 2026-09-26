@@ -134,7 +134,7 @@ abstract class Controller
     protected function logError(string $location ,\Throwable $e){
         Log::error("Error en: $location", [
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => 'trace disabled',
         ]);
     }
 

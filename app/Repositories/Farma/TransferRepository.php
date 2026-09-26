@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Farma;
 
+use App\DTO\Farma\PurchaseData;
 use App\Interfaces\Farma\TransferService;
-use App\DTOs\Farma\PurchaseData;
 use App\Models\Farma\Lote;
 use App\Models\Farma\Transferencia;
 use App\Models\Farma\TransferenciaEstado;

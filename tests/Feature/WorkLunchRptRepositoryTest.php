@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\DTOs\Reportes\WorkLunchReportFilterDTO;
+use App\DTO\Reportes\WorkLunchReportFilterDTO;
 use App\Interfaces\Config\UserRepositoryInterface;
 use App\Interfaces\Reportes\WorkLunchRptService;
 use App\Models\User;
 use App\Models\WorkLunch;
 use App\Repositories\Reportes\WorkLunchRptRepository;
 use App\Repositories\WorkLunch\WorkLunchRepository;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Mockery;
@@ -19,6 +19,7 @@ use Tests\TestCase;
 class WorkLunchRptRepositoryTest extends TestCase
 {
     private WorkLunchRptRepository $repository;
+
     private UserRepositoryInterface $userRepository;
 
     protected function setUp(): void

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Farma;
 
-use App\DTOs\Farma\PurchaseData;
+use App\DTO\Farma\PurchaseData;
 use App\Http\Controllers\API\Farma\Compras\PurchaseCatalogController;
 use App\Http\Requests\Farma\Compras\PurchaseRequest;
 use App\Http\Requests\Farma\Compras\PurchaseTransactionRequest;

@@ -17,9 +17,7 @@ final class BibliaController extends Controller
     public function random(): JsonResponse
     {
         try {
-          //  return $this->sendResponse($this->service->getRandom()->toArray(), 'ok');
-          //temp
-        return $this->sendResponse(['message' => 'Versículo bíblico aleatorio'], 'ok');
+            return $this->sendResponse($this->service->getRandom()->toArray(), 'ok');
         } catch (ConnectionException|RequestException|UnexpectedValueException $exception) {
             $this->logError(__METHOD__, $exception);
 

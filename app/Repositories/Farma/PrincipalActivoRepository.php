@@ -6,6 +6,7 @@ use App\DTO\Farma\PrincipalActivoData;
 use App\Interfaces\Farma\PrincipalActivoService;
 use App\Models\Farma\PrincipalActivo;
 use App\Repositories\Repository;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class PrincipalActivoRepository extends Repository implements PrincipalActivoService
 {
@@ -15,6 +16,15 @@ class PrincipalActivoRepository extends Repository implements PrincipalActivoSer
         $this->perPage = 30;
         $this->orderBy = ['id', 'DESC'];
         $this->defaultRelations = ['concentracionDetalle'];
+    }
+
+    public function paginate(?int $perPage = null): LengthAwarePaginator
+    {
+        if ($perPage !== null) {
+            $this->setPerPage($perPage);
+        }
+
+        return parent::paginate();
     }
 
     /** @param array<string, mixed> $data */

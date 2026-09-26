@@ -33,7 +33,7 @@ class WorkLunchRptHoursEndpointTest extends TestCase
             Mockery::mock(WorkLunchRptService::class),
         );
 
-        $this->getJson('/api/reportes/worklunch/horas_lab/7')
+        $this->getJson('/api/reportes/worklunch/horasLab/7')
             ->assertOk()
             ->assertExactJson([
                 'message' => 'ok',
@@ -65,7 +65,7 @@ class WorkLunchRptHoursEndpointTest extends TestCase
             Mockery::mock(WorkLunchRptService::class),
         );
 
-        $this->getJson('/api/reportes/worklunch/horas_lab/9')
+        $this->getJson('/api/reportes/worklunch/horasLab/9')
             ->assertOk()
             ->assertExactJson([
                 'message' => 'empty',

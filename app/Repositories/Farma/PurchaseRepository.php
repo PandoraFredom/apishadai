@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Farma;
 
+use App\DTO\Farma\PurchaseData;
 use App\Interfaces\Farma\PurchaseService;
-use App\DTOs\Farma\PurchaseData;
 use App\Models\Farma\Compra;
 use App\Models\Farma\CompraDetalle;
 use App\Models\Farma\CompraTipo;
@@ -22,7 +22,7 @@ class PurchaseRepository implements PurchaseService
         'usuarioDetalle:id,nombre,name',
         'kardexUsuarioDetalle:id,nombre,name',
         'detalles.productoDetalle.unidadDetalle',
-        'detalles.productoDetalle.familiaDetalle.presentacionDetalle',
+        'detalles.productoDetalle.Familia.Presentacion',
         'detalles.productoDetalle.laboratorioDetalle',
         'transacciones:id,compra,valor',
     ];
@@ -273,7 +273,7 @@ class PurchaseRepository implements PurchaseService
                     'tiene_imagen' => (bool) $provider->tiene_imagen,
                 ])->all(),
             'productos' => Producto::query()
-                ->with(['unidadDetalle', 'familiaDetalle.presentacionDetalle', 'laboratorioDetalle'])
+                ->with(['unidadDetalle', 'Familia.Presentacion', 'laboratorioDetalle'])
                 ->orderBy('descripcion')
                 ->get(['id', 'laboratorio', 'unidad', 'familia', 'descripcion'])
                 ->map(fn (Producto $product): array => [
@@ -281,7 +281,7 @@ class PurchaseRepository implements PurchaseService
                     'label' => (string) $product->descripcion,
                     'descripcion' => (string) $product->descripcion,
                     'laboratorio' => (string) ($product->laboratorioDetalle?->nombre ?? ''),
-                    'presentacion' => (string) ($product->familiaDetalle?->presentacionDetalle?->descripcion ?? ''),
+                    'presentacion' => (string) ($product->Familia?->Presentacion?->descripcion ?? ''),
                     'unidad_compra' => (int) ($product->unidadDetalle?->cantidad_c ?? 0),
                 ])->all(),
         ];

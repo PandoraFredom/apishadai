@@ -26,6 +26,14 @@ class WorkLunchRptResource extends JsonResource
             : max(0, $workSeconds - ($lunchSeconds ?? 0));
 
         return [
+            'id' => $this->id,
+            'usuario' => ['id' => $this->User?->id, 'nombre' => $this->User?->nombre],
+            'work_minutes' => $this->toMinutes($workSeconds),
+            'lunch_minutes' => $this->toMinutes($lunchSeconds),
+            'net_work_minutes' => $this->toMinutes($netWorkSeconds),
+            'work_duration' => $this->formatDuration($workSeconds),
+            'lunch_duration' => $this->formatDuration($lunchSeconds),
+            'net_work_duration' => $this->formatDuration($netWorkSeconds),
             'work_date' => $this->formatDate($this->work_date),
 
             'device' => [

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\DTOs\Reportes\WorkLunchReportFilterDTO;
+use App\DTO\Reportes\WorkLunchReportFilterDTO;
 use App\Interfaces\Reportes\WorkLunchRptService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;

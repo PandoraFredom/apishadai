@@ -22,16 +22,16 @@ class ProductData
     public static function fromValidated(array $validated): self
     {
         return new self(
-            categoria: (int) $validated['categoria'],
-            laboratorio: (int) $validated['laboratorio'],
-            unidad: (int) $validated['unidad'],
-            familia: (int) $validated['familia'],
+            categoria: (int) $validated['categoria']['id'],
+            laboratorio: (int) $validated['laboratorio']['id'],
+            unidad: (int) $validated['unidad']['id'],
+            familia: (int) $validated['familia']['id'],
             codigo: self::text((string) $validated['codigo']),
             codigobar: filled($validated['codigobar'] ?? null)
                 ? self::text((string) $validated['codigobar'])
                 : null,
             descripcion: self::text((string) $validated['descripcion']),
-            estado: (int) $validated['estado'],
+            estado: (int) $validated['estado']['id'],
             imagen: isset($validated['imagen']) ? trim((string) $validated['imagen']) : null,
             principiosActivos: array_key_exists('principios_activos', $validated)
                 ? array_values(array_unique(array_map(

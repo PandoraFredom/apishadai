@@ -28,7 +28,7 @@ class WorkLunchRptUsersEndpointTest extends TestCase
             ->andReturn($users);
         $this->app->instance(WorkLunchRptService::class, $service);
 
-        $this->getJson('/api/reportes/worklunch/list_usuarios')
+        $this->getJson('/api/reportes/worklunch/listUsuarios')
             ->assertOk()
             ->assertExactJson([
                 'message' => 'ok',

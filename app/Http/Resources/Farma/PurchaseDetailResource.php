@@ -35,7 +35,7 @@ class PurchaseDetailResource extends JsonResource
                 'id' => (int) $this->productoDetalle->id,
                 'descripcion' => (string) $this->productoDetalle->descripcion,
                 'laboratorio' => (string) ($this->productoDetalle->laboratorioDetalle?->nombre ?? ''),
-                'presentacion' => (string) ($this->productoDetalle->familiaDetalle?->presentacionDetalle?->descripcion ?? ''),
+                'presentacion' => (string) ($this->productoDetalle->Familia?->Presentacion?->descripcion ?? ''),
                 'unidad_compra' => (int) ($this->productoDetalle->unidadDetalle?->cantidad_c ?? 0),
             ]),
         ];

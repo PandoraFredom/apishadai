@@ -11,6 +11,7 @@ use App\Models\Farma\Producto;
 use App\Models\Farma\ProdUnidad;
 use App\Models\Laboratorio;
 use App\Models\Proveedores;
+use App\Models\Utils\Filter\FilterModel;
 use App\Repositories\Repository;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -87,6 +88,41 @@ class ProductRepository extends Repository implements ProductService
         }, 'paginate', $this->getEmptyPaginator());
     }
 
+    public function filterProducts(FilterModel $filterModel): LengthAwarePaginator
+    {
+        return $this->executeQuery(function () use ($filterModel) {
+            $query = $this->buildBaseQuery();
+
+            $textFilters = [];
+
+            foreach ($filterModel->getFilterItems() as $item) {
+                $key = $item->getKey();
+                $operator = match ($key) {
+                    'codigo', 'codigobar', 'descripcion' => 'like',
+                    'laboratorio', 'familia', 'categoria' => '=',
+                    default => throw new \InvalidArgumentException('Campo de filtro no permitido.'),
+                };
+
+                if ($operator === 'like') {
+                    $textFilters[$key] = $item->getValue();
+                } else {
+                    $query->where($key, '=', (int) $item->getValue());
+                }
+            }
+
+            // Los campos de texto son alternativas; los catálogos siguen siendo obligatorios.
+            if ($textFilters !== []) {
+                $query->where(static function (Builder $query) use ($textFilters): void {
+                    foreach ($textFilters as $key => $value) {
+                        $query->orWhere($key, 'like', $value);
+                    }
+                });
+            }
+
+            return $query->orderByDesc('id')->paginate($this->perPage);
+        }, 'filterProducts', $this->getEmptyPaginator());
+    }
+
     /** @param array<string, mixed> $data */
     public function create(array $data, array $principiosActivos = []): bool
     {
@@ -127,6 +163,36 @@ class ProductRepository extends Repository implements ProductService
         $image = $this->model->newQuery()->whereKey($id)->value('imagen');
 
         return is_string($image) && $image !== '' ? $image : null;
+    }
+
+    public function getActivePrinciples(int $id): ?Collection
+    {
+        $product = $this->model->newQuery()->find($id, ['id']);
+
+        return $product?->principiosActivos()
+            ->with('concentracionDetalle')
+            ->orderBy('principal_activos.nombre')
+            ->orderBy('principal_activos.id')
+            ->get();
+    }
+
+    public function addActivePrinciple(int $id, int $activeId): bool
+    {
+        $product = $this->model->newQuery()->find($id, ['id']);
+        if ($product === null) {
+            return false;
+        }
+
+        $product->principiosActivos()->attach($activeId);
+
+        return true;
+    }
+
+    public function removeActivePrinciple(int $id, int $activeId): bool
+    {
+        $product = $this->model->newQuery()->find($id, ['id']);
+
+        return $product !== null && $product->principiosActivos()->detach($activeId) > 0;
     }
 
     /** @return array<string, array<int, array<string, mixed>>> */

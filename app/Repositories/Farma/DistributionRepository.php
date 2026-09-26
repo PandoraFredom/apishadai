@@ -32,9 +32,9 @@ class DistributionRepository implements DistributionService
                     ->select(['id', 'codigo', 'descripcion', 'laboratorio', 'familia'])
                     ->selectRaw('imagen IS NOT NULL AS tiene_imagen'),
                 'productoDetalle.laboratorioDetalle:id,nombre',
-                'productoDetalle.familiaDetalle:id,presentacion,administracion',
-                'productoDetalle.familiaDetalle.presentacionDetalle:id,descripcion',
-                'productoDetalle.familiaDetalle.administracionDetalle:id,descripcion',
+                'productoDetalle.Familia:id,presentacion,administracion',
+                'productoDetalle.Familia.Presentacion:id,descripcion',
+                'productoDetalle.Familia.Administracion:id,descripcion',
             ])
             ->groupBy('lotes.producto');
 

@@ -10,9 +10,9 @@ class ConcentracionResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
-        $data = parent::toArray($request);
-        unset($data['pivot']);
-
-        return $data;
+        return [
+            'id' => $this->id,
+            'valor' => $this->valor,
+        ];
     }
 }

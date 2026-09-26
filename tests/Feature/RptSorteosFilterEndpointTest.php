@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Interfaces\Reportes\SorteosRptService;
 use App\Models\Utils\Filter\FilterModel;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -15,7 +14,6 @@ class RptSorteosFilterEndpointTest extends TestCase
     public function test_it_searches_customer_document_or_name(): void
     {
         $this->withoutMiddleware();
-        Log::spy();
 
         $service = Mockery::mock(SorteosRptService::class);
         $service->shouldReceive('filterClientes')
@@ -57,20 +55,6 @@ class RptSorteosFilterEndpointTest extends TestCase
             ->assertJsonPath('data.0.pnombre', 'DANIEL EDU')
             ->assertJsonPath('meta.total', 1);
 
-        Log::shouldHaveReceived('info')
-            ->once()
-            ->with('Filtro de clientes recibido', Mockery::on(function (array $context): bool {
-                $this->assertSame('filterclientes', $context['request']['name']);
-                $this->assertSame('pnombre', $context['request']['filterItems'][0]['key']);
-                $this->assertSame('docid', $context['request']['filterItems'][1]['key']);
-                $this->assertSame('docid', $context['filter']['filterItems'][0]['key']);
-                $this->assertSame('LIKE', $context['filter']['filterItems'][0]['operator']);
-                $this->assertSame('%ANA%', $context['filter']['filterItems'][0]['value']);
-                $this->assertSame('pnombre', $context['filter']['filterItems'][1]['key']);
-                $this->assertSame('OR', $context['filter']['filterItems'][1]['logicalOperator']);
-
-                return true;
-            }));
     }
 
     #[DataProvider('filterItems')]

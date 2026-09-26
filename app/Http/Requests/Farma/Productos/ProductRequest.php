@@ -5,6 +5,8 @@ namespace App\Http\Requests\Farma\Productos;
 use App\Http\Requests\BaseRequest;
 use Illuminate\Validation\Rule;
 
+use function is_string;
+
 class ProductRequest extends BaseRequest
 {
     protected function prepareForValidation(): void
@@ -14,6 +16,14 @@ class ProductRequest extends BaseRequest
         }
 
         $data = [];
+
+        // Admitir IDs escalares y objetos de los selectores sin omitir la validación.
+        foreach (['categoria', 'laboratorio', 'unidad', 'familia', 'estado'] as $field) {
+            $value = $this->input($field);
+            if (is_int($value) || is_string($value)) {
+                $data[$field] = ['id' => $value];
+            }
+        }
 
         foreach (['codigo', 'codigobar', 'descripcion'] as $field) {
             if (! $this->exists($field)) {
@@ -30,7 +40,6 @@ class ProductRequest extends BaseRequest
             $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $value) ?? '';
             $data[$field] = trim($value);
         }
-
         $this->merge($data);
     }
 
@@ -41,24 +50,26 @@ class ProductRequest extends BaseRequest
 
         return [
             ...($updating ? ['id' => ['required', 'integer', 'exists:productos,id']] : []),
-            'categoria' => ['required', 'integer', 'exists:prod_categorias,id'],
-            'laboratorio' => ['required', 'integer', 'exists:laboratorios,id'],
-            'unidad' => ['required', 'integer', 'exists:prod_unidades,id'],
-            'familia' => ['required', 'integer', 'exists:familia,id'],
+            'categoria.id' => ['required', 'integer', 'exists:prod_categorias,id'],
+            'laboratorio.id' => ['required', 'integer', 'exists:laboratorios,id'],
+            'unidad.id' => ['required', 'integer', 'exists:prod_unidades,id'],
+            'familia.id' => ['required', 'integer', 'exists:familia,id'],
             'codigo' => [
                 'required',
                 'string',
-                'max:100',
+                'max:20',
                 Rule::unique('productos', 'codigo')->ignore($id),
             ],
             'codigobar' => [
                 'nullable',
                 'string',
-                'max:150',
+                'max:50',
                 Rule::unique('productos', 'codigobar')->ignore($id),
             ],
-            'descripcion' => ['required', 'string', 'max:255'],
-            'estado' => ['required', 'integer', 'exists:prod_estado,id'],
+            'descripcion' => ['required', 'string', 'max:150'],
+            'estado.id' => ['required', 'integer', 'exists:prod_estado,id'],
+            'principios_activos' => ['sometimes', 'array'],
+            'principios_activos.*' => ['required', 'integer', 'distinct', 'exists:principal_activos,id'],
             'imagen' => [
                 'nullable',
                 'string',
@@ -69,8 +80,6 @@ class ProductRequest extends BaseRequest
                     }
                 },
             ],
-            'principios_activos' => ['sometimes', 'array'],
-            'principios_activos.*' => ['integer', 'distinct', 'exists:principal_activos,id'],
         ];
     }
 

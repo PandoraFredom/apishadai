@@ -6,15 +6,22 @@ use App\DTO\Farma\ProductData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Farma\Productos\FamiliaFilterRequest;
 use App\Http\Requests\Farma\Productos\LaboratorioFilterRequest;
+use App\Http\Requests\Farma\Productos\PrincipalActivoFilterRequest;
+use App\Http\Requests\Farma\Productos\PrincipalActivoListRequest;
+use App\Http\Requests\Farma\Productos\ProductFilterRequest;
+use App\Http\Requests\Farma\Productos\ProductPrincipleRemoveRequest;
+use App\Http\Requests\Farma\Productos\ProductPrincipleRequest;
 use App\Http\Requests\Farma\Productos\ProductRequest;
 use App\Http\Requests\Farma\Productos\ProdUnidadFilterRequest;
 use App\Http\Resources\Farma\FamiliaResource;
+use App\Http\Resources\Farma\PrincipalActivoResource;
 use App\Http\Resources\Farma\ProdCategoriaResource;
 use App\Http\Resources\Farma\ProdEstadoResource;
 use App\Http\Resources\Farma\ProductResource;
 use App\Http\Resources\Farma\ProdUnidadResource;
 use App\Http\Resources\Laboratorios\LaboratorioResource;
 use App\Interfaces\Farma\FamiliaService;
+use App\Interfaces\Farma\PrincipalActivoService;
 use App\Interfaces\Farma\ProdCategoriaService;
 use App\Interfaces\Farma\ProdEstadoService;
 use App\Interfaces\Farma\ProductService;
@@ -36,6 +43,7 @@ class ProductController extends Controller
         private readonly ProdUnidadService $unidades,
         private readonly ProdEstadoService $estados,
         private readonly ProdCategoriaService $categorias,
+        private readonly PrincipalActivoService $principios,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -61,11 +69,23 @@ class ProductController extends Controller
         );
     }
 
+    public function filterProductos(ProductFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            ProductResource::collection($this->repository->filterProducts($request->toFilterModel())),
+            'ok',
+            200,
+            true,
+        );
+    }
+
     public function laboratorios(): JsonResponse
     {
         return $this->sendResponse(
             LaboratorioResource::collection($this->laboratorios->paginate()),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -73,7 +93,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             LaboratorioResource::collection($this->laboratorios->filterAll($request->toFilterModel(), true)),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -81,7 +103,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             FamiliaResource::collection($this->familias->paginate()),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -89,7 +113,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             FamiliaResource::collection($this->familias->filterAll($request->toFilterModel(), true)),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -97,7 +123,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             ProdUnidadResource::collection($this->unidades->paginate()),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -105,7 +133,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             ProdUnidadResource::collection($this->unidades->filterAll($request->toFilterModel(), true)),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -113,7 +143,9 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             ProdEstadoResource::collection($this->estados->paginate()),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
     }
 
@@ -121,8 +153,64 @@ class ProductController extends Controller
     {
         return $this->sendResponse(
             ProdCategoriaResource::collection($this->categorias->paginate()),
-            'ok', 200, true,
+            'ok',
+            200,
+            true,
         );
+    }
+
+    public function todosPrincipiosActivos(PrincipalActivoListRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            PrincipalActivoResource::collection($this->principios->paginate(15)),
+            'ok',
+            200,
+            true,
+        );
+    }
+
+    public function filterPrincipiosActivos(PrincipalActivoFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            PrincipalActivoResource::collection($this->principios->filterAll($request->toFilterModel())),
+            'ok',
+        );
+    }
+
+    public function principiosActivos(int $id): JsonResponse
+    {
+        $principles = $this->repository->getActivePrinciples($id);
+        if ($principles === null) {
+            return $this->sendError('Producto no encontrado.', null, 404);
+        }
+
+        return $this->sendResponse(PrincipalActivoResource::collection($principles), 'ok');
+    }
+
+    public function agregarPrincipioActivo(ProductPrincipleRequest $request, int $id): JsonResponse
+    {
+        try {
+            return $this->repository->addActivePrinciple($id, (int) $request->validated('pactivo'))
+                ? $this->sendResponse(true, 'Principio activo asociado correctamente.', 201)
+                : $this->sendError('Producto no encontrado.', null, 404);
+        } catch (Throwable $throwable) {
+            $this->logError('ProductController agregarPrincipioActivo', $throwable);
+
+            return $this->databaseError($throwable, 'No se pudo asociar el principio activo.');
+        }
+    }
+
+    public function eliminarPrincipioActivo(ProductPrincipleRemoveRequest $request, int $id): JsonResponse
+    {
+        try {
+            return $this->repository->removeActivePrinciple($id, (int) $request->validated('pactivo'))
+                ? $this->sendResponse(true, 'Principio activo eliminado del producto correctamente.')
+                : $this->sendError('Asociación no encontrada.', null, 404);
+        } catch (Throwable $throwable) {
+            $this->logError('ProductController eliminarPrincipioActivo', $throwable);
+
+            return $this->databaseError($throwable, 'No se pudo eliminar el principio activo del producto.');
+        }
     }
 
     public function store(ProductRequest $request): JsonResponse

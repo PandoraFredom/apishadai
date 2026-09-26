@@ -4,9 +4,9 @@ namespace App\Utils\Repositories;
 
 use App\Utils\Services\Base64UtilityService;
 
+use function imagedestroy;
 use function in_array;
 use function is_string;
-use function Safe\imagedestroy;
 use function strlen;
 
 class Base64UtilityRepository implements Base64UtilityService

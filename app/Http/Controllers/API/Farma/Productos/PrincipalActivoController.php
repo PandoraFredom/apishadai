@@ -4,8 +4,12 @@ namespace App\Http\Controllers\API\Farma\Productos;
 
 use App\DTO\Farma\PrincipalActivoData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Farma\Productos\ConcentracionFilterRequest;
+use App\Http\Requests\Farma\Productos\PrincipalActivoFilterRequest;
 use App\Http\Requests\Farma\Productos\PrincipalActivoRequest;
+use App\Http\Resources\Farma\ConcentracionResource;
 use App\Http\Resources\Farma\PrincipalActivoResource;
+use App\Interfaces\Farma\ConcentracionService;
 use App\Interfaces\Farma\PrincipalActivoService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +17,10 @@ use Throwable;
 
 class PrincipalActivoController extends Controller
 {
-    public function __construct(private readonly PrincipalActivoService $repository) {}
+    public function __construct(
+        private readonly PrincipalActivoService $repository,
+        private readonly ConcentracionService $concentraciones,
+    ) {}
 
     public function index(): JsonResponse
     {
@@ -22,6 +29,32 @@ class PrincipalActivoController extends Controller
             'ok',
             200,
             true,
+        );
+    }
+
+    public function concentraciones(): JsonResponse
+    {
+        return $this->sendResponse(
+            ConcentracionResource::collection($this->concentraciones->paginate()),
+            'ok',
+            200,
+            true,
+        );
+    }
+
+    public function filterPrincipiosActivos(PrincipalActivoFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            PrincipalActivoResource::collection($this->repository->filterAll($request->toFilterModel())),
+            'ok',
+        );
+    }
+
+    public function filterConcentraciones(ConcentracionFilterRequest $request): JsonResponse
+    {
+        return $this->sendResponse(
+            ConcentracionResource::collection($this->concentraciones->filterAll($request->toFilterModel())),
+            'ok',
         );
     }
 

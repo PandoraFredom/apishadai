@@ -2,18 +2,19 @@
 
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_missing_api_routes_return_not_found(): void
     {
-        $response = $this->get('/');
+        $this->withoutMiddleware();
+        $this->getJson('/api/ruta-inexistente')->assertNotFound()->assertJsonPath('code', 404);
+    }
 
-        $response->assertStatus(200);
+    public function test_unsupported_methods_do_not_expire_the_session(): void
+    {
+        $this->withoutMiddleware();
+        $this->getJson('/api/auth/session/login')->assertStatus(405)->assertJsonPath('code', 405);
     }
 }

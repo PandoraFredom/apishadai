@@ -109,10 +109,16 @@ class ProductDomainTest extends TestCase
 
         $this->assertSame($product->categoria, $payload['categoria_id']);
         $this->assertSame(['id' => $product->categoria, 'nombre' => 'Categoría prueba'], $payload['categoria']);
-        $this->assertSame(['id' => $product->laboratorio, 'direccion' => 'Tegucigalpa'], $payload['laboratorio']);
-        $this->assertSame(['id' => $product->unidad, 'cantidad_v' => 20], $payload['unidad']);
+        $this->assertSame($product->laboratorio, $payload['laboratorio']['id']);
+        $this->assertSame('Tegucigalpa', $payload['laboratorio']['direccion']);
+        $this->assertArrayHasKey('nombre', $payload['laboratorio']);
+        $this->assertSame($product->unidad, $payload['unidad']['id']);
+        $this->assertSame(20, $payload['unidad']['cantidad_v']);
+        $this->assertArrayHasKey('abreviatura_c', $payload['unidad']);
+        $this->assertTrue($payload['tiene_imagen']);
         $this->assertSame([
             'id' => $product->familia,
+            'descripcion' => $product->Familia->descripcion,
             'presentacion' => ['id' => $product->Familia->Presentacion->id, 'descripcion' => 'Tableta'],
             'administracion' => ['id' => $product->Familia->Administracion->id, 'descripcion' => 'Oral'],
         ], $payload['familia']);
@@ -478,7 +484,7 @@ class ProductDomainTest extends TestCase
         $this->withoutMiddleware();
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with($route->uri(), 'api/farma/productos/'));
-        $this->assertCount(61, $routes);
+        $this->assertCount(70, $routes);
 
         foreach ($routes as $route) {
             $this->assertStringNotContainsString('{catalogo}', $route->uri());
@@ -496,7 +502,7 @@ class ProductDomainTest extends TestCase
         }
 
         $this->assertCount(10, $routes->filter(fn ($route) => in_array('PUT', $route->methods(), true)));
-        foreach (['listar', 'laboratorios', 'familias', 'unidades', 'estados', 'categorias', 'filter_laboratorios', 'filter_familias', 'filter_unidades', 'buscar/1', 'imagen/1', 'activos/listar'] as $path) {
+        foreach (['listar', 'filter_productos', 'laboratorios', 'familias', 'unidades', 'estados', 'categorias', 'filter_laboratorios', 'filter_familias', 'filter_unidades', 'buscar/1', 'imagen/1', 'activos/listar'] as $path) {
             $controller = str_starts_with($path, 'activos/') ? 'ProductActiveController' : 'ProductController';
             $base = $this->productResourceBase($controller);
             $path = str_replace('activos/', '', $path);
@@ -681,6 +687,83 @@ class ProductDomainTest extends TestCase
         $this->assertSame(0, DB::transactionLevel());
     }
 
+    #[DataProvider('nestedProductWriteMethods')]
+    public function test_product_writes_accept_nested_relation_ids(string $method): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        $category = ProdCategoria::query()->create(['nombre' => 'Otra categoría']);
+        $base = $this->productResourceBase('ProductController');
+        $expected = $product->only(['categoria', 'laboratorio', 'unidad', 'familia', 'codigo', 'codigobar', 'descripcion', 'estado']);
+        $expected['categoria'] = $category->id;
+        $expected['codigo'] = $method === 'POST' ? 'NESTED-CREATE' : $product->codigo;
+        $expected['codigobar'] = null;
+        $expected['descripcion'] = 'Producto anidado';
+        $input = $expected;
+        foreach (['categoria', 'laboratorio', 'unidad', 'familia', 'estado'] as $field) {
+            $input[$field] = ['id' => $expected[$field], 'nombre' => 'Dato de presentación'];
+        }
+        $input['descripcion'] = ' <b>Producto anidado</b> ';
+        $input['codigobar'] = ' ';
+        $input['id'] = 999999;
+        $path = $method === 'POST' ? $base.'/crear' : $this->updatePath($base, $product->id);
+
+        $this->json($method, $path, $input)
+            ->assertStatus($method === 'POST' ? 201 : 200)
+            ->assertJsonPath('data', true);
+
+        $this->assertDatabaseHas('productos', $method === 'POST' ? $expected : ['id' => $product->id, ...$expected]);
+        $this->assertDatabaseCount('productos', $method === 'POST' ? 2 : 1);
+    }
+
+    public static function nestedProductWriteMethods(): array
+    {
+        return ['crear' => ['POST'], 'actualizar' => ['PUT']];
+    }
+
+    public function test_product_http_update_validates_syncs_and_clears_active_principles(): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        $principle = PrincipalActivo::query()->create(['nombre' => 'Nuevo principio', 'concentracion' => 1]);
+        $base = $this->productResourceBase('ProductController');
+        $path = $this->updatePath($base, $product->id);
+        $input = $product->only(['categoria', 'laboratorio', 'unidad', 'familia', 'codigo', 'codigobar', 'descripcion', 'estado']);
+
+        $this->putJson($path, [...$input, 'principios_activos' => [$principle->id]])->assertOk();
+        $this->assertSame([$principle->id], $product->fresh()->principiosActivos->pluck('id')->all());
+        $this->putJson($path, $input)->assertOk();
+        $this->assertSame([$principle->id], $product->fresh()->principiosActivos->pluck('id')->all());
+        $this->putJson($path, [...$input, 'principios_activos' => [999999]])
+            ->assertUnprocessable()->assertJsonStructure(['data' => ['errors' => ['principios_activos.0']]]);
+        $this->assertSame([$principle->id], $product->fresh()->principiosActivos->pluck('id')->all());
+        $this->putJson($path, [...$input, 'principios_activos' => []])->assertOk();
+        $this->assertSame([], $product->fresh()->principiosActivos->pluck('id')->all());
+    }
+
+    public function test_product_rejects_invalid_nested_relations_before_writing(): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        $base = $this->productResourceBase('ProductController');
+        $original = $product->fresh()->getAttributes();
+        $input = $product->only(['codigo', 'codigobar', 'descripcion']);
+        foreach (['categoria', 'laboratorio', 'unidad', 'familia', 'estado'] as $field) {
+            $input[$field] = ['id' => $product->getAttribute($field)];
+        }
+
+        foreach (['categoria', 'laboratorio', 'unidad', 'familia', 'estado'] as $field) {
+            foreach ([[], ['id' => 999999]] as $invalid) {
+                $this->putJson($this->updatePath($base, $product->id), array_replace($input, [$field => $invalid]))
+                    ->assertUnprocessable()
+                    ->assertJsonPath('code', 422);
+            }
+        }
+
+        $this->assertDatabaseCount('productos', 1);
+        $this->assertSame($original, $product->fresh()->getAttributes());
+    }
+
     public function test_product_update_uses_route_id_and_accepts_body_without_id(): void
     {
         $this->withoutMiddleware();
@@ -854,6 +937,291 @@ class ProductDomainTest extends TestCase
         ]);
 
         $this->assertSame(0, $repository->paginate(provider: $otherProvider)->total());
+    }
+
+    public function test_product_filter_searches_text_and_combines_catalog_ids(): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        $otherLaboratory = Laboratorio::query()->create(['nombre' => 'Otro fabricante']);
+        $otherCategory = ProdCategoria::query()->create(['nombre' => 'Otra categoría']);
+        $otherFamily = Familia::query()->create([
+            'presentacion' => 1,
+            'administracion' => 1,
+            'descripcion' => 'Vitaminas',
+        ]);
+        $other = $product->replicate();
+        $other->fill([
+            'codigo' => 'XYZ-999',
+            'codigobar' => '890123456789',
+            'descripcion' => 'Suplemento diario',
+            'laboratorio' => $otherLaboratory->id,
+            'familia' => $otherFamily->id,
+            'categoria' => $otherCategory->id,
+        ])->save();
+        $base = $this->productResourceBase('ProductController').'/filter_productos';
+        $items = [];
+
+        foreach ([
+            'codigo' => 'RD-00',
+            'codigobar' => '000000',
+            'descripcion' => 'de prueba',
+            'laboratorio' => $product->laboratorio,
+            'familia' => $product->familia,
+            'categoria' => $product->categoria,
+        ] as $key => $value) {
+            $item = ['key' => $key, 'value' => $value];
+            $items[] = $item;
+            $response = $this->getJson($base.'?'.http_build_query(['filterItems' => [$item]]))
+                ->assertOk()->assertJsonPath('meta.total', 1)
+                ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $product->id);
+            $this->assertArrayNotHasKey('imagen', $response->json('data.0'));
+            $this->assertArrayNotHasKey('imagen', $response->json('data.0.laboratorio'));
+            $response->assertJsonPath('data.0.laboratorio.nombre', 'Laboratorio prueba')
+                ->assertJsonPath('data.0.familia.descripcion', 'Analgésico');
+        }
+
+        // El cliente también envía FilterModel en el cuerpo JSON de GET.
+        $this->json('GET', $base, ['filterItems' => $items])
+            ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $product->id);
+        foreach ([3 => $otherLaboratory->id, 4 => $otherFamily->id, 5 => $otherCategory->id] as $index => $id) {
+            $mismatched = $items;
+            $mismatched[$index]['value'] = $id;
+            $this->json('GET', $base, ['filterItems' => $mismatched])
+                ->assertOk()->assertJsonPath('meta.total', 0)->assertJsonPath('data', []);
+        }
+    }
+
+    public function test_product_filter_matches_any_text_field_and_keeps_catalog_constraints(): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        $base = $this->productResourceBase('ProductController').'/filter_productos';
+        $catalogItems = [];
+        foreach (['laboratorio', 'familia', 'categoria'] as $key) {
+            $catalogItems[] = ['key' => $key, 'value' => $product->{$key}];
+        }
+
+        // Cada texto coincide exclusivamente con uno de los tres campos.
+        foreach (['RD-00', '000000', 'de prueba'] as $text) {
+            $textItems = [];
+            foreach (['codigo', 'codigobar', 'descripcion'] as $key) {
+                $textItems[] = ['key' => $key, 'value' => $text];
+            }
+            $this->json('GET', $base, ['filterItems' => $textItems])
+                ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $product->id);
+            $this->json('GET', $base, ['filterItems' => [...$textItems, ...$catalogItems]])
+                ->assertOk()->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $product->id);
+
+            foreach (array_keys($catalogItems) as $index) {
+                $mismatched = $catalogItems;
+                $mismatched[$index]['value'] = 999999;
+                $this->json('GET', $base, ['filterItems' => [...$textItems, ...$mismatched]])
+                    ->assertOk()->assertJsonPath('meta.total', 0)->assertJsonPath('data', []);
+            }
+        }
+
+        $this->json('GET', $base, ['filterItems' => [
+            ['key' => 'codigo', 'value' => 'Inexistente'],
+            ['key' => 'codigobar', 'value' => 'Inexistente'],
+            ['key' => 'descripcion', 'value' => 'Inexistente'],
+            ...$catalogItems,
+        ]])->assertOk()->assertJsonPath('meta.total', 0)->assertJsonPath('data', []);
+    }
+
+    public function test_product_filter_paginates_matching_products(): void
+    {
+        $this->withoutMiddleware();
+        [$product] = $this->seedProductDomain();
+        for ($index = 1; $index <= 30; $index++) {
+            $copy = $product->replicate();
+            $copy->fill(['codigo' => 'COPY-'.$index, 'codigobar' => null])->save();
+        }
+        $base = $this->productResourceBase('ProductController').'/filter_productos';
+        $filter = ['filterItems' => [['key' => 'laboratorio', 'value' => $product->laboratorio]]];
+
+        $first = $this->getJson($base.'?'.http_build_query($filter))
+            ->assertOk()->assertJsonPath('meta.total', 31)->assertJsonPath('meta.last_page', 2)
+            ->assertJsonPath('meta.current_page', 1)->assertJsonCount(30, 'data');
+        $second = $this->getJson($base.'?'.http_build_query([...$filter, 'page' => 2]))
+            ->assertOk()->assertJsonPath('meta.total', 31)->assertJsonPath('meta.current_page', 2)
+            ->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $product->id);
+        $this->assertSame([], array_intersect(array_column($first->json('data'), 'id'), array_column($second->json('data'), 'id')));
+    }
+
+    public function test_product_filter_rejects_invalid_fields_operators_and_pages(): void
+    {
+        $this->withoutMiddleware();
+        $base = $this->productResourceBase('ProductController').'/filter_productos';
+        foreach ([
+            [],
+            [['key' => 'id', 'value' => '1']],
+            [['key' => 'descripcion', 'value' => '']],
+            [['key' => 'codigo', 'value' => 'PRD', 'operator' => '=']],
+            [['key' => 'familia', 'value' => 1, 'logicalOperator' => 'OR']],
+            [['key' => 'codigo', 'value' => 'PRD'], ['key' => 'codigo', 'value' => 'XYZ']],
+        ] as $items) {
+            $this->json('GET', $base, ['filterItems' => $items])
+                ->assertUnprocessable()->assertJsonPath('code', 422);
+        }
+        foreach (['laboratorio', 'familia', 'categoria'] as $key) {
+            foreach (['nombre', '1%', '1.5', 1.5, 0, -1] as $value) {
+                $this->json('GET', $base, ['filterItems' => [['key' => $key, 'value' => $value]]])
+                    ->assertUnprocessable()->assertJsonPath('code', 422);
+            }
+        }
+        foreach ([0, -1, 'abc', 1.5] as $page) {
+            $this->getJson($base.'?'.http_build_query([
+                'filterItems' => [['key' => 'codigo', 'value' => 'PRD']],
+                'page' => $page,
+            ]))->assertUnprocessable()->assertJsonPath('code', 422);
+        }
+    }
+
+    public function test_product_filters_active_principles_by_partial_name_without_pagination(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        for ($index = 1; $index <= 35; $index++) {
+            PrincipalActivo::query()->create(['nombre' => 'Paracetamol '.$index, 'concentracion' => 1]);
+        }
+        PrincipalActivo::query()->create(['nombre' => 'Cafeína', 'concentracion' => 1]);
+        $base = $this->productResourceBase('ProductController').'/filter_principios_activos';
+
+        $response = $this->getJson($base.'?'.http_build_query([
+            'name' => 'principios_activos',
+            'filterItems' => [['key' => 'nombre', 'value' => 'racetam']],
+        ]))->assertOk()->assertJsonCount(36, 'data');
+        foreach ($response->json('data') as $principle) {
+            $this->assertStringContainsString('Paracetamol', $principle['nombre']);
+            $this->assertSame('500 mg', $principle['concentracion_detalle']['valor']);
+            $this->assertArrayNotHasKey('pivot', $principle);
+        }
+        $this->getJson($base.'?'.http_build_query([
+            'filterItems' => [['key' => 'nombre', 'value' => 'Inexistente']],
+        ]))->assertOk()->assertJsonPath('data', []);
+        // ShApi envia FilterModel como cuerpo JSON, incluso en solicitudes GET.
+        $this->json('GET', $base, [
+            'name' => 'principios_activos',
+            'filterItems' => [['key' => 'nombre', 'value' => 'Cafe']],
+        ])->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.nombre', 'Cafeína');
+        $this->assertDatabaseCount('prod_activo', 1);
+    }
+
+    public function test_product_active_principle_filter_rejects_invalid_fields_and_operators(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        $base = $this->productResourceBase('ProductController').'/filter_principios_activos';
+        foreach ([
+            [],
+            [['key' => 'id', 'value' => '1']],
+            [['key' => 'concentracion', 'value' => '1']],
+            [['key' => 'nombre', 'value' => '']],
+            [['key' => 'nombre', 'value' => 'Para', 'operator' => '=']],
+            [['key' => 'nombre', 'value' => 'Para', 'logicalOperator' => 'OR']],
+        ] as $items) {
+            $this->json('GET', $base, ['filterItems' => $items])
+                ->assertUnprocessable()->assertJsonPath('code', 422);
+        }
+        $this->assertDatabaseCount('principal_activos', 1);
+    }
+
+    public function test_product_lists_all_active_principles_in_pages_of_fifteen(): void
+    {
+        $this->withoutMiddleware();
+        $base = $this->productResourceBase('ProductController').'/principios_activos';
+        $this->getJson($base)->assertOk()->assertJsonPath('data', [])->assertJsonPath('meta.total', 0);
+        [, $association] = $this->seedProductDomain();
+        for ($index = 1; $index <= 35; $index++) {
+            PrincipalActivo::query()->create(['nombre' => 'Principio '.$index, 'concentracion' => 1]);
+        }
+
+        $this->getJson($base)->assertOk()->assertJsonCount(15, 'data')->assertJsonPath('meta.current_page', 1);
+        $ids = [];
+        foreach ([1 => 15, 2 => 15, 3 => 6, 4 => 0] as $page => $count) {
+            $response = $this->getJson($base.'?page='.$page.'&per_page=100')->assertOk()
+                ->assertJsonCount($count, 'data')->assertJsonPath('meta.total', 36)
+                ->assertJsonPath('meta.current_page', $page)->assertJsonPath('meta.last_page', 3);
+            foreach ($response->json('data') as $principle) {
+                $ids[] = $principle['id'];
+                $this->assertSame('500 mg', $principle['concentracion_detalle']['valor']);
+                $this->assertArrayNotHasKey('pivot', $principle);
+            }
+        }
+        $this->assertCount(36, array_unique($ids));
+        $this->assertContains($association->pactivo, $ids);
+        foreach (['0', '-1', 'invalid'] as $page) {
+            $this->getJson($base.'?page='.$page)->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('prod_activo', 1);
+    }
+
+    public function test_product_active_principles_list_only_its_associations_with_concentration(): void
+    {
+        $this->withoutMiddleware();
+        [$product, $association] = $this->seedProductDomain();
+        PrincipalActivo::query()->create(['nombre' => 'Sin asociar', 'concentracion' => 1]);
+        $base = $this->productResourceBase('ProductController').'/principios_activos';
+
+        $response = $this->getJson($base.'/'.$product->id)->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $association->pactivo)
+            ->assertJsonPath('data.0.concentracion_detalle.valor', '500 mg');
+        $this->assertArrayNotHasKey('pivot', $response->json('data.0'));
+        $this->getJson($base.'/999999')->assertNotFound();
+        $this->getJson($base.'/invalid')->assertNotFound();
+        $product->principiosActivos()->detach();
+        $this->getJson($base.'/'.$product->id)->assertOk()->assertJsonPath('data', []);
+    }
+
+    public function test_product_active_principles_add_validates_and_preserves_existing_associations(): void
+    {
+        $this->withoutMiddleware();
+        [$product, $association] = $this->seedProductDomain();
+        $principle = PrincipalActivo::query()->create(['nombre' => 'Cafeína', 'concentracion' => 1]);
+        $base = $this->productResourceBase('ProductController').'/crear_principios_activos';
+
+        $this->postJson($base.'/'.$product->id, ['pactivo' => $principle->id, 'producto' => 999999])
+            ->assertCreated()->assertJsonPath('data', true);
+        $this->assertDatabaseHas('prod_activo', ['producto' => $product->id, 'pactivo' => $association->pactivo]);
+        $this->assertDatabaseHas('prod_activo', ['producto' => $product->id, 'pactivo' => $principle->id]);
+        foreach ([[], ['pactivo' => 999999], ['pactivo' => 'invalid'], ['pactivo' => $principle->id]] as $input) {
+            $this->postJson($base.'/'.$product->id, $input)->assertUnprocessable();
+        }
+        $this->postJson($base.'/999999', ['pactivo' => $principle->id])->assertNotFound();
+        $this->assertDatabaseCount('prod_activo', 2);
+    }
+
+    public function test_product_active_principles_remove_only_the_requested_product_relation(): void
+    {
+        $this->withoutMiddleware();
+        [$product, $association] = $this->seedProductDomain();
+        $otherProduct = $product->replicate();
+        $otherProduct->codigo = 'OTRO';
+        $otherProduct->codigobar = null;
+        $otherProduct->save();
+        $otherProduct->principiosActivos()->attach($association->pactivo);
+        $secondPrinciple = PrincipalActivo::query()->create(['nombre' => 'Cafeína', 'concentracion' => 1]);
+        $product->principiosActivos()->attach($secondPrinciple->id);
+        $base = $this->productResourceBase('ProductController').'/remove_principios_activos';
+        $path = $base.'/'.$product->id;
+        $body = ['pactivo' => $association->pactivo, 'producto' => $otherProduct->id];
+
+        foreach ([[], ['pactivo' => 'invalid'], ['pactivo' => 0], ['pactivo' => -1], ['pactivo' => []]] as $invalidBody) {
+            $this->deleteJson($path, $invalidBody)->assertUnprocessable();
+            $this->assertDatabaseCount('prod_activo', 3);
+        }
+        $this->deleteJson($path, $body)->assertOk()->assertJsonPath('data', true);
+        $this->assertDatabaseMissing('prod_activo', ['producto' => $product->id, 'pactivo' => $association->pactivo]);
+        $this->assertDatabaseHas('principal_activos', ['id' => $association->pactivo]);
+        $this->assertDatabaseHas('prod_activo', ['producto' => $otherProduct->id, 'pactivo' => $association->pactivo]);
+        $this->assertDatabaseHas('prod_activo', ['producto' => $product->id, 'pactivo' => $secondPrinciple->id]);
+        $this->deleteJson($path, $body)->assertNotFound();
+        $this->deleteJson($base.'/999999', $body)->assertNotFound();
+        $this->deleteJson($base.'/invalid', $body)->assertNotFound();
+        $this->deleteJson($path, ['pactivo' => 999999])->assertNotFound();
+        $this->deleteJson($path.'/'.$association->pactivo)->assertNotFound();
     }
 
     /** @return array{Producto, ProdActivo} */

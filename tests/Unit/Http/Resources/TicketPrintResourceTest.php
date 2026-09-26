@@ -43,13 +43,16 @@ class TicketPrintResourceTest extends TestCase
 
         $this->assertSame(108, $data['id']);
         $this->assertSame(23, $data['numero']);
+        $this->assertSame(15, $data['promocion_id']);
+        $this->assertSame(32, $data['cliente_id']);
+        $this->assertSame(7, $data['stock_id']);
         $this->assertSame(50.0, $data['valor']);
         $this->assertSame(1, $data['template_version']);
-        $this->assertSame('SORTEO AMISTOSO', $data['promocion']['nombre']);
-        $this->assertSame('GESTOR SAGASTUME', $data['cliente']['nombre']);
-        $this->assertSame('0801199217327', $data['cliente']['identidad']);
-        $this->assertSame('33250022', $data['cliente']['telefono']);
-        $this->assertSame('STOCK DEV', $data['stock']['descripcion']);
+        $this->assertSame('SORTEO AMISTOSO', $data['promocion']);
+        $this->assertSame('GESTOR SAGASTUME', $data['cliente_n']);
+        $this->assertSame('0801199217327', $data['cliente_i']);
+        $this->assertSame('33250022', $data['cliente_t']);
+        $this->assertSame('STOCK DEV', $data['stock']);
         $this->assertArrayNotHasKey('base64', $data);
         $this->assertArrayNotHasKey('mime', $data);
         $this->assertArrayNotHasKey('print_html_base64', $data);
