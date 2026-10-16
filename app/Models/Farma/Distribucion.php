@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Distribucion extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'distribucion';
 
     protected $fillable = ['lote', 'precio', 'isv', 'dto1', 'dto2', 'dto3', 'dto4'];

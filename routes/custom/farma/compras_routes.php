@@ -16,6 +16,8 @@ Route::prefix('compras')->group(function (): void {
     Route::delete('/borrador/{purchase}/detalle/{detail}', [PurchaseController::class, 'deleteDetail']);
     Route::post('/finalizar/{id}', [PurchaseController::class, 'finalize']);
     Route::get('/opciones', [PurchaseController::class, 'options']);
+    Route::get('/ultimos-costos', [PurchaseController::class, 'latestCosts']);
+    Route::get('/proveedores', [PurchaseController::class, 'providers']);
     Route::get('/proveedor-imagen/{id}', [PurchaseController::class, 'providerImage']);
     Route::get('/reporte/{id}', [PurchaseController::class, 'report']);
     Route::post('/kardex/{id}', [PurchaseController::class, 'sendToKardex']);

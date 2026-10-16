@@ -12,3 +12,5 @@ Route::prefix('transferencias')->group(function (): void {
     Route::post('/recibir/{id}', [TransferController::class, 'receive'])->whereNumber('id');
     Route::get('/buscar/{id}', [TransferController::class, 'show'])->whereNumber('id');
 });
+
+require __DIR__.'/transfer_types_routes.php';

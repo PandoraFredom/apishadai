@@ -9,6 +9,7 @@ use App\Http\Requests\Farma\Productos\LaboratorioFilterRequest;
 use App\Http\Requests\Farma\Productos\PrincipalActivoFilterRequest;
 use App\Http\Requests\Farma\Productos\PrincipalActivoListRequest;
 use App\Http\Requests\Farma\Productos\ProductFilterRequest;
+use App\Http\Requests\Farma\Productos\ProductParentLookupRequest;
 use App\Http\Requests\Farma\Productos\ProductPrincipleRemoveRequest;
 use App\Http\Requests\Farma\Productos\ProductPrincipleRequest;
 use App\Http\Requests\Farma\Productos\ProductRequest;
@@ -27,10 +28,12 @@ use App\Interfaces\Farma\ProdEstadoService;
 use App\Interfaces\Farma\ProductService;
 use App\Interfaces\Farma\ProdUnidadService;
 use App\Interfaces\Laboratorios\LaboratorioService;
+use App\Models\Farma\Producto;
 use App\Utils\Services\Base64UtilityService;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class ProductController extends Controller
@@ -45,6 +48,28 @@ class ProductController extends Controller
         private readonly ProdCategoriaService $categorias,
         private readonly PrincipalActivoService $principios,
     ) {}
+
+    public function padres(ProductParentLookupRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $search = trim($data['search'] ?? '');
+        $query = Producto::query()->select(['id', 'codigo', 'descripcion']);
+        if ($search !== '') {
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+            $query->where(function ($q) use ($pattern): void {
+                $q->whereRaw("codigo LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereRaw("descripcion LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereRaw("codigobar LIKE ? ESCAPE '!'", [$pattern]);
+            });
+        }
+        if (isset($data['exclude'])) {
+            $query->where('id', '<>', $data['exclude']);
+        }
+        $page = $query->orderBy('descripcion')->orderBy('id')->paginate(30);
+        $page->through(fn ($product): array => ['id' => (string) $product->id, 'codigo' => $product->codigo, 'descripcion' => $product->descripcion]);
+
+        return $this->sendResponse($page, 'ok', 200, true);
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -79,10 +104,10 @@ class ProductController extends Controller
         );
     }
 
-    public function laboratorios(): JsonResponse
+    public function laboratorios(Request $request): JsonResponse
     {
         return $this->sendResponse(
-            LaboratorioResource::collection($this->laboratorios->paginate()),
+            LaboratorioResource::collection($request->boolean('all') ? $this->laboratorios->getAll() : $this->laboratorios->paginate()),
             'ok',
             200,
             true,
@@ -99,10 +124,10 @@ class ProductController extends Controller
         );
     }
 
-    public function familias(): JsonResponse
+    public function familias(Request $request): JsonResponse
     {
         return $this->sendResponse(
-            FamiliaResource::collection($this->familias->paginate()),
+            FamiliaResource::collection($request->boolean('all') ? $this->familias->getAll() : $this->familias->paginate()),
             'ok',
             200,
             true,
@@ -119,10 +144,10 @@ class ProductController extends Controller
         );
     }
 
-    public function unidades(): JsonResponse
+    public function unidades(Request $request): JsonResponse
     {
         return $this->sendResponse(
-            ProdUnidadResource::collection($this->unidades->paginate()),
+            ProdUnidadResource::collection($request->boolean('all') ? $this->unidades->getAll() : $this->unidades->paginate()),
             'ok',
             200,
             true,
@@ -139,20 +164,20 @@ class ProductController extends Controller
         );
     }
 
-    public function estados(): JsonResponse
+    public function estados(Request $request): JsonResponse
     {
         return $this->sendResponse(
-            ProdEstadoResource::collection($this->estados->paginate()),
+            ProdEstadoResource::collection($request->boolean('all') ? $this->estados->getAll() : $this->estados->paginate()),
             'ok',
             200,
             true,
         );
     }
 
-    public function categorias(): JsonResponse
+    public function categorias(Request $request): JsonResponse
     {
         return $this->sendResponse(
-            ProdCategoriaResource::collection($this->categorias->paginate()),
+            ProdCategoriaResource::collection($request->boolean('all') ? $this->categorias->getAll() : $this->categorias->paginate()),
             'ok',
             200,
             true,
@@ -162,7 +187,7 @@ class ProductController extends Controller
     public function todosPrincipiosActivos(PrincipalActivoListRequest $request): JsonResponse
     {
         return $this->sendResponse(
-            PrincipalActivoResource::collection($this->principios->paginate(15)),
+            PrincipalActivoResource::collection($request->boolean('all') ? $this->principios->getAll() : $this->principios->paginate(15)),
             'ok',
             200,
             true,
@@ -331,6 +356,9 @@ class ProductController extends Controller
 
     private function databaseError(Throwable $throwable, string $fallback): JsonResponse
     {
+        if ($throwable instanceof ValidationException) {
+            return response()->json(['code' => 422, 'message' => 'Revisa el producto padre.', 'errors' => $throwable->errors()], 422);
+        }
         if ($throwable instanceof QueryException && in_array((string) $throwable->getCode(), ['23000', '23503'], true)) {
             return $this->sendError(
                 'El producto está duplicado o se encuentra relacionado con otros datos.',

@@ -87,6 +87,17 @@ class PurchaseDomainTest extends TestCase
         $this->assertSame(base64_encode('provider-image'), (new PurchaseRepository(new Compra))->providerImage(1));
 
         $repository = new PurchaseRepository(new Compra);
+        $compactOptions = $repository->options(true);
+        $this->assertArrayHasKey('tipos', $compactOptions);
+        $this->assertArrayNotHasKey('proveedores', $compactOptions);
+        $this->assertArrayNotHasKey('productos', $compactOptions);
+
+        DB::table('proveedores')->insert(['id' => 2, 'nombre' => 'Otro proveedor', 'imagen' => null]);
+        $this->assertSame(2, $repository->providers(1)->total());
+        $this->assertSame(1, $repository->providers(1)->count());
+        $this->assertSame('Otro proveedor', $repository->providers(10, 'Otro')->items()[0]->nombre);
+        $this->assertSame(0, $repository->providers(10, 'Inexistente')->total());
+
         $this->assertSame($purchase->id, $repository->paginate(30, 'Proveedor')->items()[0]->id);
         $this->assertSame($purchase->id, $repository->paginate(30, 'Producto gravado')->items()[0]->id);
         $this->assertSame($purchase->id, $repository->paginate(30, '143.06')->items()[0]->id);

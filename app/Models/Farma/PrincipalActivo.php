@@ -2,6 +2,7 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PrincipalActivo extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'principal_activos';
 
     protected $fillable = ['nombre', 'concentracion'];

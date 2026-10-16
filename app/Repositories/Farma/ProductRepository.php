@@ -13,16 +13,20 @@ use App\Models\Laboratorio;
 use App\Models\Proveedores;
 use App\Models\Utils\Filter\FilterModel;
 use App\Repositories\Repository;
+use App\Services\Headquarters\ChangeRecorder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProductRepository extends Repository implements ProductService
 {
     /** @var array<int, string> */
     private const RELATIONS = [
+        'padreDetalle:id,codigo,descripcion',
         'categoriaDetalle',
         'laboratorioDetalle:id,nombre,telefono,direccion',
         'unidadDetalle',
@@ -126,16 +130,18 @@ class ProductRepository extends Repository implements ProductService
     /** @param array<string, mixed> $data */
     public function create(array $data, array $principiosActivos = []): bool
     {
-        return $this->executeTransaction(function () use ($data, $principiosActivos): bool {
-            if (! parent::create($data)) {
+        return $this->parentTransaction(function () use ($data, $principiosActivos): bool {
+            $this->validateParent($data);
+            if (! app(ChangeRecorder::class)->withoutRecording(fn (): bool => parent::create($data))) {
                 return false;
             }
 
             $product = $this->model->newQuery()->where('codigo', $this->sanitizeData($data)['codigo'])->firstOrFail();
             $product->principiosActivos()->sync($this->uniqueIds($principiosActivos));
+            app(ChangeRecorder::class)->record($product, 'CREATE');
 
             return true;
-        }, 'createWithPrinciples');
+        }, 3);
     }
 
     /**
@@ -144,8 +150,9 @@ class ProductRepository extends Repository implements ProductService
      */
     public function update(int $id, array $data, ?array $principiosActivos = null): bool
     {
-        return $this->executeTransaction(function () use ($id, $data, $principiosActivos): bool {
-            if (! parent::update($id, $data)) {
+        return $this->parentTransaction(function () use ($id, $data, $principiosActivos): bool {
+            $this->validateParent($data, $id);
+            if (! app(ChangeRecorder::class)->withoutRecording(fn (): bool => parent::update($id, $data))) {
                 return false;
             }
 
@@ -153,9 +160,49 @@ class ProductRepository extends Repository implements ProductService
                 $product = $this->model->newQuery()->findOrFail($id);
                 $product->principiosActivos()->sync($this->uniqueIds($principiosActivos));
             }
+            app(ChangeRecorder::class)->record($this->model->newQuery()->findOrFail($id), 'UPDATE');
 
             return true;
-        }, 'updateWithPrinciples', ['id' => $id]);
+        }, 3);
+    }
+
+    private function parentTransaction(callable $operation, int $attempts): bool
+    {
+        try {
+            return DB::transaction($operation, $attempts);
+        } catch (ValidationException $exception) {
+            throw $exception;
+        } catch (\Throwable $exception) {
+            $this->logGeneralError('productParent', $exception);
+
+            return false;
+        }
+    }
+
+    private function validateParent(array $data, ?int $id = null): void
+    {
+        if (! array_key_exists('producto_padre_id', $data)) {
+            return;
+        }
+        DB::table('producto_relacion_mutex')->where('id', 1)->lockForUpdate()->firstOrFail();
+        $next = $data['producto_padre_id'];
+        $seen = [];
+        while ($next !== null) {
+            $key = (string) $next;
+            if (($id !== null && $key === (string) $id) || isset($seen[$key])) {
+                throw ValidationException::withMessages([
+                    'producto_padre_id' => 'El producto padre no puede formar un ciclo con sus hijos.',
+                ]);
+            }
+            $seen[$key] = true;
+            $parent = DB::table('productos')->where('id', $key)->lockForUpdate()->first();
+            if ($parent === null) {
+                throw ValidationException::withMessages([
+                    'producto_padre_id' => 'El producto padre ya no está disponible.',
+                ]);
+            }
+            $next = $parent->producto_padre_id;
+        }
     }
 
     public function getImage(int $id): ?string
@@ -178,21 +225,29 @@ class ProductRepository extends Repository implements ProductService
 
     public function addActivePrinciple(int $id, int $activeId): bool
     {
-        $product = $this->model->newQuery()->find($id, ['id']);
-        if ($product === null) {
-            return false;
-        }
+        return DB::transaction(function () use ($id, $activeId): bool {
+            $product = $this->model->newQuery()->whereKey($id)->lockForUpdate()->first();
+            if ($product === null) {
+                return false;
+            }
+            $product->principiosActivos()->attach($activeId);
+            app(ChangeRecorder::class)->record($product, 'UPDATE');
 
-        $product->principiosActivos()->attach($activeId);
-
-        return true;
+            return true;
+        }, 3);
     }
 
     public function removeActivePrinciple(int $id, int $activeId): bool
     {
-        $product = $this->model->newQuery()->find($id, ['id']);
+        return DB::transaction(function () use ($id, $activeId): bool {
+            $product = $this->model->newQuery()->whereKey($id)->lockForUpdate()->first();
+            if ($product === null || $product->principiosActivos()->detach($activeId) === 0) {
+                return false;
+            }
+            app(ChangeRecorder::class)->record($product, 'UPDATE');
 
-        return $product !== null && $product->principiosActivos()->detach($activeId) > 0;
+            return true;
+        }, 3);
     }
 
     /** @return array<string, array<int, array<string, mixed>>> */
@@ -258,6 +313,7 @@ class ProductRepository extends Repository implements ProductService
         return parent::buildBaseQuery()
             ->select([
                 'id',
+                'producto_padre_id',
                 'categoria',
                 'laboratorio',
                 'unidad',
@@ -289,6 +345,9 @@ class ProductRepository extends Repository implements ProductService
     protected function filterEmptyData(array $data): array
     {
         $filtered = parent::filterEmptyData($data);
+        if (array_key_exists('producto_padre_id', $data)) {
+            $filtered['producto_padre_id'] = $data['producto_padre_id'];
+        }
         if (array_key_exists('codigobar', $data) && $data['codigobar'] === null) {
             $filtered['codigobar'] = null;
         }

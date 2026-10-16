@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Interfaces\Auth\AuthService;
 use App\Interfaces\Config\DeviceInfoService;
+
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AuthService $authService,
         private readonly DeviceInfoService $deviceInfoService,
+
     ) {}
 
 
@@ -49,6 +51,7 @@ class AuthController extends Controller
             $credentials = $request->validated();
 
             $credentials['name'] = $this->authService->hashValue($credentials['name']);
+
 
 
 

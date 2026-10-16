@@ -2,12 +2,15 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Familia extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'familia';
 
     protected $fillable = ['presentacion', 'administracion', 'descripcion'];

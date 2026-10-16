@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 
 class DeviceEstado extends Model
 {
-    protected $table = 'device_estado';
-    protected $fillable = ['descripcion'];
+    use PublishesHeadquarters;
 
+    protected $table = 'device_estado';
+
+    protected $fillable = ['descripcion'];
 
     public function Device()
     {

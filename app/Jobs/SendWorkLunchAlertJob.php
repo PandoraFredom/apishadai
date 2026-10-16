@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -21,6 +22,8 @@ class SendWorkLunchAlertJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
+    public ?string $attendanceRequestId = null;
 
     /** @var array<int, int> */
     public array $backoff = [30, 120, 300];
@@ -41,6 +44,10 @@ class SendWorkLunchAlertJob implements ShouldQueue
 
     public function handle(): void
     {
+        if ($this->attendanceRequestId !== null && DB::table('pos_asistencia_solicitudes')
+            ->where('request_id', $this->attendanceRequestId)->whereNotNull('correo_enviado_at')->exists()) {
+            return;
+        }
         $workLunch = WorkLunch::query()
             ->with(['User', 'Device.Stock'])
             ->find($this->workLunchId);
@@ -49,9 +56,17 @@ class SendWorkLunchAlertJob implements ShouldQueue
             return;
         }
 
+        if ($workLunch->usuario_pos !== null) {
+            $workLunch->load('PosUser');
+        }
+        $name = $workLunch->usuario_pos !== null ? $workLunch->PosUser?->nombre : $workLunch->User?->nombre;
         $mails = AppConfig::query()->first();
 
         if (! $mails) {
+            if ($this->attendanceRequestId !== null) {
+                throw new \RuntimeException('Falta la configuración de correo de asistencia.');
+            }
+
             return;
         }
 
@@ -60,6 +75,10 @@ class SendWorkLunchAlertJob implements ShouldQueue
         $cc = $this->validEmail($mails->mail_cc2);
 
         if ($recipient === null || $sender === null) {
+            if ($this->attendanceRequestId !== null) {
+                throw new \RuntimeException('Falta un remitente o destinatario válido para asistencia.');
+            }
+
             return;
         }
 
@@ -67,10 +86,10 @@ class SendWorkLunchAlertJob implements ShouldQueue
         $details = [
             'from' => $sender,
             'cc' => $cc !== $recipient ? $cc : null,
-            'subject' => $eventLabel.' · '.($workLunch->User?->nombre ?: 'Usuario'),
+            'subject' => $eventLabel.' · '.($name ?: 'Usuario'),
             'data' => [
                 'id' => $workLunch->id,
-                'user' => $workLunch->User?->nombre,
+                'user' => $name,
                 'event' => $this->event,
                 'event_label' => $eventLabel,
                 'event_time' => $this->eventTime(),
@@ -92,6 +111,10 @@ class SendWorkLunchAlertJob implements ShouldQueue
 
         Notification::route('mail', $recipient)
             ->notify(new AlertMail($details));
+        if ($this->attendanceRequestId !== null) {
+            DB::table('pos_asistencia_solicitudes')->where('request_id', $this->attendanceRequestId)
+                ->update(['correo_enviado_at' => now()]);
+        }
     }
 
     public function failed(?Throwable $exception): void

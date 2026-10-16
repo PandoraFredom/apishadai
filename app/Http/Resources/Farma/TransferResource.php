@@ -37,6 +37,9 @@ class TransferResource extends JsonResource
             'estado_general' => $receiptStatus,
             'enviado_at' => $this->enviado_at?->toIso8601String(),
             'recibido_at' => $this->recibido_at?->toIso8601String(),
+            'puede_imprimir' => $sendStatus === 'enviada'
+                && $device instanceof Device
+                && (int) $device->stock === (int) $this->stock_de,
             'puede_recibir' => $sendStatus === 'enviada'
                 && $receiptStatus === 'pendiente'
                 && $this->usuario_recibe === null
@@ -50,10 +53,14 @@ class TransferResource extends JsonResource
             'stock_de' => $this->whenLoaded('stockOrigen', fn (): array => [
                 'id' => (int) $this->stockOrigen->id,
                 'descripcion' => (string) $this->stockOrigen->descripcion,
+                'telefono' => $this->stockOrigen->telefono,
+                'ubicacion' => $this->stockOrigen->ubicacion,
             ]),
             'stock_para' => $this->whenLoaded('stockDestino', fn (): array => [
                 'id' => (int) $this->stockDestino->id,
                 'descripcion' => (string) $this->stockDestino->descripcion,
+                'telefono' => $this->stockDestino->telefono,
+                'ubicacion' => $this->stockDestino->ubicacion,
             ]),
             'usuario_envia' => $this->whenLoaded('usuarioEnvia', fn (): array => [
                 'id' => (int) $this->usuarioEnvia->id,

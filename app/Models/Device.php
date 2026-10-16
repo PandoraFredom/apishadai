@@ -2,18 +2,23 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 
 class Device extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'devices';
+
     protected $fillable = [
         'ip',
         'ip2',
         'displayname',
         'name',
         'stock',
-        'estado'
+        'estado',
+        'hq_pairing_uuid',
     ];
 
     protected $casts = [
@@ -21,14 +26,11 @@ class Device extends Model
         'estado' => 'integer',
     ];
 
-
     protected $hidden = [
         'ip',
         'ip2',
         'name',
     ];
-
-
 
     public function Estado()
     {
@@ -44,5 +46,4 @@ class Device extends Model
     {
         return $this->hasMany(WorkLunch::class);
     }
-
 }

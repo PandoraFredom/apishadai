@@ -2,18 +2,22 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 
 class Stocks extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'stocks';
+
     protected $fillable =
-    [
-        'descripcion',
-        'telefono',
-        'ubicacion',
-        'estado',
-    ];
+        [
+            'descripcion',
+            'telefono',
+            'ubicacion',
+            'estado',
+        ];
 
     protected $casts = [
         'estado' => 'integer',
@@ -28,6 +32,7 @@ class Stocks extends Model
     {
         return $this->hasMany(Device::class, 'stock');
     }
+
     public function Tikets()
     {
         return $this->hasMany(tikets::class, 'stock');

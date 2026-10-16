@@ -16,12 +16,16 @@ class ProductData
         public readonly ?string $imagen,
         /** @var array<int, int>|null */
         public readonly ?array $principiosActivos,
+        public readonly ?string $productoPadreId = null,
+        public readonly bool $actualizarPadre = false,
     ) {}
 
     /** @param array<string, mixed> $validated */
     public static function fromValidated(array $validated): self
     {
         return new self(
+            productoPadreId: isset($validated['producto_padre_id']) ? (string) $validated['producto_padre_id'] : null,
+            actualizarPadre: array_key_exists('producto_padre_id', $validated),
             categoria: (int) $validated['categoria']['id'],
             laboratorio: (int) $validated['laboratorio']['id'],
             unidad: (int) $validated['unidad']['id'],
@@ -55,6 +59,10 @@ class ProductData
             'descripcion' => $this->descripcion,
             'estado' => $this->estado,
         ];
+
+        if ($this->actualizarPadre) {
+            $data['producto_padre_id'] = $this->productoPadreId;
+        }
 
         if ($this->imagen !== null) {
             $data['imagen'] = $this->imagen;

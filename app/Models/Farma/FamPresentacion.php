@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FamPresentacion extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'fam_presentacion';
 
     protected $fillable = ['descripcion'];

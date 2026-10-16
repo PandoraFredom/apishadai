@@ -16,7 +16,7 @@ use App\Utils\Services\SingleHashService;
 class UserController extends Controller
 {
 
-    public function __construct(private UserRepositoryInterface $service,
+    public function __construct(private readonly UserRepositoryInterface $service,
     private SingleHashService $encService) {}
 
     /**

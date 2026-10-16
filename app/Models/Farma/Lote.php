@@ -2,12 +2,15 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Lote extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'lotes';
 
     protected $fillable = ['compra', 'producto', 'lote', 'fecha_elab', 'fecha_exp', 'cantidad', 'costo', 'isv'];
@@ -19,8 +22,8 @@ class Lote extends Model
             'producto' => 'integer',
             'fecha_elab' => 'date:Y-m-d',
             'fecha_exp' => 'date:Y-m-d',
-            'cantidad' => 'integer',
-            'costo' => 'decimal:2',
+            'cantidad' => 'decimal:4',
+            'costo' => 'decimal:4',
             'isv' => 'boolean',
         ];
     }

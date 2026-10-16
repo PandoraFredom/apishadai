@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('auth/session/login', [App\Http\Controllers\Auth\AuthController::class, 'login']);
 
+require __DIR__ . '/custom/headquarters_api.php';
+
 Route::group(
     ['middleware' => ['auth:api', 'idempotency']],
     function () {
@@ -23,6 +25,11 @@ Route::group(
 
         //==================================FARMACIA=============================
         require __DIR__ . '/custom/farmaModulo_routes.php';
+
+        require __DIR__ . '/custom/pos/clientepos_routes.php';
+        require __DIR__ . '/custom/pos/management_routes.php';
+        require __DIR__ . '/custom/pos/purchases_routes.php';
+        require __DIR__ . '/custom/pos/discounts_routes.php';
 
         //==================================UTILIDADES============================
         require __DIR__ . '/custom/utils_api.php';

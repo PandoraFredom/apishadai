@@ -50,6 +50,7 @@ class ProductRequest extends BaseRequest
 
         return [
             ...($updating ? ['id' => ['required', 'integer', 'exists:productos,id']] : []),
+            'producto_padre_id' => ['sometimes', 'nullable', 'regex:/^[1-9][0-9]{0,19}$/', 'exists:productos,id'],
             'categoria.id' => ['required', 'integer', 'exists:prod_categorias,id'],
             'laboratorio.id' => ['required', 'integer', 'exists:laboratorios,id'],
             'unidad.id' => ['required', 'integer', 'exists:prod_unidades,id'],

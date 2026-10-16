@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProdActivo extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'prod_activo';
 
     protected $fillable = ['producto', 'pactivo'];

@@ -73,7 +73,7 @@ class LotDomainTest extends TestCase
     {
         $repository = new DistributionRepository(new Lote, new Distribucion);
         $page = $repository->paginateProducts();
-        $first = DistributionProductResource::make($page->items()[0])->resolve(request());
+        $first = DistributionProductResource::make($page->getCollection()->firstWhere('producto', 1))->resolve(request());
 
         $this->assertSame(1, $first['producto_id']);
         $this->assertSame(2, $first['lotes_count']);
@@ -86,6 +86,41 @@ class LotDomainTest extends TestCase
         $this->assertTrue($lots[0]['isv']);
         $this->assertSame(125.5, $lots[0]['distribucion']['precio']);
         $this->assertFalse($lots[1]['configurado']);
+    }
+
+    public function test_distribution_orders_products_by_latest_lot_entry_before_pagination_and_search(): void
+    {
+        $repository = new DistributionRepository(new Lote, new Distribucion);
+        DB::table('lotes')->whereIn('id', [1, 2])->update(['created_at' => '2026-10-01 09:00:00']);
+        DB::table('lotes')->where('id', 3)->update([
+            'created_at' => '2026-10-02 09:00:00',
+            'updated_at' => '2026-10-13 09:00:00',
+        ]);
+        DB::table('lotes')->insert([
+            'id' => 4, 'compra' => 11, 'producto' => 1, 'lote' => 'LOTE-NUEVO',
+            'fecha_elab' => '2026-01-01', 'fecha_exp' => '2027-01-01',
+            'cantidad' => 2, 'created_at' => '2026-10-03 09:00:00',
+        ]);
+
+        $this->assertSame([1, 2], $repository->paginateProducts()->getCollection()->pluck('producto')->all());
+        $this->assertSame([1, 2], $repository->paginateProducts(30, 'Laboratorio')->getCollection()->pluck('producto')->all());
+        $this->assertSame([2], $repository->paginateProducts(30, 'Ibuprofeno')->getCollection()->pluck('producto')->all());
+
+        $firstPage = $repository->paginateProducts(1);
+        $this->assertSame(2, $firstPage->total());
+        $this->assertSame([1], $firstPage->getCollection()->pluck('producto')->all());
+        request()->merge(['page' => 2]);
+        $this->assertSame([2], $repository->paginateProducts(1)->getCollection()->pluck('producto')->all());
+    }
+
+    public function test_distribution_breaks_equal_entry_dates_by_latest_lot_id(): void
+    {
+        DB::table('lotes')->update(['created_at' => '2026-10-03 09:00:00']);
+        $repository = new DistributionRepository(new Lote, new Distribucion);
+
+        $this->assertSame([2, 1], $repository->paginateProducts()->getCollection()->pluck('producto')->all());
+        DB::table('lotes')->update(['created_at' => null]);
+        $this->assertSame([2, 1], $repository->paginateProducts()->getCollection()->pluck('producto')->all());
     }
 
     public function test_distribution_is_created_or_updated_once_per_lot(): void

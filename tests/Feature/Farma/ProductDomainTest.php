@@ -3,6 +3,7 @@
 namespace Tests\Feature\Farma;
 
 use App\DTO\Farma\ProdUnidadData;
+use App\Http\Middleware\EnsureProductParentPermission;
 use App\Http\Requests\Farma\Productos\ProdUnidadRequest;
 use App\Http\Resources\Farma\ProductActiveResource;
 use App\Http\Resources\Farma\ProductResource;
@@ -23,9 +24,11 @@ use App\Models\Farma\ProdEstado;
 use App\Models\Farma\Producto;
 use App\Models\Farma\ProdUnidad;
 use App\Models\Laboratorio;
+use App\Models\SyncChange;
 use App\Repositories\Farma\ProductActiveRepository;
 use App\Repositories\Farma\ProductRepository;
 use App\Repositories\Repository;
+use App\Services\Headquarters\EntityContract;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
@@ -33,11 +36,62 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProductDomainTest extends TestCase
 {
+    public function test_headquarters_product_changes_include_the_final_principles_and_image(): void
+    {
+        [$product, $active] = $this->seedProductDomain();
+        (require database_path('migrations/2026_10_01_000024_create_sync_changes_table.php'))->up();
+        (require database_path('migrations/2026_10_01_000030_create_headquarters_outbox.php'))->up();
+        Schema::create('devices', fn (Blueprint $table) => $table->integer('id', true));
+        (require database_path('migrations/2026_10_01_000032_add_headquarters_device_links_and_stock_scope.php'))->up();
+        config(['headquarters.publishing_enabled' => true, 'headquarters.send_immediately' => false]);
+        $repository = new ProductRepository(new Producto);
+        $this->assertTrue($repository->update($product->id, ['descripcion' => 'Nueva descripción'], [$active->pactivo]));
+        $change = SyncChange::where('entity', 'productos')->firstOrFail();
+        $this->assertSame([$active->pactivo], $change->payload['principios_activos']);
+        $this->assertSame('Nueva descripción', $change->payload['descripcion']);
+        $this->assertSame('imagen-del-producto', base64_decode($change->payload['imagen_base64'], true));
+        $this->assertArrayHasKey('producto_padre_id', $change->payload);
+        $this->assertNull($change->payload['producto_padre_id']);
+        $this->assertSame(1, SyncChange::where('entity', 'productos')->count());
+        $available = [];
+        foreach (SyncChange::orderBy('id')->get() as $record) {
+            foreach (EntityContract::references($record->entity, $record->payload) as $reference) {
+                $this->assertArrayHasKey($reference['entity'].':'.$reference['entity_id'], $available);
+            }
+            $available[$record->entity.':'.$record->entity_id] = true;
+        }
+        $this->assertTrue($repository->removeActivePrinciple($product->id, $active->pactivo));
+        $this->assertSame([], SyncChange::orderByDesc('id')->firstOrFail()->payload['principios_activos']);
+        $this->assertTrue($repository->addActivePrinciple($product->id, $active->pactivo));
+        $this->assertSame([$active->pactivo], SyncChange::orderByDesc('id')->firstOrFail()->payload['principios_activos']);
+        $this->assertSame([1, 2, 3], SyncChange::where('entity', 'productos')->orderBy('id')->pluck('version')->all());
+    }
+
+    public function test_direct_product_principle_changes_publish_both_affected_products(): void
+    {
+        [$product, $active] = $this->seedProductDomain();
+        $other = $product->replicate();
+        $other->codigo = 'OTHER';
+        $other->codigobar = null;
+        $other->save();
+        (require database_path('migrations/2026_10_01_000024_create_sync_changes_table.php'))->up();
+        (require database_path('migrations/2026_10_01_000030_create_headquarters_outbox.php'))->up();
+        Schema::create('devices', fn (Blueprint $table) => $table->integer('id', true));
+        (require database_path('migrations/2026_10_01_000032_add_headquarters_device_links_and_stock_scope.php'))->up();
+        config(['headquarters.publishing_enabled' => true, 'headquarters.send_immediately' => false]);
+        $active->updateQuietly(['producto' => $other->id]);
+        $changes = SyncChange::where('entity', 'productos')->orderBy('id')->get();
+        $this->assertSame([$product->id, $other->id], $changes->pluck('entity_id')->all());
+        $this->assertSame([], $changes[0]->payload['principios_activos']);
+        $this->assertSame([$active->pactivo], $changes[1]->payload['principios_activos']);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,6 +104,7 @@ class ProductDomainTest extends TestCase
         DB::purge('sqlite');
 
         $this->createSchema();
+        (require database_path('migrations/2026_10_11_000006_product_parent.php'))->up();
     }
 
     protected function tearDown(): void
@@ -484,7 +539,7 @@ class ProductDomainTest extends TestCase
         $this->withoutMiddleware();
         $routes = collect(app('router')->getRoutes()->getRoutes())
             ->filter(fn ($route) => str_starts_with($route->uri(), 'api/farma/productos/'));
-        $this->assertCount(70, $routes);
+        $this->assertCount(71, $routes);
 
         foreach ($routes as $route) {
             $this->assertStringNotContainsString('{catalogo}', $route->uri());
@@ -1127,6 +1182,30 @@ class ProductDomainTest extends TestCase
         $this->assertDatabaseCount('principal_activos', 1);
     }
 
+    public function test_product_form_can_load_complete_catalogs_in_one_response(): void
+    {
+        $this->withoutMiddleware();
+        $this->seedProductDomain();
+        for ($index = 1; $index <= 35; $index++) {
+            PrincipalActivo::query()->create(['nombre' => 'Principio '.$index, 'concentracion' => 1]);
+            Laboratorio::query()->create(['nombre' => 'Laboratorio '.$index]);
+        }
+
+        $base = $this->productResourceBase('ProductController');
+        foreach (['categorias' => 1, 'laboratorios' => 36, 'unidades' => 1, 'familias' => 1, 'estados' => 1, 'principios_activos' => 36] as $catalog => $count) {
+            $this->getJson($base.'/'.$catalog.'?all=1')->assertOk()
+                ->assertJsonCount($count, 'data')
+                ->assertJsonPath('meta.total', $count)
+                ->assertJsonPath('meta.last_page', 1);
+        }
+
+        $this->getJson($base.'/principios_activos?all=1')->assertOk()
+            ->assertJsonPath('data.0.concentracion_detalle.valor', '500 mg');
+        $this->getJson($base.'/laboratorios')->assertOk()->assertJsonCount(30, 'data');
+        $this->getJson($base.'/principios_activos?all=0')->assertOk()->assertJsonCount(15, 'data');
+        $this->getJson($base.'/principios_activos?all=invalid')->assertUnprocessable();
+    }
+
     public function test_product_lists_all_active_principles_in_pages_of_fifteen(): void
     {
         $this->withoutMiddleware();
@@ -1222,6 +1301,110 @@ class ProductDomainTest extends TestCase
         $this->deleteJson($base.'/invalid', $body)->assertNotFound();
         $this->deleteJson($path, ['pactivo' => 999999])->assertNotFound();
         $this->deleteJson($path.'/'.$association->pactivo)->assertNotFound();
+    }
+
+    public function test_parent_lookup_requires_its_own_options_permission_and_active_hierarchy(): void
+    {
+        foreach (['modulo_estados', 'vista_estados'] as $table) {
+            Schema::create($table, function (Blueprint $schema): void {
+                $schema->id();
+                $schema->string('descripcion');
+            });
+            DB::table($table)->insert(['id' => 1, 'descripcion' => 'ACTIVO']);
+        }
+        Schema::create('modulos', function (Blueprint $table): void {
+            $table->id();
+            $table->string('codigo');
+            $table->integer('estado');
+        });
+        Schema::create('vistas', function (Blueprint $table): void {
+            $table->id();
+            $table->string('codigo');
+            $table->integer('estado');
+            $table->integer('modulo');
+        });
+        Schema::create('actionsvistas', function (Blueprint $table): void {
+            $table->id();
+            $table->string('codigo');
+            $table->integer('vista');
+        });
+        Schema::create('permisos', function (Blueprint $table): void {
+            $table->id();
+            $table->integer('usuario');
+            $table->integer('modulo');
+            $table->integer('vista');
+            $table->integer('actionvista');
+            $table->dateTime('lifetime')->nullable();
+        });
+        DB::table('modulos')->insert(['id' => 1, 'codigo' => 'frm', 'estado' => 1]);
+        DB::table('vistas')->insert(['id' => 1, 'codigo' => 'prd', 'estado' => 1, 'modulo' => 1]);
+        DB::table('actionsvistas')->insert(['id' => 1, 'codigo' => 'prdbtn07', 'vista' => 1]);
+        $middleware = new EnsureProductParentPermission;
+        $request = Request::create('/api/farma/productos/producto/padres');
+        $request->setUserResolver(fn () => new class
+        {
+            public function getAuthIdentifier(): int
+            {
+                return 99;
+            }
+        });
+        $request->headers->set('Action-Btn', 'prdbtn07');
+        $next = fn () => response()->json(['ok' => true]);
+        $this->assertSame(403, $middleware->handle($request, $next)->getStatusCode());
+        DB::table('permisos')->insert(['id' => 1, 'usuario' => 99, 'modulo' => 1, 'vista' => 1, 'actionvista' => 1]);
+        $this->assertSame(200, $middleware->handle($request, $next)->getStatusCode());
+        $request->headers->set('Action-Btn', 'prdbtn01');
+        $this->assertSame(403, $middleware->handle($request, $next)->getStatusCode());
+        $request->headers->set('Action-Btn', 'prdbtn07');
+        DB::table('permisos')->where('id', 1)->update(['lifetime' => now()->subMinute()]);
+        $this->assertSame(403, $middleware->handle($request, $next)->getStatusCode());
+        DB::table('permisos')->where('id', 1)->update(['lifetime' => null]);
+        DB::table('actionsvistas')->where('id', 1)->update(['vista' => 2]);
+        $this->assertSame(403, $middleware->handle($request, $next)->getStatusCode());
+    }
+
+    public function test_product_parent_lookup_is_paginated_and_escapes_search(): void
+    {
+        [$parent] = $this->seedProductDomain();
+        $this->withoutMiddleware();
+        $this->getJson('/api/farma/productos/producto/padres?search=PRD')->assertOk()->assertJsonFragment(['codigo' => 'PRD-001']);
+        $this->getJson('/api/farma/productos/producto/padres?search=%25')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/farma/productos/producto/padres?exclude='.$parent->id)->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson('/api/farma/productos/producto/padres?page=0')->assertUnprocessable();
+        $this->getJson('/api/farma/productos/producto/padres?exclude=1.2')->assertUnprocessable();
+    }
+
+    public function test_product_parent_persists_clears_preserves_omitted_and_rejects_cycles(): void
+    {
+        [$parent] = $this->seedProductDomain();
+        $repository = new ProductRepository(new Producto);
+        $data = $parent->only(['categoria', 'laboratorio', 'unidad', 'familia', 'descripcion', 'estado']);
+        $this->assertTrue($repository->create([...$data, 'codigo' => 'CHILD-TEST', 'producto_padre_id' => (string) $parent->id]));
+        $child = Producto::where('codigo', 'CHILD-TEST')->firstOrFail();
+        $this->assertSame((string) $parent->id, (string) $child->producto_padre_id);
+        $this->assertTrue($repository->update($child->id, ['descripcion' => 'Changed child']));
+        $this->assertSame((string) $parent->id, (string) $child->fresh()->producto_padre_id);
+        $resource = ProductResource::make($repository->findById($child->id))->resolve();
+        $this->assertSame((string) $parent->id, $resource['producto_padre_id']);
+        $this->assertSame($parent->codigo, $resource['producto_padre']['codigo']);
+        foreach ([[$child->id, $child->id], [$parent->id, $child->id]] as [$target, $proposed]) {
+            try {
+                $repository->update($target, ['producto_padre_id' => (string) $proposed]);
+                $this->fail('A parent cycle must be rejected.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('producto_padre_id', $exception->errors());
+            }
+        }
+        $this->assertNull($parent->fresh()->producto_padre_id);
+        $this->assertSame((string) $parent->id, (string) $child->fresh()->producto_padre_id);
+        try {
+            $parent->delete();
+            $this->fail('A referenced parent must not be deleted.');
+        } catch (QueryException) {
+            $this->assertNotNull($parent->fresh());
+        }
+        $this->assertTrue($repository->update($child->id, ['producto_padre_id' => null]));
+        $this->assertNull($child->fresh()->producto_padre_id);
     }
 
     /** @return array{Producto, ProdActivo} */

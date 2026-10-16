@@ -50,7 +50,8 @@ class DistributionRepository implements DistributionService
         }
 
         return $query
-            ->orderBy('lotes.producto')
+            ->orderByRaw('MAX(lotes.created_at) DESC')
+            ->orderByRaw('MAX(lotes.id) DESC')
             ->paginate(max(1, min($perPage, 100)));
     }
 

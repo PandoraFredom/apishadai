@@ -2,6 +2,7 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use App\Models\Laboratorio;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Producto extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'productos';
 
     protected $fillable = [
@@ -22,6 +25,7 @@ class Producto extends Model
         'descripcion',
         'imagen',
         'estado',
+        'producto_padre_id',
     ];
 
     protected $hidden = ['imagen'];
@@ -35,6 +39,16 @@ class Producto extends Model
             'familia' => 'integer',
             'estado' => 'integer',
         ];
+    }
+
+    public function padreDetalle(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'producto_padre_id');
+    }
+
+    public function hijos(): HasMany
+    {
+        return $this->hasMany(self::class, 'producto_padre_id');
     }
 
     public function categoriaDetalle(): BelongsTo

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
-
-
 
 class Proveedores extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'proveedores';
 
     protected $fillable = [

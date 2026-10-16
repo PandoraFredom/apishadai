@@ -255,13 +255,59 @@ class PurchaseRepository implements PurchaseService
         return is_string($value) && $value !== '' ? $value : null;
     }
 
-    /** @return array<string, array<int, array<string, mixed>>> */
-    public function options(): array
+    /**
+     * @param  array<int, int>  $productIds
+     * @return array<int, array{producto_id: int, costo: ?string}>
+     */
+    public function latestCosts(array $productIds, ?int $excludePurchase = null): array
     {
-        return [
+        if ($productIds === []) {
+            return [];
+        }
+
+        // Each product is a bound constant so MySQL can read the covering
+        // index backwards without filesort. Correlating a product table here
+        // makes MySQL sort even with the same index. UNION ALL batches the
+        // bounded scalar lookups into one round trip, without deduplication.
+        $query = null;
+        foreach (array_unique($productIds) as $id) {
+            $cost = DB::table('compra_detalle as detail')
+                ->select('detail.costo')
+                ->where('detail.producto', $id)
+                ->where('detail.costo', '>', 0)
+                ->when($excludePurchase !== null, fn ($detail) => $detail->where('detail.compra', '<>', $excludePurchase))
+                ->where(fn ($purchase) => $purchase->select('estado')->from('compras')
+                    ->whereColumn('compras.id', 'detail.compra'), '<>', 'borrador')
+                ->orderByDesc('detail.compra')
+                ->orderByDesc('detail.id')
+                ->limit(1);
+            $product = DB::query()->selectRaw('? AS producto_id', [$id])->selectSub($cost, 'costo');
+            $query = $query === null ? $product : $query->unionAll($product);
+        }
+
+        return $query
+            ->get()
+            ->map(static fn ($product): array => [
+                'producto_id' => (int) $product->producto_id,
+                'costo' => $product->costo === null ? null : number_format((float) $product->costo, 2, '.', ''),
+            ])->all();
+    }
+
+    /** @return array<string, array<int, array<string, mixed>>> */
+    public function options(bool $compact = false): array
+    {
+        $types = [
             'tipos' => CompraTipo::query()->orderBy('descripcion')->get()->map(fn (CompraTipo $type): array => [
                 'id' => (int) $type->getKey(), 'label' => (string) $type->descripcion,
             ])->all(),
+        ];
+
+        if ($compact) {
+            return $types;
+        }
+
+        return [
+            ...$types,
             'proveedores' => Proveedores::query()
                 ->select(['id', 'nombre'])
                 ->selectRaw('imagen IS NOT NULL AS tiene_imagen')
@@ -285,6 +331,19 @@ class PurchaseRepository implements PurchaseService
                     'unidad_compra' => (int) ($product->unidadDetalle?->cantidad_c ?? 0),
                 ])->all(),
         ];
+    }
+
+    public function providers(int $perPage = 10, string $search = ''): LengthAwarePaginator
+    {
+        $query = Proveedores::query()
+            ->select(['id', 'nombre'])
+            ->selectRaw('imagen IS NOT NULL AS tiene_imagen');
+
+        if (trim($search) !== '') {
+            $query->where('nombre', 'like', '%'.trim($search).'%');
+        }
+
+        return $query->orderBy('nombre')->paginate(max(1, min($perPage, 100)));
     }
 
     private function baseQuery(): Builder

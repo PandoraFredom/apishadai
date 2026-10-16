@@ -149,7 +149,7 @@ class tiketsController extends Controller
     {
         try {
 
-            $active = $this->service->activephone('', $id);
+            $active = $this->service->activephone($id);
 
             return $this->sendResponse(
                 $active,

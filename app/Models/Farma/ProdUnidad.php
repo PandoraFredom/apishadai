@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProdUnidad extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'prod_unidades';
 
     protected $fillable = ['abreviatura_c', 'abreviatura_v', 'cantidad_c', 'cantidad_v'];

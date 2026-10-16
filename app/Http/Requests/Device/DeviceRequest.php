@@ -7,6 +7,13 @@ use Illuminate\Contracts\Validation\ValidationRule;
 
 class DeviceRequest extends BaseRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if (is_string($this->input('hq_pairing_uuid'))) {
+            $this->merge(['hq_pairing_uuid' => strtolower(trim($this->input('hq_pairing_uuid'))) ?: null]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -21,6 +28,7 @@ class DeviceRequest extends BaseRequest
             'name' => 'required|string|max:100|unique:devices,name',
             'stock.id' => 'required|integer|exists:stocks,id',
             'estado.id' => 'required|integer|exists:device_estado,id',
+            'hq_pairing_uuid' => ['sometimes', 'nullable', 'uuid', 'not_in:00000000-0000-0000-0000-000000000000', 'unique:devices,hq_pairing_uuid'],
         ];
     }
 
@@ -32,6 +40,8 @@ class DeviceRequest extends BaseRequest
     protected function customMessages(): array
     {
         return [
+            'hq_pairing_uuid.uuid' => 'Pega un UUID de emparejamiento válido generado en HQ.',
+            'hq_pairing_uuid.unique' => 'Este UUID de HQ ya está vinculado a otro dispositivo.',
             // IP
             'ip.required' => 'El campo IP es obligatorio.',
             'ip.string' => 'El campo IP debe ser una cadena de texto.',

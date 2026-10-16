@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Http\Resources\WorkLunchResource;
 use App\Interfaces\Config\DeviceInfoService;
 use App\Interfaces\WorkLunch\WorkLunchService;
+use App\Services\Headquarters\PosAttendanceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class WorkLunchController extends Controller
 {
@@ -14,6 +18,20 @@ class WorkLunchController extends Controller
         private readonly DeviceInfoService $deviceInfoService,
         private readonly WorkLunchService $workLunchService
     ) {}
+
+    public function headquarters(Request $request, PosAttendanceService $service, string $action): JsonResponse
+    {
+        try {
+            $data = $request->validate(['device_id' => ['required', 'integer', 'min:1'],
+                'client_uuid' => ['required', 'uuid'], 'payload' => ['present', 'array']]);
+
+            return $this->sendResponse($service->execute($data['device_id'], $data['client_uuid'], $action, $data['payload']));
+        } catch (ValidationException $exception) {
+            return $this->sendError('El registro no cumple el contrato de asistencia.', $exception->errors(), 422);
+        } catch (HttpExceptionInterface $exception) {
+            return $this->sendError('El registro de asistencia no está disponible.', null, $exception->getStatusCode());
+        }
+    }
 
     public function today()
     {

@@ -15,6 +15,7 @@ use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class PurchaseController extends Controller
@@ -37,9 +38,41 @@ class PurchaseController extends Controller
         ), 'ok', 200, true);
     }
 
-    public function options(): JsonResponse
+    public function options(Request $request): JsonResponse
     {
-        return $this->sendResponse($this->repository->options(), 'ok');
+        return $this->sendResponse($this->repository->options($request->boolean('compact')), 'ok');
+    }
+
+    public function latestCosts(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->query(), [
+            'productos' => ['required', 'array', 'min:1', 'max:200'],
+            'productos.*' => ['required', 'integer', 'min:1', 'distinct'],
+            'excluir_compra' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError($validator->errors()->first(), ['errors' => $validator->errors()->toArray()], 422);
+        }
+        $data = $validator->validated();
+
+        return $this->sendResponse($this->repository->latestCosts(
+            array_map('intval', $data['productos']),
+            isset($data['excluir_compra']) ? (int) $data['excluir_compra'] : null,
+        ), 'ok');
+    }
+
+    public function providers(Request $request): JsonResponse
+    {
+        $search = mb_substr(trim(strip_tags((string) $request->query('search', ''))), 0, 100);
+        $page = $this->repository->providers($request->integer('per_page', 10), $search);
+        $page->getCollection()->transform(static fn ($provider): array => [
+            'id' => (int) $provider->id,
+            'nombre' => (string) $provider->nombre,
+            'tiene_imagen' => (bool) $provider->tiene_imagen,
+        ]);
+
+        return $this->sendResponse($page, 'ok', 200, true);
     }
 
     public function providerImage(int $id): JsonResponse

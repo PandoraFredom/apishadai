@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Pos\UsuarioPos;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WorkLunch extends Model
 {
     protected $table = 'worklunch';
+
     protected $fillable = [
         'usuario',
+        'usuario_pos',
         'device',
         'wkstart_time',
         'work_date',
@@ -23,10 +27,16 @@ class WorkLunch extends Model
         return $this->belongsTo(User::class, 'usuario');
     }
 
+    public function PosUser(): BelongsTo
+    {
+        return $this->belongsTo(UsuarioPos::class, 'usuario_pos');
+    }
+
     public function Device()
     {
         return $this->belongsTo(Device::class, 'device');
     }
+
     public function getWorkDurationAttribute()
     {
         if ($this->wkend_time) {
@@ -44,6 +54,7 @@ class WorkLunch extends Model
 
         return null;
     }
+
     public function getLunchDurationAttribute()
     {
         if ($this->lunch_start_time && $this->lunch_end_time) {

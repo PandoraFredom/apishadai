@@ -8,6 +8,8 @@ use App\Http\Resources\Farma\LotResource;
 use App\Http\Resources\Farma\TransferResource;
 use App\Interfaces\Config\DeviceInfoService;
 use App\Interfaces\Farma\TransferService;
+use App\Models\Farma\TransferenciaTipo;
+use App\Services\Farma\TransferStockScope;
 use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -22,7 +24,8 @@ class TransferController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $stockId = $this->stockId($request);
+        $scope = app(TransferStockScope::class);
+        $stockId = $scope->stockId($request, $this->stockId($request));
 
         if ($stockId === null) {
             return $this->sendError('El dispositivo no tiene un stock válido asignado.', null, 422);
@@ -37,7 +40,7 @@ class TransferController extends Controller
             'tipo' => ['nullable', 'integer', 'exists:transferencias_tipo,id'],
         ]);
 
-        return $this->sendResponse(
+        $response = $this->sendResponse(
             TransferResource::collection($this->repository->paginate(
                 $stockId,
                 (int) ($validated['per_page'] ?? 30),
@@ -47,11 +50,20 @@ class TransferController extends Controller
             200,
             true,
         );
+
+        $payload = $response->getData(true);
+        $payload['meta']['tipos'] = TransferenciaTipo::query()->orderBy('descripcion')->get(['id', 'descripcion'])->toArray();
+
+        if ($scope->canFilter($request)) {
+            $payload['meta']['stocks'] = $scope->stocks();
+        }
+
+        return $response->setData($payload);
     }
 
     public function show(Request $request, int $id): JsonResponse
     {
-        $stockId = $this->stockId($request);
+        $stockId = app(TransferStockScope::class)->stockId($request, $this->stockId($request));
 
         if ($stockId === null) {
             return $this->sendError('El dispositivo no tiene un stock válido asignado.', null, 422);

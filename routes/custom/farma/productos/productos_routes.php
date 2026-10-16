@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Farma\Productos\ProductController;
+use App\Http\Middleware\EnsureProductParentPermission;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('producto')->group(
@@ -14,7 +15,7 @@ Route::prefix('producto')->group(
         Route::delete('/eliminar/{id}', [ProductController::class, 'destroy'])->whereNumber('id');
         Route::get('/imagen/{id}', [ProductController::class, 'getImage']);
 
-
+        Route::get('/padres', [ProductController::class, 'padres'])->middleware(EnsureProductParentPermission::class);
         Route::get('/laboratorios', [ProductController::class, 'laboratorios']);
         Route::get('/filter_laboratorios', [ProductController::class, 'filterLaboratorios']);
         Route::get('/familias', [ProductController::class, 'familias']);

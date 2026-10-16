@@ -27,7 +27,7 @@ class WorkLunchRptResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'usuario' => ['id' => $this->User?->id, 'nombre' => $this->User?->nombre],
+            'usuario' => $this->usuario_pos ? ['id' => $this->PosUser?->id, 'nombre' => $this->PosUser?->nombre, 'origen' => 'POS'] : ['id' => $this->User?->id, 'nombre' => $this->User?->nombre],
             'work_minutes' => $this->toMinutes($workSeconds),
             'lunch_minutes' => $this->toMinutes($lunchSeconds),
             'net_work_minutes' => $this->toMinutes($netWorkSeconds),

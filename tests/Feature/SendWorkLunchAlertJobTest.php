@@ -147,6 +147,39 @@ class SendWorkLunchAlertJobTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_pos_notice_uses_pos_identity_and_skips_a_delivered_request(): void
+    {
+        Schema::create('usuariospos', function (Blueprint $table): void {
+            $table->id();
+            $table->string('nombre');
+        });
+        Schema::table('worklunch', function (Blueprint $table): void {
+            $table->unsignedBigInteger('usuario')->nullable()->change();
+            $table->unsignedBigInteger('usuario_pos')->nullable();
+        });
+        Schema::create('pos_asistencia_solicitudes', function (Blueprint $table): void {
+            $table->uuid('request_id')->primary();
+            $table->timestamp('correo_enviado_at')->nullable();
+        });
+        $requestId = '20000000-0000-4000-8000-000000000001';
+        DB::table('usuariospos')->insert(['id' => 70, 'nombre' => 'TEST Cuenta POS']);
+        DB::table('worklunch')->where('id', 15)->update(['usuario' => null, 'usuario_pos' => 70]);
+        DB::table('pos_asistencia_solicitudes')->insert(['request_id' => $requestId]);
+        $job = new SendWorkLunchAlertJob(15, 'work_started', [
+            'wkstart_time' => '2026-07-29 08:00:00', 'wkend_time' => null,
+            'lunch_start_time' => null, 'lunch_end_time' => null,
+        ]);
+        $job->attendanceRequestId = $requestId;
+        $job->handle();
+        $job->handle();
+        Notification::assertSentOnDemand(AlertMail::class, function (AlertMail $notification, array $channels, object $notifiable): bool {
+            return $notification->toArray($notifiable)['data']['user'] === 'TEST Cuenta POS'
+                && $notification->toMail($notifiable)->subject === 'Entrada registrada · TEST Cuenta POS';
+        });
+        Notification::assertCount(1);
+        $this->assertNotNull(DB::table('pos_asistencia_solicitudes')->value('correo_enviado_at'));
+    }
+
     public function test_it_logs_a_final_delivery_failure(): void
     {
         Log::spy();

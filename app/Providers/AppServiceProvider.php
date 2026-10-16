@@ -176,6 +176,7 @@ class AppServiceProvider extends ServiceProvider
         TransferService::class => TransferRepository::class,
         ProveedoresService::class => ProveedoresRepository::class,
         LaboratorioService::class => LaboratorioRepository::class,
+        \App\Interfaces\Pos\ClienteposService::class => \App\Repositories\Pos\ClienteposRepository::class,
 
         // -------------------------------- UTILS ---------------------------------
 

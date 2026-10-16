@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TransferenciaEstado extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'transferencia_estado';
 
     protected $fillable = ['descripcion'];

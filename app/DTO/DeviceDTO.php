@@ -2,12 +2,8 @@
 
 namespace App\DTO;
 
-
-
 class DeviceDTO
 {
-
-
     public function __construct(
         public readonly string $ip,
         public readonly string $ip2,
@@ -15,7 +11,9 @@ class DeviceDTO
         public readonly string $name,
         public readonly int $stock,
         public readonly int $estado,
-        public readonly ?int $id = null
+        public readonly ?int $id = null,
+        public readonly ?string $hqPairingUuid = null,
+        public readonly bool $includesHqPairingUuid = false,
     ) {}
 
     /**
@@ -31,9 +29,12 @@ class DeviceDTO
             name: $data['name'],
             stock: $data['stock']['id'],
             estado: $data['estado']['id'],
-            id: $data['id'] ?? null
+            id: $data['id'] ?? null,
+            hqPairingUuid: $data['hq_pairing_uuid'] ?? null,
+            includesHqPairingUuid: array_key_exists('hq_pairing_uuid', $data),
         );
     }
+
     public static function fromUpdateRequest(array $data, int $id): self
     {
         return new self(
@@ -43,7 +44,9 @@ class DeviceDTO
             name: '',
             stock: 0,
             estado: $data['estado']['id'],
-            id: $id
+            id: $id,
+            hqPairingUuid: $data['hq_pairing_uuid'] ?? null,
+            includesHqPairingUuid: array_key_exists('hq_pairing_uuid', $data),
         );
     }
 
@@ -52,7 +55,7 @@ class DeviceDTO
      */
     public function toArray(): array
     {
-        return array_filter([
+        $attributes = array_filter([
             'ip' => $this->ip ?: null,
             'ip2' => $this->ip2 ?: null,
             'displayname' => $this->displayname ?: null,
@@ -60,13 +63,23 @@ class DeviceDTO
             'stock' => $this->stock > 0 ? $this->stock : null,
             'estado' => $this->estado > 0 ? $this->estado : null,
         ]);
+        if ($this->includesHqPairingUuid) {
+            $attributes['hq_pairing_uuid'] = $this->hqPairingUuid;
+        }
+
+        return $attributes;
     }
 
     public function toUpdateArray(): array
     {
-        return array_filter([
+        $attributes = array_filter([
             'id' => $this->id > 0 ? $this->id : null,
             'estado' => $this->estado > 0 ? $this->estado : null,
         ]);
+        if ($this->includesHqPairingUuid) {
+            $attributes['hq_pairing_uuid'] = $this->hqPairingUuid;
+        }
+
+        return $attributes;
     }
 }

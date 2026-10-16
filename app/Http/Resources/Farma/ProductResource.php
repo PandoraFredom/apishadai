@@ -12,6 +12,10 @@ class ProductResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'producto_padre_id' => $this->producto_padre_id === null ? null : (string) $this->producto_padre_id,
+            'producto_padre' => $this->whenLoaded('padreDetalle', fn ($parent): array => [
+                'id' => (string) $parent->id, 'codigo' => $parent->codigo, 'descripcion' => $parent->descripcion,
+            ]),
             'categoria_id' => $this->categoria,
             'laboratorio_id' => $this->laboratorio,
             'unidad_id' => $this->unidad,

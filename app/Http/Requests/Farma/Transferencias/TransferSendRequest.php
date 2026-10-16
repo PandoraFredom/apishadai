@@ -11,7 +11,7 @@ class TransferSendRequest extends BaseRequest
         return [
             'tipo' => ['required', 'integer', 'exists:transferencias_tipo,id'],
             'stock_para' => ['required', 'integer', 'exists:stocks,id'],
-            'detalles' => ['sometimes', 'array', 'max:200'],
+            'detalles' => ['required', 'array', 'min:1', 'max:200'],
             'detalles.*.lote' => ['required', 'integer', 'distinct', 'exists:lotes,id'],
             'detalles.*.cantidad' => ['required', 'integer', 'min:1', 'max:1000000'],
         ];

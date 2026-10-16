@@ -2,11 +2,14 @@
 
 namespace App\Models\Farma;
 
+use App\Models\Concerns\PublishesHeadquarters;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TransferenciaDetalle extends Model
 {
+    use PublishesHeadquarters;
+
     protected $table = 'trasferencia_detalle';
 
     protected $fillable = ['transferencia_id', 'lote', 'cantidad', 'subtotal', 'isv', 'total'];
